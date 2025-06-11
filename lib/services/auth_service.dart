@@ -1,17 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
+import '../config/api_config.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://localhost:8000'; // Update this to your Laravel backend URL
-  static const String loginEndpoint = '/api/login';
-  static const String logoutEndpoint = '/api/logout';
-  static const String meEndpoint = '/api/me';
-
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl$loginEndpoint'),
+        Uri.parse(ApiConfig.getUrl(ApiConfig.login)),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -52,7 +48,7 @@ class AuthService {
   Future<bool> logout(String token) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl$logoutEndpoint'),
+        Uri.parse(ApiConfig.getUrl(ApiConfig.logout)),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -69,7 +65,7 @@ class AuthService {
   Future<User?> getCurrentUser(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl$meEndpoint'),
+        Uri.parse(ApiConfig.getUrl(ApiConfig.me)),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
