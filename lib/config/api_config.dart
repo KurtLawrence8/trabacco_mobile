@@ -1,10 +1,34 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class ApiConfig {
-  // Base URL
-  static const String baseUrl = 'http://localhost:8000';
+  // Base URL for the Laravel backend
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8000/api'; // For web
+    } else if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8000/api'; // For Android Emulator
+    } else {
+      return 'http://localhost:8000/api'; // For iOS Simulator and others
+    }
+  }
+
+  // API Endpoints
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String logout = '/logout';
+  static const String user = '/user';
+
+  // Headers
+  static Map<String, String> getHeaders({String? token}) {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
 
   // Auth endpoints
-  static const String login = '/api/login';
-  static const String logout = '/api/logout';
   static const String me = '/api/me';
 
   // Technician endpoints
@@ -33,9 +57,12 @@ class ApiConfig {
 
   // Supply Distribution endpoints
   static const String supplyDistribution = '/api/supply-distribution';
-  static const String supplyDistributionTrashed = '/api/supply-distribution/trashed';
-  static const String supplyDistributionRestore = '/api/supply-distribution/{id}/restore';
-  static const String supplyDistributionForceDelete = '/api/supply-distribution/{id}/force';
+  static const String supplyDistributionTrashed =
+      '/api/supply-distribution/trashed';
+  static const String supplyDistributionRestore =
+      '/api/supply-distribution/{id}/restore';
+  static const String supplyDistributionForceDelete =
+      '/api/supply-distribution/{id}/force';
 
   // Report endpoints
   static const String reports = '/api/reports';
@@ -67,11 +94,12 @@ class ApiConfig {
   }
 
   // Helper method to replace path parameters
-  static String replacePathParams(String endpoint, Map<String, dynamic> params) {
+  static String replacePathParams(
+      String endpoint, Map<String, dynamic> params) {
     String result = endpoint;
     params.forEach((key, value) {
       result = result.replaceAll('{$key}', value.toString());
     });
     return result;
   }
-} 
+}
