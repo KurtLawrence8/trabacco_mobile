@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 
 class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://localhost:8000/api'; // For web
+      return 'http://127.0.0.1:8000/api'; // For web
     } else if (Platform.isAndroid) {
       return 'http://10.0.2.2:8000/api'; // For Android Emulator
     } else {
@@ -42,51 +43,11 @@ class ApiConfig {
   static const String farmWorkerTrashed = '/api/farm-workers/trashed';
   static const String farmWorkerRestore = '/api/farm-workers/{id}/restore';
   static const String farmWorkerForceDelete = '/api/farm-workers/{id}/force';
-
-  // Farm endpoints
-  static const String farms = '/api/farms';
-  static const String farmTrashed = '/api/farms/trashed';
-  static const String farmRestore = '/api/farms/{id}/restore';
-  static const String farmForceDelete = '/api/farms/{id}/force';
-
-  // Inventory endpoints
-  static const String inventory = '/api/inventory';
-  static const String inventoryTrashed = '/api/inventory/trashed';
-  static const String inventoryRestore = '/api/inventory/{id}/restore';
-  static const String inventoryForceDelete = '/api/inventory/{id}/force';
-
-  // Supply Distribution endpoints
-  static const String supplyDistribution = '/api/supply-distribution';
-  static const String supplyDistributionTrashed =
-      '/api/supply-distribution/trashed';
-  static const String supplyDistributionRestore =
-      '/api/supply-distribution/{id}/restore';
-  static const String supplyDistributionForceDelete =
-      '/api/supply-distribution/{id}/force';
-
-  // Report endpoints
-  static const String reports = '/api/reports';
-  static const String reportTrashed = '/api/reports/trashed';
-  static const String reportRestore = '/api/reports/{id}/restore';
-  static const String reportForceDelete = '/api/reports/{id}/force';
-
-  // Request endpoints
-  static const String requests = '/api/requests';
-  static const String requestTrashed = '/api/requests/trashed';
-  static const String requestRestore = '/api/requests/{id}/restore';
-  static const String requestForceDelete = '/api/requests/{id}/force';
-
   // Schedule endpoints
   static const String schedules = '/api/schedules';
   static const String scheduleTrashed = '/api/schedules/trashed';
   static const String scheduleRestore = '/api/schedules/{id}/restore';
   static const String scheduleForceDelete = '/api/schedules/{id}/force';
-
-  // Notification endpoints
-  static const String notifications = '/api/notifications';
-  static const String notificationTrashed = '/api/notifications/trashed';
-  static const String notificationRestore = '/api/notifications/{id}/restore';
-  static const String notificationForceDelete = '/api/notifications/{id}/force';
 
   // Helper method to get full URL
   static String getUrl(String endpoint) {
@@ -101,5 +62,103 @@ class ApiConfig {
       result = result.replaceAll('{$key}', value.toString());
     });
     return result;
+  }
+}
+
+class SidebarMenu extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onTap;
+
+  const SidebarMenu({super.key, required this.selectedIndex, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = Color(0xFF219653); // Green
+    final activeBg = Color(0xFFEAFBF3);    // Light green
+    final inactiveColor = Color(0xFF6D758F);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
+          child: Text(
+            "Accounts",
+            style: TextStyle(
+              color: activeColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        ),
+        _SidebarItem(
+          icon: Icons.emoji_people,
+          label: "Farm Worker",
+          isActive: selectedIndex == 0,
+          activeColor: activeColor,
+          activeBg: activeBg,
+          inactiveColor: inactiveColor,
+          onTap: () => onTap(0),
+        ),
+        _SidebarItem(
+          icon: Icons.groups,
+          label: "Technician",
+          isActive: selectedIndex == 1,
+          activeColor: activeColor,
+          activeBg: activeBg,
+          inactiveColor: inactiveColor,
+          onTap: () => onTap(1),
+        ),
+      ],
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final Color activeColor;
+  final Color activeBg;
+  final Color inactiveColor;
+  final VoidCallback onTap;
+
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.activeColor,
+    required this.activeBg,
+    required this.inactiveColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isActive ? activeBg : Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Icon(icon, color: isActive ? activeColor : inactiveColor),
+              SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isActive ? activeColor : inactiveColor,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'technician_landing_screen.dart';
 import 'farm_worker_landing_screen.dart';
+import 'schedule_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -45,8 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => _roleType == 'technician'
-              ? const TechnicianLandingScreen()
-              : const FarmWorkerLandingScreen(),
+              ? TechnicianLandingScreen(token: user.token ?? '')
+              : FarmWorkerLandingScreen(token: user.token ?? ''),
         ),
       );
     } catch (e) {
@@ -66,7 +67,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Login")),
+      appBar: AppBar(
+        title: Text("Login"),
+        backgroundColor: Color(0xFF27AE60), // Green
+        elevation: 0,
+      ),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -75,7 +81,13 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               DropdownButtonFormField<String>(
                 value: _roleType,
-                decoration: InputDecoration(labelText: "Role"),
+                decoration: InputDecoration(
+                  labelText: "Role",
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF27AE60)),
+                  ),
+                  border: OutlineInputBorder(),
+                ),
                 items: [
                   DropdownMenuItem(
                       value: "technician", child: Text("Technician")),
@@ -86,29 +98,53 @@ class _LoginScreenState extends State<LoginScreen> {
                   _roleType = v!;
                 }),
               ),
+              SizedBox(height: 16),
               TextFormField(
                 controller: _loginController,
                 decoration: InputDecoration(
                   labelText: (_roleType == "technician")
                       ? "Email Address"
                       : "Phone Number",
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF27AE60)),
+                  ),
+                  border: OutlineInputBorder(),
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? "Please enter a value."
                     : null,
               ),
+              SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: "Password"),
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF27AE60)),
+                  ),
+                  border: OutlineInputBorder(),
+                ),
                 obscureText: true,
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? "Please enter a password."
                     : null,
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading ? CircularProgressIndicator() : Text("Login"),
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF27AE60), // Green
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text("Login", style: TextStyle(fontSize: 16)),
+                ),
               ),
             ],
           ),
