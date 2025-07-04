@@ -5,13 +5,22 @@ import 'technician_report_screen.dart';
 import 'schedule_page.dart';
 import '../models/schedule.dart';
 import '../services/schedule_service.dart';
+import 'package:provider/provider.dart';
+import '../models/user_model.dart';
+import 'farm_worker_detail_screen.dart';
+import 'request_list_widget.dart';
+import '../services/auth_service.dart';
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
-  const TechnicianLandingScreen({Key? key, required this.token}) : super(key: key);
+  final int technicianId;
+  const TechnicianLandingScreen(
+      {Key? key, required this.token, required this.technicianId})
+      : super(key: key);
 
   @override
-  State<TechnicianLandingScreen> createState() => _TechnicianLandingScreenState();
+  State<TechnicianLandingScreen> createState() =>
+      _TechnicianLandingScreenState();
 }
 
 class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
@@ -23,6 +32,10 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   void initState() {
     super.initState();
     _futureSchedules = _service.fetchTodaySchedules(widget.token);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<FarmWorkerProvider>(context, listen: false)
+          .fetchFarmWorkers(widget.token, widget.technicianId);
+    });
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -33,7 +46,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         children: [
           Icon(Icons.agriculture, color: Colors.white),
           SizedBox(width: 8),
-          Text('Tabacco', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text('Tabacco',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ],
       ),
       actions: [
@@ -61,13 +76,21 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             PopupMenuItem(
               value: 'profile',
               child: Row(
-                children: [Icon(Icons.settings, color: Color(0xFF27AE60)), SizedBox(width: 8), Text('Manage Profile')],
+                children: [
+                  Icon(Icons.settings, color: Color(0xFF27AE60)),
+                  SizedBox(width: 8),
+                  Text('Manage Profile')
+                ],
               ),
             ),
             PopupMenuItem(
               value: 'logout',
               child: Row(
-                children: [Icon(Icons.logout, color: Colors.red), SizedBox(width: 8), Text('Logout')],
+                children: [
+                  Icon(Icons.logout, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Logout')
+                ],
               ),
             ),
           ],
@@ -82,18 +105,77 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text('Welcome, Technician!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF222B45))),
+        Text('Welcome, Technician!',
+            style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF222B45))),
         const SizedBox(height: 16),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Today's Schedules", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2E5BFF))),
+                Text("Assigned Farm Workers",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF2E5BFF))),
+                const SizedBox(height: 8),
+                Consumer<FarmWorkerProvider>(
+                  builder: (context, provider, _) {
+                    if (provider.loading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (provider.error != null) {
+                      return Center(child: Text('Error: \\${provider.error}'));
+                    }
+                    final farmWorkers = provider.farmWorkers;
+                    if (farmWorkers.isEmpty) {
+                      return const Text('No assigned farm workers.',
+                          style: TextStyle(color: Colors.grey));
+                    }
+                    return Column(
+                      children: farmWorkers
+                          .map((fw) => Card(
+                                elevation: 1,
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: ListTile(
+                                  title: Text(
+                                      '\\${fw.firstName} \\${fw.lastName}',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  subtitle: Text(fw.phoneNumber),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FarmWorkerDetailScreen(
+                                            farmWorker: fw,
+                                            token: widget.token),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ))
+                          .toList(),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                Divider(),
+                Text("Today's Schedules",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF2E5BFF))),
                 const SizedBox(height: 8),
                 FutureBuilder<List<Schedule>>(
                   future: _futureSchedules,
@@ -106,19 +188,26 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                     }
                     final schedules = snapshot.data ?? [];
                     if (schedules.isEmpty) {
-                      return const Text('No schedules for today.', style: TextStyle(color: Colors.grey));
+                      return const Text('No schedules for today.',
+                          style: TextStyle(color: Colors.grey));
                     }
                     final preview = schedules.take(3).toList();
                     return Column(
-                      children: preview.map((s) => Card(
-                        elevation: 1,
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: ListTile(
-                          title: Text(s.title, style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('${s.description}\n${s.startTime} - ${s.endTime}'),
-                        ),
-                      )).toList(),
+                      children: preview
+                          .map((s) => Card(
+                                elevation: 1,
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: ListTile(
+                                  title: Text(s.title,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  subtitle: Text(
+                                      '${s.description}\n${s.startTime} - ${s.endTime}'),
+                                ),
+                              ))
+                          .toList(),
                     );
                   },
                 ),
@@ -130,11 +219,13 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => SchedulePage(userType: 'Technician', token: widget.token),
+                          builder: (_) => SchedulePage(
+                              userType: 'Technician', token: widget.token),
                         ),
                       );
                     },
-                    child: Text('View All', style: TextStyle(color: Color(0xFF2E5BFF))),
+                    child: Text('View All',
+                        style: TextStyle(color: Color(0xFF2E5BFF))),
                   ),
                 ),
               ],
@@ -150,14 +241,63 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   Widget _buildNotifications() {
-    return Center(
-      child: Text('Notifications', style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
+    return FutureBuilder<List<NotificationModel>>(
+      future: NotificationService().getNotifications(widget.token),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        final notifications = snapshot.data ?? [];
+        if (notifications.isEmpty) {
+          return Center(
+              child: Text('No notifications found.',
+                  style: TextStyle(color: Colors.grey)));
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: notifications.length,
+          separatorBuilder: (_, __) => SizedBox(height: 14),
+          itemBuilder: (context, i) {
+            final n = notifications[i];
+            return Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(n.title,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: n.title.contains('Rejected')
+                                ? Colors.red
+                                : Colors.green)),
+                    SizedBox(height: 8),
+                    Text(n.body, style: TextStyle(fontSize: 15)),
+                    SizedBox(height: 8),
+                    Text('Received: ${n.createdAt.toLocal()}',
+                        style:
+                            TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildReports() {
     return Center(
-      child: Text('Reports', style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
+      child: Text('Reports',
+          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
     );
   }
 
@@ -237,7 +377,32 @@ class ManageProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text('Manage Profile', style: TextStyle(fontSize: 20, color: Color(0xFF27AE60))),
+      child: Text('Manage Profile',
+          style: TextStyle(fontSize: 20, color: Color(0xFF27AE60))),
     );
+  }
+}
+
+class FarmWorkerProvider with ChangeNotifier {
+  List<FarmWorker> _farmWorkers = [];
+  bool _loading = false;
+  String? _error;
+
+  List<FarmWorker> get farmWorkers => _farmWorkers;
+  bool get loading => _loading;
+  String? get error => _error;
+
+  Future<void> fetchFarmWorkers(String token, int technicianId) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final service = FarmWorkerService();
+      _farmWorkers = await service.getAssignedFarmWorkers(token, technicianId);
+    } catch (e) {
+      _error = e.toString();
+    }
+    _loading = false;
+    notifyListeners();
   }
 }

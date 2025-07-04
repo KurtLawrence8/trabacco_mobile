@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'technician_landing_screen.dart';
 import 'farm_worker_landing_screen.dart';
 import 'schedule_page.dart';
+import 'technician_landing_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -43,10 +43,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       // Navigate to appropriate landing page based on role
+      await Future.delayed(
+          Duration(milliseconds: 400)); // Ensure storage and provider are ready
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => _roleType == 'technician'
-              ? TechnicianLandingScreen(token: user.token ?? '')
+              ? TechnicianLandingScreen(
+                  token: user.token ?? '', technicianId: user.id)
               : FarmWorkerLandingScreen(token: user.token ?? ''),
         ),
       );

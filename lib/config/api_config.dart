@@ -30,24 +30,24 @@ class ApiConfig {
   }
 
   // Auth endpoints
-  static const String me = '/api/me';
+  static const String me = '/me';
 
   // Technician endpoints
-  static const String technicians = '/api/technicians';
-  static const String technicianTrashed = '/api/technicians/trashed';
-  static const String technicianRestore = '/api/technicians/{id}/restore';
-  static const String technicianForceDelete = '/api/technicians/{id}/force';
+  static const String technicians = '/technicians';
+  static const String technicianTrashed = '/technicians/trashed';
+  static const String technicianRestore = '/technicians/{id}/restore';
+  static const String technicianForceDelete = '/technicians/{id}/force';
 
   // Farm Worker endpoints
-  static const String farmWorkers = '/api/farm-workers';
-  static const String farmWorkerTrashed = '/api/farm-workers/trashed';
-  static const String farmWorkerRestore = '/api/farm-workers/{id}/restore';
-  static const String farmWorkerForceDelete = '/api/farm-workers/{id}/force';
+  static const String farmWorkers = '/farm-workers';
+  static const String farmWorkerTrashed = '/farm-workers/trashed';
+  static const String farmWorkerRestore = '/farm-workers/{id}/restore';
+  static const String farmWorkerForceDelete = '/farm-workers/{id}/force';
   // Schedule endpoints
-  static const String schedules = '/api/schedules';
-  static const String scheduleTrashed = '/api/schedules/trashed';
-  static const String scheduleRestore = '/api/schedules/{id}/restore';
-  static const String scheduleForceDelete = '/api/schedules/{id}/force';
+  static const String schedules = '/schedules';
+  static const String scheduleTrashed = '/schedules/trashed';
+  static const String scheduleRestore = '/schedules/{id}/restore';
+  static const String scheduleForceDelete = '/schedules/{id}/force';
 
   // Helper method to get full URL
   static String getUrl(String endpoint) {
@@ -69,12 +69,13 @@ class SidebarMenu extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTap;
 
-  const SidebarMenu({super.key, required this.selectedIndex, required this.onTap});
+  const SidebarMenu(
+      {super.key, required this.selectedIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final activeColor = Color(0xFF219653); // Green
-    final activeBg = Color(0xFFEAFBF3);    // Light green
+    final activeBg = Color(0xFFEAFBF3); // Light green
     final inactiveColor = Color(0xFF6D758F);
 
     return Column(

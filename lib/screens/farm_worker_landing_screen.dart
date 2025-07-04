@@ -4,24 +4,38 @@ import '../models/schedule.dart';
 import '../services/schedule_service.dart';
 import 'login_screen.dart';
 import '../services/auth_service.dart';
+import '../models/user_model.dart';
 
 class FarmWorkerLandingScreen extends StatefulWidget {
   final String token;
-  const FarmWorkerLandingScreen({Key? key, required this.token}) : super(key: key);
+  const FarmWorkerLandingScreen({Key? key, required this.token})
+      : super(key: key);
 
   @override
-  State<FarmWorkerLandingScreen> createState() => _FarmWorkerLandingScreenState();
+  State<FarmWorkerLandingScreen> createState() =>
+      _FarmWorkerLandingScreenState();
 }
 
 class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   int _selectedIndex = 0;
   late Future<List<Schedule>> _futureSchedules;
   final ScheduleService _service = ScheduleService();
+  User? _user;
 
   @override
   void initState() {
     super.initState();
     _futureSchedules = _service.fetchTodaySchedules(widget.token);
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await AuthService().getCurrentUser();
+    if (mounted) {
+      setState(() {
+        _user = user;
+      });
+    }
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -32,7 +46,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         children: [
           Icon(Icons.agriculture, color: Colors.white),
           SizedBox(width: 8),
-          Text('Tabacco', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text('Tabacco',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ],
       ),
       actions: [
@@ -60,13 +76,21 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             PopupMenuItem(
               value: 'profile',
               child: Row(
-                children: [Icon(Icons.settings, color: Color(0xFF27AE60)), SizedBox(width: 8), Text('Manage Profile')],
+                children: [
+                  Icon(Icons.settings, color: Color(0xFF27AE60)),
+                  SizedBox(width: 8),
+                  Text('Manage Profile')
+                ],
               ),
             ),
             PopupMenuItem(
               value: 'logout',
               child: Row(
-                children: [Icon(Icons.logout, color: Colors.red), SizedBox(width: 8), Text('Logout')],
+                children: [
+                  Icon(Icons.logout, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Logout')
+                ],
               ),
             ),
           ],
@@ -81,18 +105,27 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text('Welcome, Farm Worker!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF222B45))),
+        Text('Welcome, Farm Worker!',
+            style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF222B45))),
         const SizedBox(height: 16),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Today's Schedules", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2E5BFF))),
+                Text("Today's Schedules",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF2E5BFF))),
                 const SizedBox(height: 8),
                 FutureBuilder<List<Schedule>>(
                   future: _futureSchedules,
@@ -105,19 +138,26 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                     }
                     final schedules = snapshot.data ?? [];
                     if (schedules.isEmpty) {
-                      return const Text('No schedules for today.', style: TextStyle(color: Colors.grey));
+                      return const Text('No schedules for today.',
+                          style: TextStyle(color: Colors.grey));
                     }
                     final preview = schedules.take(3).toList();
                     return Column(
-                      children: preview.map((s) => Card(
-                        elevation: 1,
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: ListTile(
-                          title: Text(s.title, style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('${s.description}\n${s.startTime} - ${s.endTime}'),
-                        ),
-                      )).toList(),
+                      children: preview
+                          .map((s) => Card(
+                                elevation: 1,
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: ListTile(
+                                  title: Text(s.title,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  subtitle: Text(
+                                      '${s.description}\n${s.startTime} - ${s.endTime}'),
+                                ),
+                              ))
+                          .toList(),
                     );
                   },
                 ),
@@ -129,17 +169,65 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => SchedulePage(userType: 'Farmer', token: widget.token),
+                          builder: (_) => SchedulePage(
+                              userType: 'Farmer', token: widget.token),
                         ),
                       );
                     },
-                    child: Text('View All', style: TextStyle(color: Color(0xFF2E5BFF))),
+                    child: Text('View All',
+                        style: TextStyle(color: Color(0xFF2E5BFF))),
                   ),
                 ),
               ],
             ),
           ),
         ),
+        const SizedBox(height: 20),
+        if (_user != null)
+          Card(
+            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            color: Color(0xFFF8F9FA),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.account_circle,
+                          size: 40, color: Color(0xFF27AE60)),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_user!.name,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Color(0xFF222B45))),
+                          if (_user!.email != null)
+                            Text(_user!.email!,
+                                style: TextStyle(color: Colors.grey[700])),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  if (_user!.roles != null && _user!.roles!.isNotEmpty)
+                    Row(
+                      children: [
+                        Icon(Icons.badge, size: 18, color: Color(0xFF27AE60)),
+                        SizedBox(width: 6),
+                        Text(_user!.roles!.join(', '),
+                            style: TextStyle(color: Color(0xFF27AE60))),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -150,13 +238,15 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 
   Widget _buildNotifications() {
     return Center(
-      child: Text('Notifications', style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
+      child: Text('Notifications',
+          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
     );
   }
 
   Widget _buildReports() {
     return Center(
-      child: Text('Reports', style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
+      child: Text('Reports',
+          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
     );
   }
 
@@ -231,12 +321,13 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   }
 }
 
-// Placeholder for ManageProfileScreen
+// PLACEHOLDER SA MANAGEPROFILESCREEN
 class ManageProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text('Manage Profile', style: TextStyle(fontSize: 20, color: Color(0xFF27AE60))),
+      child: Text('Manage Profile',
+          style: TextStyle(fontSize: 20, color: Color(0xFF27AE60))),
     );
   }
 }
