@@ -25,7 +25,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   @override
   void initState() {
     super.initState();
-    _futureSchedules = _service.fetchTodaySchedules(widget.token);
     _loadUser();
   }
 
@@ -35,6 +34,12 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
       setState(() {
         _user = user;
       });
+      if (user != null) {
+        // Fetch schedules for this farm worker
+        setState(() {
+          _futureSchedules = _service.fetchSchedulesForFarmWorker(widget.token, user.id);
+        });
+      }
     }
   }
 
@@ -134,30 +139,22 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
-                      return Center(child: Text('Error: \\${snapshot.error}'));
+                      return Center(child: Text('Error: ${snapshot.error}'));
                     }
                     final schedules = snapshot.data ?? [];
                     if (schedules.isEmpty) {
-                      return const Text('No schedules for today.',
-                          style: TextStyle(color: Colors.grey));
+                      return const Text('No schedules found.', style: TextStyle(color: Colors.grey));
                     }
-                    final preview = schedules.take(3).toList();
                     return Column(
-                      children: preview
-                          .map((s) => Card(
-                                elevation: 1,
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: ListTile(
-                                  title: Text(s.title,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  subtitle: Text(
-                                      '${s.description}\n${s.startTime} - ${s.endTime}'),
-                                ),
-                              ))
-                          .toList(),
+                      children: schedules.map((s) => Card(
+                        elevation: 1,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          title: Text(s.title, style: TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text('Date: ${s.dateScheduled.toString().split(' ')[0]}\nDescription: ${s.description}\nStatus: ${s.status}'),
+                        ),
+                      )).toList(),
                     );
                   },
                 ),

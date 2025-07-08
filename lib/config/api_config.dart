@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../models/schedule.dart';
 
 class ApiConfig {
   // Base URL for the Laravel backend
@@ -161,5 +164,27 @@ class _SidebarItem extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<List<Schedule>> fetchSchedulesForFarmWorker(String token, int farmWorkerId) async {
+  final today = DateTime.now();
+  final response = await http.get(
+    Uri.parse('${ApiConfig.baseUrl}/schedules?farm_worker_id=$farmWorkerId'),
+    headers: ApiConfig.getHeaders(token: token),
+  );
+  if (response.statusCode == 200) {
+    final decoded = json.decode(response.body);
+    List data = decoded is List ? decoded : decoded['data'];
+    return data
+        .map((json) => Schedule.fromJson(json))
+        .where((s) =>
+            s.dateScheduled.year == today.year &&
+            s.dateScheduled.month == today.month &&
+            s.dateScheduled.day == today.day)
+        .toList();
+  } else {
+    print('Error fetching schedules: ${response.body}');
+    throw Exception('Failed to load schedules');
   }
 }

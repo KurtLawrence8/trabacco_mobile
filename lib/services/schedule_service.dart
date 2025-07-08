@@ -25,6 +25,24 @@ class ScheduleService {
     }
   }
 
+  Future<List<Schedule>> fetchSchedulesForFarmWorker(String token, int farmWorkerId) async {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/farm-workers/$farmWorkerId/schedules'),
+      headers: ApiConfig.getHeaders(token: token),
+    );
+    print('URL: ${ApiConfig.baseUrl}/farm-workers/$farmWorkerId/schedules');
+    print('Headers: ${ApiConfig.getHeaders(token: token)}');
+    print('Response: ${response.body}');
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      List data = (decoded['schedules'] ?? []) as List;
+      return data.map((json) => Schedule.fromJson(json)).toList();
+    } else {
+      print('Error fetching schedules: \\${response.body}');
+      throw Exception('Failed to load schedules');
+    }
+  }
+
   Future<void> updateScheduleStatus(int id, String status, String token) async {
     final response = await http.put(
       Uri.parse('${ApiConfig.baseUrl}/schedules/$id'),

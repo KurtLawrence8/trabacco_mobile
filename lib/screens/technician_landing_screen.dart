@@ -200,11 +200,32 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
-                                  title: Text(s.title,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  subtitle: Text(
-                                      '${s.description}\n${s.startTime} - ${s.endTime}'),
+                                  title: Text(
+                                    s.title,
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Date: \\${s.dateScheduled.toLocal().toString().split(' ')[0]}'),
+                                      Text('Activity: \\${s.title}'),
+                                      Text('Status: \\${s.status}'),
+                                    ],
+                                  ),
+                                  trailing: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: s.status == 'Completed' ? Colors.green : Colors.orange,
+                                    ),
+                                    onPressed: s.status == 'Completed'
+                                        ? null
+                                        : () async {
+                                            await _service.updateScheduleStatus(s.id, 'Completed', widget.token);
+                                            setState(() {
+                                              _futureSchedules = _service.fetchTodaySchedules(widget.token);
+                                            });
+                                          },
+                                    child: Text(s.status == 'Completed' ? 'Done' : 'Mark as Done'),
+                                  ),
                                 ),
                               ))
                           .toList(),
