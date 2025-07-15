@@ -33,13 +33,11 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     if (mounted) {
       setState(() {
         _user = user;
+        if (_user != null) {
+          _futureSchedules =
+              _service.fetchSchedulesForFarmWorker(_user!.id, widget.token);
+        }
       });
-      if (user != null) {
-        // Fetch schedules for this farm worker
-        setState(() {
-          _futureSchedules = _service.fetchSchedulesForFarmWorker(widget.token, user.id);
-        });
-      }
     }
   }
 
@@ -139,22 +137,46 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      return Center(child: Text('Error: \\${snapshot.error}'));
                     }
                     final schedules = snapshot.data ?? [];
                     if (schedules.isEmpty) {
-                      return const Text('No schedules found.', style: TextStyle(color: Colors.grey));
+                      return const Text('No schedules found.',
+                          style: TextStyle(color: Colors.grey));
                     }
+                    final preview = schedules.take(3).toList();
                     return Column(
-                      children: schedules.map((s) => Card(
-                        elevation: 1,
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        child: ListTile(
-                          title: Text(s.title, style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('Date: ${s.dateScheduled.toString().split(' ')[0]}\nDescription: ${s.description}\nStatus: ${s.status}'),
-                        ),
-                      )).toList(),
+                      children: preview
+                          .map((s) => Card(
+                                elevation: 1,
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: ListTile(
+                                  title: Text(s.activity,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (s.date != null)
+                                        Text(
+                                            'Date: \\${s.date!.toLocal().toString().split(' ')[0]}'),
+                                      if (s.remarks != null &&
+                                          s.remarks!.isNotEmpty)
+                                        Text('Remarks: \\${s.remarks}'),
+                                      if (s.numLaborers != null)
+                                        Text('Laborers: \\${s.numLaborers}'),
+                                      if (s.unit != null && s.unit!.isNotEmpty)
+                                        Text('Unit: \\${s.unit}'),
+                                      if (s.budget != null)
+                                        Text('Budget: \\${s.budget}'),
+                                    ],
+                                  ),
+                                ),
+                              ))
+                          .toList(),
                     );
                   },
                 ),
@@ -163,13 +185,19 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SchedulePage(
-                              userType: 'Farmer', token: widget.token),
-                        ),
-                      );
+                      if (_user != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SchedulePage(
+                              userType: 'Farmer',
+                              token: widget.token,
+                              farmWorkerId: _user!.id,
+                              farmWorkerName: _user!.name,
+                            ),
+                          ),
+                        );
+                      }
                     },
                     child: Text('View All',
                         style: TextStyle(color: Color(0xFF2E5BFF))),
@@ -230,7 +258,16 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   }
 
   Widget _buildSchedule() {
-    return SchedulePage(userType: 'Farmer', token: widget.token);
+    if (_user != null && _user!.id != 0) {
+      return SchedulePage(
+        userType: 'Farmer',
+        token: widget.token,
+        farmWorkerId: _user!.id,
+        farmWorkerName: _user!.name,
+      );
+    } else {
+      return Center(child: Text('Please log in as a valid farm worker.'));
+    }
   }
 
   Widget _buildNotifications() {

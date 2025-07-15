@@ -16,11 +16,12 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
   bool _isLoading = false;
 
   // Form controllers
-  final TextEditingController _accomplishmentsController = TextEditingController();
+  final TextEditingController _accomplishmentsController =
+      TextEditingController();
   final TextEditingController _issuesController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _diseaseTypeController = TextEditingController();
-  
+
   // Selected values
   String _selectedFarmId = '';
   String _diseaseDetected = 'None';
@@ -76,7 +77,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
         'accomplishments': _accomplishmentsController.text,
         'issues_observed': _issuesController.text,
         'disease_detected': _diseaseDetected,
-        'disease_type': _diseaseDetected == 'Yes' ? _diseaseTypeController.text : null,
+        'disease_type':
+            _diseaseDetected == 'Yes' ? _diseaseTypeController.text : null,
         'description': _descriptionController.text,
         'timestamp': _selectedDate.toIso8601String(),
       };
@@ -227,7 +229,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    if (_diseaseDetected == 'Yes' && (value == null || value.isEmpty)) {
+                    if (_diseaseDetected == 'Yes' &&
+                        (value == null || value.isEmpty)) {
                       return 'Please specify the disease type';
                     }
                     return null;
@@ -277,4 +280,4 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
     _diseaseTypeController.dispose();
     super.dispose();
   }
-} 
+}

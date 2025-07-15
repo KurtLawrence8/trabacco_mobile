@@ -27,11 +27,14 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   int _selectedIndex = 0;
   late Future<List<Schedule>> _futureSchedules;
   final ScheduleService _service = ScheduleService();
+  // Add a new future for farm workers with today's schedules
+  late Future<List<Map<String, dynamic>>> _futureFarmWorkersWithTodaySchedules;
 
   @override
   void initState() {
     super.initState();
-    _futureSchedules = _service.fetchTodaySchedules(widget.token);
+    // _futureSchedules = _service.fetchTodaySchedules(widget.token); // Removed
+    // _futureFarmWorkersWithTodaySchedules = _service.fetchFarmWorkersWithTodaySchedules(widget.token); // Only use if backend is implemented
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FarmWorkerProvider>(context, listen: false)
           .fetchFarmWorkers(widget.token, widget.technicianId);
@@ -148,8 +151,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
-                                  title: Text(
-                                      '\\${fw.firstName} \\${fw.lastName}',
+                                  title: Text("${fw.firstName} ${fw.lastName}",
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   subtitle: Text(fw.phoneNumber),
@@ -177,55 +179,45 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         fontSize: 18,
                         color: Color(0xFF2E5BFF))),
                 const SizedBox(height: 8),
-                FutureBuilder<List<Schedule>>(
-                  future: _futureSchedules,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                Consumer<FarmWorkerProvider>(
+                  builder: (context, provider, _) {
+                    if (provider.loading) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: \\${snapshot.error}'));
+                    if (provider.error != null) {
+                      return Center(child: Text('Error: \\${provider.error}'));
                     }
-                    final schedules = snapshot.data ?? [];
-                    if (schedules.isEmpty) {
-                      return const Text('No schedules for today.',
+                    final farmWorkers = provider.farmWorkers;
+                    if (farmWorkers.isEmpty) {
+                      return const Text('No assigned farm workers.',
                           style: TextStyle(color: Colors.grey));
                     }
-                    final preview = schedules.take(3).toList();
                     return Column(
-                      children: preview
-                          .map((s) => Card(
+                      children: farmWorkers
+                          .map((fw) => Card(
                                 elevation: 1,
                                 margin: const EdgeInsets.symmetric(vertical: 6),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
-                                  title: Text(
-                                    s.title,
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Date: \\${s.dateScheduled.toLocal().toString().split(' ')[0]}'),
-                                      Text('Activity: \\${s.title}'),
-                                      Text('Status: \\${s.status}'),
-                                    ],
-                                  ),
-                                  trailing: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: s.status == 'Completed' ? Colors.green : Colors.orange,
-                                    ),
-                                    onPressed: s.status == 'Completed'
-                                        ? null
-                                        : () async {
-                                            await _service.updateScheduleStatus(s.id, 'Completed', widget.token);
-                                            setState(() {
-                                              _futureSchedules = _service.fetchTodaySchedules(widget.token);
-                                            });
-                                          },
-                                    child: Text(s.status == 'Completed' ? 'Done' : 'Mark as Done'),
-                                  ),
+                                  title: Text("${fw.firstName} ${fw.lastName}",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  subtitle: Text(fw.phoneNumber),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => SchedulePage(
+                                          userType: 'Technician',
+                                          token: widget.token,
+                                          farmWorkerId: fw.id,
+                                          farmWorkerName:
+                                              "${fw.firstName} ${fw.lastName}",
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ))
                           .toList(),
@@ -237,11 +229,15 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
+                      final provider = Provider.of<FarmWorkerProvider>(context,
+                          listen: false);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => SchedulePage(
-                              userType: 'Technician', token: widget.token),
+                          builder: (_) => AllFarmWorkerSchedulesPage(
+                            farmWorkers: provider.farmWorkers,
+                            token: widget.token,
+                          ),
                         ),
                       );
                     },
@@ -258,7 +254,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   Widget _buildSchedule() {
-    return SchedulePage(userType: 'Technician', token: widget.token);
+    // Show a message instead of calling with ID 0
+    return Center(
+        child: Text('Please select a farm worker to view schedules.'));
   }
 
   Widget _buildNotifications() {
@@ -425,5 +423,50 @@ class FarmWorkerProvider with ChangeNotifier {
     }
     _loading = false;
     notifyListeners();
+  }
+}
+
+class AllFarmWorkerSchedulesPage extends StatelessWidget {
+  final List farmWorkers;
+  final String token;
+  const AllFarmWorkerSchedulesPage(
+      {Key? key, required this.farmWorkers, required this.token})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('All Farm Worker Schedules')),
+      body: ListView.builder(
+        itemCount: farmWorkers.length,
+        itemBuilder: (context, index) {
+          final fw = farmWorkers[index];
+          return Card(
+            elevation: 1,
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ListTile(
+              title: Text("${fw.firstName} ${fw.lastName}",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(fw.phoneNumber),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SchedulePage(
+                      userType: 'Technician',
+                      token: token,
+                      farmWorkerId: fw.id,
+                      farmWorkerName: "${fw.firstName} ${fw.lastName}",
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 }
