@@ -57,7 +57,7 @@ class _RequestScreenState extends State<RequestScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Request submitted!')));
+          .showSnackBar(const SnackBar(content: Text('Request submitted!')));
     } catch (e) {
       String errorMsg = e.toString();
       if (errorMsg.contains(
@@ -75,7 +75,8 @@ class _RequestScreenState extends State<RequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text('Create Request'), backgroundColor: Color(0xFF27AE60)),
+          title: const Text('Create Request'),
+          backgroundColor: const Color(0xFF27AE60)),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -85,13 +86,13 @@ class _RequestScreenState extends State<RequestScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Request Type',
+                  const Text('Request Type',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
-                      color: Color(0xFFEAFBF3),
+                      color: const Color(0xFFEAFBF3),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -101,10 +102,10 @@ class _RequestScreenState extends State<RequestScreen> {
                             onTap: () =>
                                 setState(() => _requestType = 'cash_advance'),
                             child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: _requestType == 'cash_advance'
-                                    ? Color(0xFF27AE60)
+                                    ? const Color(0xFF27AE60)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -115,14 +116,14 @@ class _RequestScreenState extends State<RequestScreen> {
                                     Icon(Icons.attach_money,
                                         color: _requestType == 'cash_advance'
                                             ? Colors.white
-                                            : Color(0xFF27AE60)),
-                                    SizedBox(width: 6),
+                                            : const Color(0xFF27AE60)),
+                                    const SizedBox(width: 6),
                                     Text('Cash Advance',
                                         style: TextStyle(
                                             color:
                                                 _requestType == 'cash_advance'
                                                     ? Colors.white
-                                                    : Color(0xFF27AE60),
+                                                    : const Color(0xFF27AE60),
                                             fontWeight: FontWeight.bold)),
                                   ],
                                 ),
@@ -135,10 +136,10 @@ class _RequestScreenState extends State<RequestScreen> {
                             onTap: () =>
                                 setState(() => _requestType = 'supply'),
                             child: Container(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: _requestType == 'supply'
-                                    ? Color(0xFF27AE60)
+                                    ? const Color(0xFF27AE60)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -149,13 +150,13 @@ class _RequestScreenState extends State<RequestScreen> {
                                     Icon(Icons.inventory_2,
                                         color: _requestType == 'supply'
                                             ? Colors.white
-                                            : Color(0xFF27AE60)),
-                                    SizedBox(width: 6),
+                                            : const Color(0xFF27AE60)),
+                                    const SizedBox(width: 6),
                                     Text('Supply',
                                         style: TextStyle(
                                             color: _requestType == 'supply'
                                                 ? Colors.white
-                                                : Color(0xFF27AE60),
+                                                : const Color(0xFF27AE60),
                                             fontWeight: FontWeight.bold)),
                                   ],
                                 ),
@@ -166,29 +167,30 @@ class _RequestScreenState extends State<RequestScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   if (_requestType == 'cash_advance') ...[
                     TextFormField(
                       controller: _amountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Amount',
-                        prefixIcon: Icon(Icons.attach_money),
+                        prefixIcon: const Icon(Icons.attach_money),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                       validator: (val) {
                         if (val == null || val.isEmpty) return 'Enter amount';
-                        if (double.tryParse(val) == null)
+                        if (double.tryParse(val) == null) {
                           return 'Invalid amount';
+                        }
                         return null;
                       },
                     ),
-                    SizedBox(height: 18),
+                    const SizedBox(height: 18),
                   ],
                   if (_requestType == 'supply') ...[
                     _loadingSupplies
-                        ? Center(child: CircularProgressIndicator())
+                        ? const Center(child: CircularProgressIndicator())
                         : DropdownButtonFormField<int>(
                             value: _selectedSupplyId,
                             items: _supplies
@@ -202,7 +204,7 @@ class _RequestScreenState extends State<RequestScreen> {
                                 setState(() => _selectedSupplyId = val),
                             decoration: InputDecoration(
                               labelText: 'Select Supply',
-                              prefixIcon: Icon(Icons.inventory_2),
+                              prefixIcon: const Icon(Icons.inventory_2),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
                             ),
@@ -211,31 +213,32 @@ class _RequestScreenState extends State<RequestScreen> {
                               return null;
                             },
                           ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: _amountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Quantity',
-                        prefixIcon: Icon(Icons.numbers),
+                        prefixIcon: const Icon(Icons.numbers),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                       validator: (val) {
                         if (val == null || val.isEmpty) return 'Enter quantity';
                         final num = double.tryParse(val);
-                        if (num == null || num <= 0)
+                        if (num == null || num <= 0) {
                           return 'Enter a valid quantity (>0)';
+                        }
                         return null;
                       },
                     ),
-                    SizedBox(height: 18),
+                    const SizedBox(height: 18),
                   ],
                   TextFormField(
                     controller: _reasonController,
                     decoration: InputDecoration(
                       labelText: 'Reason',
-                      prefixIcon: Icon(Icons.edit_note),
+                      prefixIcon: const Icon(Icons.edit_note),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10)),
                     ),
@@ -243,20 +246,20 @@ class _RequestScreenState extends State<RequestScreen> {
                         val == null || val.isEmpty ? 'Enter reason' : null,
                     maxLines: 2,
                   ),
-                  SizedBox(height: 28),
+                  const SizedBox(height: 28),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _submit,
-                      icon: Icon(Icons.send),
-                      label: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      icon: const Icon(Icons.send),
+                      label: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12.0),
                         child: Text('Submit Request',
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF27AE60),
+                        backgroundColor: const Color(0xFF27AE60),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),

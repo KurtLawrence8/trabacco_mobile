@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Maps Test</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Maps API Test</h1>
+    <div id="map"></div>
+    
+    <script>
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 16.8798, lng: 121.7740 },
+                zoom: 10,
+            });
+            
+            // Add a test marker
+            new google.maps.Marker({
+                position: { lat: 16.8798, lng: 121.7740 },
+                map: map,
+                title: "Test Farm"
+            });
+        }
+    </script>
+    
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqeh2FJ10ybg0JGxTG5PF4YyvKTSvJmIg&callback=initMap"></script>
+</body>
+</html> 

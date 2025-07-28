@@ -44,15 +44,15 @@ class _RequestListWidgetState extends State<RequestListWidget> {
       future: _requestsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No requests found.'));
+          return const Center(child: Text('No requests found.'));
         }
         final requests = snapshot.data!;
         return ListView.separated(
           itemCount: requests.length,
-          separatorBuilder: (_, __) => SizedBox(height: 14),
+          separatorBuilder: (_, __) => const SizedBox(height: 14),
           itemBuilder: (context, i) {
             final req = requests[i];
             final isPending =
@@ -77,18 +77,18 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                               : Colors.blue,
                           size: 28,
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Text(
                           req.type == 'cash_advance'
                               ? 'Cash Advance'
                               : 'Supply',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        Spacer(),
+                        const Spacer(),
                         Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: req.status == 'approved'
                                 ? Colors.green[100]
@@ -111,21 +111,22 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                         ),
                         if (isPending)
                           IconButton(
-                            icon: Icon(Icons.edit, color: Color(0xFF27AE60)),
+                            icon: const Icon(Icons.edit,
+                                color: Color(0xFF27AE60)),
                             tooltip: 'Edit',
                             onPressed: () => _editRequest(req),
                           ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     if (req.type == 'cash_advance' && req.amount != null)
                       Row(
                         children: [
                           Icon(Icons.payments,
                               size: 18, color: Colors.grey[600]),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text('Amount: ₱${req.amount!.toStringAsFixed(2)}',
-                              style: TextStyle(fontSize: 16)),
+                              style: const TextStyle(fontSize: 16)),
                         ],
                       ),
                     if (req.type == 'supply' && req.supplyName != null)
@@ -133,49 +134,49 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                         children: [
                           Icon(Icons.inventory,
                               size: 18, color: Colors.grey[600]),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text('Supply: ${req.supplyName}',
-                              style: TextStyle(fontSize: 16)),
+                              style: const TextStyle(fontSize: 16)),
                         ],
                       ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(Icons.edit_note,
                             size: 18, color: Colors.grey[600]),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Expanded(
                             child: Text(req.reason ?? '-',
-                                style: TextStyle(fontSize: 15))),
+                                style: const TextStyle(fontSize: 15))),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(Icons.calendar_today,
                             size: 16, color: Colors.grey[500]),
-                        SizedBox(width: 6),
-                        Text(req.createdAt?.toString() ?? '',
+                        const SizedBox(width: 6),
+                        Text(req.createdAt.toString() ?? '',
                             style: TextStyle(
                                 fontSize: 13, color: Colors.grey[700])),
                       ],
                     ),
                     if (req.adminNote != null &&
                         req.adminNote!.trim().isNotEmpty) ...[
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.blue[50],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.info_outline,
+                            const Icon(Icons.info_outline,
                                 color: Colors.blue, size: 18),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 req.adminNote!,
@@ -254,7 +255,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       if (!mounted) return;
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Request updated!')));
+          .showSnackBar(const SnackBar(content: Text('Request updated!')));
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Failed: $e')));
@@ -271,26 +272,26 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Edit Request',
+            const Text('Edit Request',
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF27AE60))),
-            SizedBox(height: 18),
+            const SizedBox(height: 18),
             if (widget.request.type == 'cash_advance')
               TextFormField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Amount',
-                  prefixIcon: Icon(Icons.attach_money),
+                  prefixIcon: const Icon(Icons.attach_money),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             if (widget.request.type == 'supply')
               _loadingSupplies
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : DropdownButtonFormField<int>(
                       value: _selectedSupplyId,
                       isExpanded: true,
@@ -313,23 +314,23 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                           setState(() => _selectedSupplyId = val),
                       decoration: InputDecoration(
                         labelText: 'Select Supply',
-                        prefixIcon: Icon(Icons.inventory_2),
+                        prefixIcon: const Icon(Icons.inventory_2),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _reasonController,
               decoration: InputDecoration(
                 labelText: 'Reason',
-                prefixIcon: Icon(Icons.edit_note),
+                prefixIcon: const Icon(Icons.edit_note),
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
               maxLines: 2,
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -338,16 +339,16 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                   child:
                       Text('Cancel', style: TextStyle(color: Colors.grey[700])),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF27AE60),
+                    backgroundColor: const Color(0xFF27AE60),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: Text('Save',
+                  child: const Text('Save',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],

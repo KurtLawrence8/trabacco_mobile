@@ -69,9 +69,9 @@ class SidebarMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = Color(0xFF219653); // Green
-    final activeBg = Color(0xFFEAFBF3); // Light green
-    final inactiveColor = Color(0xFF6D758F);
+    const activeColor = Color(0xFF219653); // Green
+    const activeBg = Color(0xFFEAFBF3); // Light green
+    const inactiveColor = Color(0xFF6D758F);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ class _SidebarItem extends StatelessWidget {
           child: Row(
             children: [
               Icon(icon, color: isActive ? activeColor : inactiveColor),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
                 label,
                 style: TextStyle(

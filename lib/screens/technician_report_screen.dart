@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/report_service.dart';
-import '../models/report_model.dart';
 
 class TechnicianReportScreen extends StatefulWidget {
   const TechnicianReportScreen({Key? key}) : super(key: key);

@@ -150,11 +150,8 @@ class FarmWorkerService {
         headers: ApiConfig.getHeaders(token: token));
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
-      // Filter farm workers by technicianId
-      return data
-          .map((e) => FarmWorker.fromJson(e))
-          .where((fw) => fw.technicianId == technicianId)
-          .toList();
+      // The backend now returns only the technician's assigned farm workers
+      return data.map((e) => FarmWorker.fromJson(e)).toList();
     } else {
       print('Status: ${response.statusCode}');
       print('Body: ${response.body}');

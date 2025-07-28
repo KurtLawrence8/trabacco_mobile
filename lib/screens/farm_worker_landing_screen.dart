@@ -43,9 +43,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Color(0xFF27AE60),
+      backgroundColor: const Color(0xFF27AE60),
       elevation: 2,
-      title: Row(
+      title: const Row(
         children: [
           Icon(Icons.agriculture, color: Colors.white),
           SizedBox(width: 8),
@@ -56,7 +56,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
       ),
       actions: [
         PopupMenuButton<String>(
-          icon: CircleAvatar(
+          icon: const CircleAvatar(
             backgroundColor: Colors.white,
             child: Icon(Icons.person, color: Color(0xFF27AE60)),
           ),
@@ -76,7 +76,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             }
           },
           itemBuilder: (context) => [
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'profile',
               child: Row(
                 children: [
@@ -86,7 +86,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                 ],
               ),
             ),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'logout',
               child: Row(
                 children: [
@@ -98,9 +98,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             ),
           ],
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
       ],
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
     );
   }
 
@@ -108,7 +108,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text('Welcome, Farm Worker!',
+        const Text('Welcome, Farm Worker!',
             style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -124,7 +124,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Today's Schedules",
+                const Text("Today's Schedules",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -154,7 +154,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                                     borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
                                   title: Text(s.activity,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   subtitle: Column(
                                     crossAxisAlignment:
@@ -199,7 +199,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                         );
                       }
                     },
-                    child: Text('View All',
+                    child: const Text('View All',
                         style: TextStyle(color: Color(0xFF2E5BFF))),
                   ),
                 ),
@@ -213,7 +213,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             elevation: 2,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            color: Color(0xFFF8F9FA),
+            color: const Color(0xFFF8F9FA),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -221,14 +221,14 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.account_circle,
+                      const Icon(Icons.account_circle,
                           size: 40, color: Color(0xFF27AE60)),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(_user!.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
                                   color: Color(0xFF222B45))),
@@ -239,14 +239,15 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   if (_user!.roles != null && _user!.roles!.isNotEmpty)
                     Row(
                       children: [
-                        Icon(Icons.badge, size: 18, color: Color(0xFF27AE60)),
-                        SizedBox(width: 6),
+                        const Icon(Icons.badge,
+                            size: 18, color: Color(0xFF27AE60)),
+                        const SizedBox(width: 6),
                         Text(_user!.roles!.join(', '),
-                            style: TextStyle(color: Color(0xFF27AE60))),
+                            style: const TextStyle(color: Color(0xFF27AE60))),
                       ],
                     ),
                 ],
@@ -266,19 +267,19 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         farmWorkerName: _user!.name,
       );
     } else {
-      return Center(child: Text('Please log in as a valid farm worker.'));
+      return const Center(child: Text('Please log in as a valid farm worker.'));
     }
   }
 
   Widget _buildNotifications() {
-    return Center(
+    return const Center(
       child: Text('Notifications',
           style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
     );
   }
 
   Widget _buildReports() {
-    return Center(
+    return const Center(
       child: Text('Reports',
           style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
     );
@@ -290,7 +291,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       _buildDashboard(),
       _buildSchedule(),
       _buildNotifications(),
@@ -300,7 +301,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: SafeArea(child: _pages[_selectedIndex]),
+      body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -308,7 +309,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             BoxShadow(
               color: Colors.black.withOpacity(0.07),
               blurRadius: 8,
-              offset: Offset(0, -2),
+              offset: const Offset(0, -2),
             ),
           ],
         ),
@@ -316,8 +317,8 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: BottomNavigationBar(
             backgroundColor: Colors.white,
-            selectedItemColor: Color(0xFF27AE60),
-            unselectedItemColor: Color(0xFF8F9BB3),
+            selectedItemColor: const Color(0xFF27AE60),
+            unselectedItemColor: const Color(0xFF8F9BB3),
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,
             elevation: 0,
@@ -357,9 +358,11 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 
 // PLACEHOLDER SA MANAGEPROFILESCREEN
 class ManageProfileScreen extends StatelessWidget {
+  const ManageProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Text('Manage Profile',
           style: TextStyle(fontSize: 20, color: Color(0xFF27AE60))),
     );

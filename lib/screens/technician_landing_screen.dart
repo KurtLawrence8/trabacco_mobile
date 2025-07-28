@@ -10,6 +10,8 @@ import '../models/user_model.dart';
 import 'farm_worker_detail_screen.dart';
 import 'request_list_widget.dart';
 import '../services/auth_service.dart';
+import 'technician_farms_screen.dart';
+import '../models/user_model.dart' show NotificationModel;
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
@@ -43,9 +45,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Color(0xFF27AE60),
+      backgroundColor: const Color(0xFF27AE60),
       elevation: 2,
-      title: Row(
+      title: const Row(
         children: [
           Icon(Icons.agriculture, color: Colors.white),
           SizedBox(width: 8),
@@ -56,7 +58,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
       ),
       actions: [
         PopupMenuButton<String>(
-          icon: CircleAvatar(
+          icon: const CircleAvatar(
             backgroundColor: Colors.white,
             child: Icon(Icons.person, color: Color(0xFF27AE60)),
           ),
@@ -76,7 +78,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             }
           },
           itemBuilder: (context) => [
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'profile',
               child: Row(
                 children: [
@@ -86,7 +88,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                 ],
               ),
             ),
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'logout',
               child: Row(
                 children: [
@@ -98,9 +100,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             ),
           ],
         ),
-        SizedBox(width: 12),
       ],
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
     );
   }
 
@@ -108,11 +109,32 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text('Welcome, Technician!',
+        const Text('Welcome, Technician!',
             style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF222B45))),
+        const SizedBox(height: 16),
+        // Button to view farms of assigned farm workers
+        ElevatedButton.icon(
+          icon: Icon(Icons.map, color: Colors.white),
+          label: Text('View My Workers\' Farms on Map/List'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF27AE60),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TechnicianFarmsScreen(),
+              ),
+            );
+          },
+        ),
         const SizedBox(height: 16),
         Card(
           elevation: 2,
@@ -124,7 +146,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Assigned Farm Workers",
+                const Text("Assigned Farm Workers",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -152,7 +174,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                                     borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
                                   title: Text("${fw.firstName} ${fw.lastName}",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   subtitle: Text(fw.phoneNumber),
                                   onTap: () {
@@ -172,8 +194,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                Divider(),
-                Text("Today's Schedules",
+                const Divider(),
+                const Text("Today's Schedules",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -201,7 +223,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                                     borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
                                   title: Text("${fw.firstName} ${fw.lastName}",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   subtitle: Text(fw.phoneNumber),
                                   onTap: () {
@@ -241,7 +263,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         ),
                       );
                     },
-                    child: Text('View All',
+                    child: const Text('View All',
                         style: TextStyle(color: Color(0xFF2E5BFF))),
                   ),
                 ),
@@ -255,7 +277,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
   Widget _buildSchedule() {
     // Show a message instead of calling with ID 0
-    return Center(
+    return const Center(
         child: Text('Please select a farm worker to view schedules.'));
   }
 
@@ -271,14 +293,14 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         }
         final notifications = snapshot.data ?? [];
         if (notifications.isEmpty) {
-          return Center(
+          return const Center(
               child: Text('No notifications found.',
                   style: TextStyle(color: Colors.grey)));
         }
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: notifications.length,
-          separatorBuilder: (_, __) => SizedBox(height: 14),
+          separatorBuilder: (_, __) => const SizedBox(height: 14),
           itemBuilder: (context, i) {
             final n = notifications[i];
             return Card(
@@ -297,9 +319,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                             color: n.title.contains('Rejected')
                                 ? Colors.red
                                 : Colors.green)),
-                    SizedBox(height: 8),
-                    Text(n.body, style: TextStyle(fontSize: 15)),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
+                    Text(n.body, style: const TextStyle(fontSize: 15)),
+                    const SizedBox(height: 8),
                     Text('Received: ${n.createdAt.toLocal()}',
                         style:
                             TextStyle(fontSize: 12, color: Colors.grey[600])),
@@ -314,7 +336,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   Widget _buildReports() {
-    return Center(
+    return const Center(
       child: Text('Reports',
           style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
     );
@@ -326,7 +348,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       _buildDashboard(),
       _buildSchedule(),
       _buildNotifications(),
@@ -336,7 +358,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: SafeArea(child: _pages[_selectedIndex]),
+      body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -344,7 +366,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             BoxShadow(
               color: Colors.black.withOpacity(0.07),
               blurRadius: 8,
-              offset: Offset(0, -2),
+              offset: const Offset(0, -2),
             ),
           ],
         ),
@@ -352,8 +374,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: BottomNavigationBar(
             backgroundColor: Colors.white,
-            selectedItemColor: Color(0xFF27AE60),
-            unselectedItemColor: Color(0xFF8F9BB3),
+            selectedItemColor: const Color(0xFF27AE60),
+            unselectedItemColor: const Color(0xFF8F9BB3),
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,
             elevation: 0,
@@ -393,9 +415,11 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
 // Placeholder for ManageProfileScreen
 class ManageProfileScreen extends StatelessWidget {
+  const ManageProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Text('Manage Profile',
           style: TextStyle(fontSize: 20, color: Color(0xFF27AE60))),
     );
@@ -436,7 +460,7 @@ class AllFarmWorkerSchedulesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('All Farm Worker Schedules')),
+      appBar: AppBar(title: const Text('All Farm Worker Schedules')),
       body: ListView.builder(
         itemCount: farmWorkers.length,
         itemBuilder: (context, index) {
@@ -448,7 +472,7 @@ class AllFarmWorkerSchedulesPage extends StatelessWidget {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: ListTile(
               title: Text("${fw.firstName} ${fw.lastName}",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(fw.phoneNumber),
               onTap: () {
                 Navigator.push(

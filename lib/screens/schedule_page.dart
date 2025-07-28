@@ -57,15 +57,17 @@ class _SchedulePageState extends State<SchedulePage> {
         title: Text('${widget.farmWorkerName} Schedule'),
       ),
       body: widget.farmWorkerId == 0
-          ? Center(
+          ? const Center(
               child: Text('PLEASE SELECT A FARM WORKER TO VIEW SCHEDULES.'))
           : FutureBuilder<List<Schedule>>(
               future: _futureSchedules,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  return Center(child: CircularProgressIndicator());
-                if (snapshot.hasError)
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
                   return Center(child: Text('ERROR:  [${snapshot.error}'));
+                }
                 final schedules = snapshot.data ?? [];
                 final finished =
                     schedules.where((s) => s.status == 'Completed').toList();
@@ -78,7 +80,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 return ListView(
                   children: [
                     if (today.isNotEmpty) ...[
-                      ListTile(
+                      const ListTile(
                         title: Text('ACTIVITIES',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
@@ -86,7 +88,7 @@ class _SchedulePageState extends State<SchedulePage> {
                           s, todayDate, (status) => _updateStatus(s, status))),
                     ],
                     if (finished.isNotEmpty) ...[
-                      ListTile(
+                      const ListTile(
                           title: Text('FINISHED',
                               style: TextStyle(fontWeight: FontWeight.bold))),
                       ...finished.map((s) => ListTile(
@@ -104,7 +106,7 @@ class _SchedulePageState extends State<SchedulePage> {
                           )),
                     ],
                     if (cancelled.isNotEmpty) ...[
-                      ListTile(
+                      const ListTile(
                           title: Text('CANCELLED',
                               style: TextStyle(fontWeight: FontWeight.bold))),
                       ...cancelled.map((s) => ListTile(
