@@ -185,3 +185,171 @@ class NotificationModel {
     );
   }
 }
+
+class Technician {
+  final int id;
+  final String firstName;
+  final String lastName;
+  final String? middleName;
+  final DateTime? birthDate;
+  final String? sex;
+  final String emailAddress;
+  final String? phoneNumber;
+  final String? address;
+  final String status;
+  final String? profilePicture;
+  final String? idPicture;
+  final DateTime? deletedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  Technician({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    this.middleName,
+    this.birthDate,
+    this.sex,
+    required this.emailAddress,
+    this.phoneNumber,
+    this.address,
+    required this.status,
+    this.profilePicture,
+    this.idPicture,
+    this.deletedAt,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory Technician.fromJson(Map<String, dynamic> json) {
+    return Technician(
+      id: json['id'],
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
+      middleName: json['middle_name'],
+      birthDate: json['birth_date'] != null 
+          ? DateTime.tryParse(json['birth_date'])
+          : null,
+      sex: json['sex'],
+      emailAddress: json['email_address'] ?? '',
+      phoneNumber: json['phone_number'],
+      address: json['address'],
+      status: json['status'] ?? 'Active',
+      profilePicture: json['profile_picture'],
+      idPicture: json['id_picture'],
+      deletedAt: json['deleted_at'] != null 
+          ? DateTime.tryParse(json['deleted_at'])
+          : null,
+      createdAt: json['created_at'] != null 
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.tryParse(json['updated_at'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'first_name': firstName,
+      'last_name': lastName,
+      'middle_name': middleName,
+      'birth_date': birthDate?.toIso8601String(),
+      'sex': sex,
+      'email_address': emailAddress,
+      'phone_number': phoneNumber,
+      'address': address,
+      'status': status,
+      'profile_picture': profilePicture,
+      'id_picture': idPicture,
+      'deleted_at': deletedAt?.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+    };
+  }
+}
+
+class FarmWorkerProfile {
+  final int id;
+  final String firstName;
+  final String lastName;
+  final String? middleName;
+  final DateTime? birthDate;
+  final String? sex;
+  final String phoneNumber;
+  final String? address;
+  final String status;
+  final String? profilePicture;
+  final String? idPicture;
+  final int technicianId;
+  final DateTime? deletedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  FarmWorkerProfile({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    this.middleName,
+    this.birthDate,
+    this.sex,
+    required this.phoneNumber,
+    this.address,
+    required this.status,
+    this.profilePicture,
+    this.idPicture,
+    required this.technicianId,
+    this.deletedAt,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory FarmWorkerProfile.fromJson(Map<String, dynamic> json) {
+    return FarmWorkerProfile(
+      id: json['id'],
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
+      middleName: json['middle_name'],
+      birthDate: json['birth_date'] != null 
+          ? DateTime.tryParse(json['birth_date'])
+          : null,
+      sex: json['sex'],
+      phoneNumber: json['phone_number'] ?? '',
+      address: json['address'],
+      status: json['status'] ?? 'Active',
+      profilePicture: json['profile_picture'],
+      idPicture: json['id_picture'],
+      technicianId: json['technician_id'] ?? 0,
+      deletedAt: json['deleted_at'] != null 
+          ? DateTime.tryParse(json['deleted_at'])
+          : null,
+      createdAt: json['created_at'] != null 
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.tryParse(json['updated_at'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'first_name': firstName,
+      'last_name': lastName,
+      'middle_name': middleName,
+      'birth_date': birthDate?.toIso8601String(),
+      'sex': sex,
+      'phone_number': phoneNumber,
+      'address': address,
+      'status': status,
+      'profile_picture': profilePicture,
+      'id_picture': idPicture,
+      'technician_id': technicianId,
+      'deleted_at': deletedAt?.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+    };
+  }
+}
