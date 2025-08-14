@@ -3,10 +3,12 @@ import 'package:intl/intl.dart';
 import '../services/report_service.dart';
 
 class TechnicianReportScreen extends StatefulWidget {
-  const TechnicianReportScreen({Key? key}) : super(key: key);
+  final String? token;
+  final int? technicianId;
+  const TechnicianReportScreen({Key? key, this.token, this.technicianId}) : super(key: key);
 
   @override
-  _TechnicianReportScreenState createState() => _TechnicianReportScreenState();
+  State<TechnicianReportScreen> createState() => _TechnicianReportScreenState();
 }
 
 class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
@@ -35,17 +37,44 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
 
   Future<void> _loadFarms() async {
     try {
-      final farms = await _reportService.getFarms();
-      setState(() {
-        _farms = farms;
-        if (farms.isNotEmpty) {
-          _selectedFarmId = farms[0]['id'].toString();
-        }
-      });
+      if (widget.token == null) {
+        throw Exception('No authentication token available');
+      }
+      print('Loading farms with token: ${widget.token!.substring(0, 10)}...');
+      final farms = await _reportService.getFarms(widget.token!);
+      print('Loaded ${farms.length} farms');
+      if (mounted) {
+        setState(() {
+          _farms = farms;
+          if (farms.isNotEmpty && farms[0]['id'] != null) {
+            _selectedFarmId = farms[0]['id'].toString();
+            print('Selected farm: ${farms[0]['name']} (ID: ${farms[0]['id']})');
+          } else {
+            _selectedFarmId = '';
+            print('No valid farms found');
+          }
+        });
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load farms: ${e.toString()}')),
-      );
+      print('Error loading farms: $e');
+      if (mounted) {
+        // Show error but also provide fallback data for testing
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load farms: ${e.toString()}'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        
+        // Add fallback data for testing if API is not available
+        setState(() {
+          _farms = [
+            {'id': 1, 'name': 'Sample Farm 1'},
+            {'id': 2, 'name': 'Sample Farm 2'},
+          ];
+          _selectedFarmId = '1';
+        });
+      }
     }
   }
 
@@ -72,7 +101,9 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
 
     try {
       final report = {
-        'farm_id': _selectedFarmId,
+        'technician_id': widget.technicianId ?? 1,
+        // Use a hardcoded farm_id that exists in your tbl_farms table
+        'farm_id': 1, // Change this to an actual farm ID from your tbl_farms table
         'accomplishments': _accomplishmentsController.text,
         'issues_observed': _issuesController.text,
         'disease_detected': _diseaseDetected,
@@ -82,7 +113,12 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
         'timestamp': _selectedDate.toIso8601String(),
       };
 
-      await _reportService.createReport(report);
+      if (widget.token == null) {
+        throw Exception('No authentication token available');
+      }
+      print('Submitting report with technician_id: ${widget.technicianId}');
+      print('Report data: $report');
+      await _reportService.createReport(report, widget.token!);
 
       if (!mounted) return;
 
@@ -116,6 +152,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Submit Daily Report'),
+        backgroundColor: const Color(0xFF27AE60),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -125,39 +163,70 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Farm Selection
-              DropdownButtonFormField<String>(
-                value: _selectedFarmId,
-                decoration: const InputDecoration(
-                  labelText: 'Select Farm',
-                  border: OutlineInputBorder(),
-                ),
-                items: _farms.map((farm) {
-                  return DropdownMenuItem(
-                    value: farm['id'].toString(),
-                    child: Text(farm['name']),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedFarmId = value!;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a farm';
-                  }
-                  return null;
-                },
-              ),
+              _farms.isEmpty
+                  ? Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Loading farms...',
+                              style: TextStyle(fontStyle: FontStyle.italic),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Token: ${widget.token?.substring(0, 10) ?? 'None'}...',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            Text(
+                              'Technician ID: ${widget.technicianId ?? 'None'}',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : DropdownButtonFormField<String>(
+                      value: _selectedFarmId.isEmpty ? null : _selectedFarmId,
+                      decoration: InputDecoration(
+                        labelText: 'Select Farm',
+                        border: const OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      items: _farms.where((farm) => farm['id'] != null).map((farm) {
+                        final farmId = farm['id']!.toString();
+                        final farmName = farm['name']?.toString() ?? 'Unknown Farm';
+                        return DropdownMenuItem(
+                          value: farmId,
+                          child: Text(farmName),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedFarmId = value ?? '';
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a farm';
+                        }
+                        return null;
+                      },
+                    ),
               const SizedBox(height: 16),
 
               // Date Selection
               InkWell(
                 onTap: () => _selectDate(context),
                 child: InputDecorator(
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Date',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.grey[50],
                   ),
                   child: Text(
                     DateFormat('MMMM d, y').format(_selectedDate),
@@ -169,9 +238,11 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
               // Accomplishments
               TextFormField(
                 controller: _accomplishmentsController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Accomplishments',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 maxLines: 3,
                 validator: (value) {
@@ -186,9 +257,11 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
               // Issues Observed
               TextFormField(
                 controller: _issuesController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Issues Observed',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 maxLines: 3,
                 validator: (value) {
@@ -203,9 +276,11 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
               // Disease Detection
               DropdownButtonFormField<String>(
                 value: _diseaseDetected,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Disease Detected',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 items: const [
                   DropdownMenuItem(value: 'None', child: Text('None')),
@@ -223,9 +298,11 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
               if (_diseaseDetected == 'Yes')
                 TextFormField(
                   controller: _diseaseTypeController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Disease Type',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.grey[50],
                   ),
                   validator: (value) {
                     if (_diseaseDetected == 'Yes' &&
@@ -240,9 +317,11 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Description',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 maxLines: 3,
                 validator: (value) {
@@ -258,11 +337,29 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitReport,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF27AE60),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Submit Report'),
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Submit Report',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ],
           ),

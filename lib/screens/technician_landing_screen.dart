@@ -6,16 +6,11 @@ import 'schedule_page.dart';
 import '../models/schedule.dart';
 import '../services/schedule_service.dart';
 import 'package:provider/provider.dart';
-import '../models/user.dart' as user_model;
 import 'farm_worker_detail_screen.dart';
-import 'request_list_widget.dart';
-import '../services/auth_service.dart';
 import 'technician_farms_screen.dart';
 import '../models/user_model.dart' show NotificationModel, Technician;
 import '../services/auth_service.dart' show TechnicianService;
-import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import 'dart:convert';
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
@@ -31,10 +26,6 @@ class TechnicianLandingScreen extends StatefulWidget {
 
 class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   int _selectedIndex = 0;
-  late Future<List<Schedule>> _futureSchedules;
-  final ScheduleService _service = ScheduleService();
-  // Add a new future for farm workers with today's schedules
-  late Future<List<Map<String, dynamic>>> _futureFarmWorkersWithTodaySchedules;
 
   @override
   void initState() {
@@ -340,10 +331,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   Widget _buildReports() {
-    return const Center(
-      child: Text('Reports',
-          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
-    );
+    return TechnicianReportScreen(token: widget.token, technicianId: widget.technicianId);
   }
 
   Widget _buildManageProfile() {
