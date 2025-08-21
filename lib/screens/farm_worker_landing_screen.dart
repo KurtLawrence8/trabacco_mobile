@@ -4,12 +4,11 @@ import '../models/schedule.dart';
 import '../services/schedule_service.dart';
 import 'login_screen.dart';
 import '../services/auth_service.dart';
-import '../models/user_model.dart' show NotificationModel, FarmWorkerProfile;
+import '../models/user_model.dart' show FarmWorkerProfile;
 import '../services/auth_service.dart' show FarmWorkerProfileService;
-import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import 'dart:convert';
 import '../models/user_model.dart';
+import 'package:intl/intl.dart';
 
 class FarmWorkerLandingScreen extends StatefulWidget {
   final String token;
@@ -110,6 +109,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   }
 
   Widget _buildDashboard() {
+    final DateFormat dateFormatter = DateFormat('MM/dd/yyyy');
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -166,8 +166,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       if (s.date != null)
-                                        Text(
-                                            'Date: \\${s.date!.toLocal().toString().split(' ')[0]}'),
+                                        Text('Date: \\${dateFormatter.format(s.date!.toLocal())}'),
                                       if (s.remarks != null &&
                                           s.remarks!.isNotEmpty)
                                         Text('Remarks: \\${s.remarks}'),

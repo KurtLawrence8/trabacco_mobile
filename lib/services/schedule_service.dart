@@ -11,8 +11,8 @@ class ScheduleService {
       headers: ApiConfig.getHeaders(token: token),
       body: json.encode({'status': status}),
     );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update schedule');
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to update schedule. Code: ${response.statusCode}. Body: ${response.body}');
     }
   }
 
