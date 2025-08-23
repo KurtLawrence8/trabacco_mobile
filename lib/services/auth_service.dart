@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import '../models/user_model.dart';
 
-export '../models/user_model.dart' show FarmWorker, RequestModel, InventoryItem, Technician, FarmWorkerProfile;
+export '../models/user_model.dart'
+    show FarmWorker, RequestModel, InventoryItem, Technician, FarmWorkerProfile;
 
 class AuthService {
   static const String _tokenKey = 'auth_token';
@@ -166,14 +167,15 @@ class FarmWorkerProfileService {
     try {
       final url = ApiConfig.getUrl('/test');
       print('Testing API connection to: $url');
-      
+
       final response = await http.get(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
       );
-      
+
       print('Test response status: ${response.statusCode}');
-      return response.statusCode < 500; // Any response means server is reachable
+      return response.statusCode <
+          500; // Any response means server is reachable
     } catch (e) {
       print('API connection test failed: $e');
       return false;
@@ -181,13 +183,14 @@ class FarmWorkerProfileService {
   }
 
   /// Fetch farm worker profile by ID
-  Future<FarmWorkerProfile> getFarmWorkerProfile(String token, int farmWorkerId) async {
+  Future<FarmWorkerProfile> getFarmWorkerProfile(
+      String token, int farmWorkerId) async {
     try {
       final url = ApiConfig.getUrl('/farm-workers/$farmWorkerId');
       print('Fetching farm worker profile from: $url');
       print('Using farm worker ID: $farmWorkerId');
       print('Token length: ${token.length}');
-      
+
       final response = await http.get(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
@@ -200,7 +203,7 @@ class FarmWorkerProfileService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         print('Parsed data: $data');
-        
+
         // Handle the case where data is wrapped in a 'farm_worker' object
         Map<String, dynamic> farmWorkerData;
         if (data.containsKey('farm_worker')) {
@@ -208,7 +211,7 @@ class FarmWorkerProfileService {
         } else {
           farmWorkerData = data;
         }
-        
+
         return FarmWorkerProfile.fromJson(farmWorkerData);
       } else if (response.statusCode == 404) {
         throw Exception('Farm worker not found (404) - Endpoint may not exist');
@@ -217,7 +220,8 @@ class FarmWorkerProfileService {
       } else if (response.statusCode == 403) {
         throw Exception('Forbidden (403) - Check permissions');
       } else {
-        throw Exception('Failed to load farm worker profile: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Failed to load farm worker profile: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error in getFarmWorkerProfile: $e');
@@ -227,11 +231,12 @@ class FarmWorkerProfileService {
   }
 
   /// Update farm worker profile
-  Future<FarmWorkerProfile> updateFarmWorkerProfile(String token, int farmWorkerId, Map<String, dynamic> updateData) async {
+  Future<FarmWorkerProfile> updateFarmWorkerProfile(
+      String token, int farmWorkerId, Map<String, dynamic> updateData) async {
     try {
       final url = ApiConfig.getUrl('/farm-workers/$farmWorkerId');
       print('Updating farm worker profile at: $url');
-      
+
       // Clean and validate the update data
       final cleanedData = <String, dynamic>{};
       updateData.forEach((key, value) {
@@ -239,9 +244,9 @@ class FarmWorkerProfileService {
           cleanedData[key] = value;
         }
       });
-      
+
       print('Update data (cleaned): $cleanedData');
-      
+
       final response = await http.patch(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
@@ -253,7 +258,7 @@ class FarmWorkerProfileService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         // Handle the case where data is wrapped in a 'farm_worker' object
         Map<String, dynamic> farmWorkerData;
         if (data.containsKey('farm_worker')) {
@@ -261,18 +266,20 @@ class FarmWorkerProfileService {
         } else {
           farmWorkerData = data;
         }
-        
+
         return FarmWorkerProfile.fromJson(farmWorkerData);
       } else if (response.statusCode == 422) {
         // Validation error
         final errorData = json.decode(response.body);
-        throw Exception('Validation error: ${errorData['message'] ?? 'Invalid data'}');
+        throw Exception(
+            'Validation error: ${errorData['message'] ?? 'Invalid data'}');
       } else if (response.statusCode == 404) {
         throw Exception('Farm worker not found (404)');
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized (401) - Check token');
       } else {
-        throw Exception('Failed to update farm worker profile: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Failed to update farm worker profile: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error in updateFarmWorkerProfile: $e');
@@ -282,9 +289,11 @@ class FarmWorkerProfileService {
   }
 
   /// Upload profile picture
-  Future<String> uploadProfilePicture(String token, int farmWorkerId, List<int> imageBytes, String fileName) async {
+  Future<String> uploadProfilePicture(String token, int farmWorkerId,
+      List<int> imageBytes, String fileName) async {
     try {
-      final url = ApiConfig.getUrl('/farm-workers/$farmWorkerId/profile-picture');
+      final url =
+          ApiConfig.getUrl('/farm-workers/$farmWorkerId/profile-picture');
       final request = http.MultipartRequest('POST', Uri.parse(url));
       request.headers['Authorization'] = 'Bearer $token';
       request.files.add(http.MultipartFile.fromBytes(
@@ -300,7 +309,8 @@ class FarmWorkerProfileService {
         final data = json.decode(responseBody);
         return data['profile_picture_url'] ?? '';
       } else {
-        throw Exception('Failed to upload profile picture: ${response.statusCode} - $responseBody');
+        throw Exception(
+            'Failed to upload profile picture: ${response.statusCode} - $responseBody');
       }
     } catch (e) {
       throw Exception('Failed to upload profile picture: $e');
@@ -308,7 +318,8 @@ class FarmWorkerProfileService {
   }
 
   /// Upload ID picture
-  Future<String> uploadIdPicture(String token, int farmWorkerId, List<int> imageBytes, String fileName) async {
+  Future<String> uploadIdPicture(String token, int farmWorkerId,
+      List<int> imageBytes, String fileName) async {
     try {
       final url = ApiConfig.getUrl('/farm-workers/$farmWorkerId/id-picture');
       final request = http.MultipartRequest('POST', Uri.parse(url));
@@ -326,7 +337,8 @@ class FarmWorkerProfileService {
         final data = json.decode(responseBody);
         return data['id_picture_url'] ?? '';
       } else {
-        throw Exception('Failed to upload ID picture: ${response.statusCode} - $responseBody');
+        throw Exception(
+            'Failed to upload ID picture: ${response.statusCode} - $responseBody');
       }
     } catch (e) {
       throw Exception('Failed to upload ID picture: $e');
@@ -382,7 +394,21 @@ class RequestService {
     final response = await http.post(Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
         body: json.encode(payload));
-    if (response.statusCode != 201) {
+
+    if (response.statusCode == 201) {
+      // Request created successfully
+      return;
+    } else if (response.statusCode == 409) {
+      // Daily limit exceeded
+      final errorData = json.decode(response.body);
+      throw Exception(
+          errorData['message'] ?? 'Daily limit exceeded for this request type');
+    } else if (response.statusCode == 422) {
+      // Validation error
+      final errorData = json.decode(response.body);
+      throw Exception(errorData['message'] ?? 'Invalid request data');
+    } else {
+      // Other errors
       throw Exception(
           json.decode(response.body)['message'] ?? 'Failed to create request');
     }
@@ -423,14 +449,15 @@ class TechnicianService {
     try {
       final url = ApiConfig.getUrl('/test');
       print('Testing API connection to: $url');
-      
+
       final response = await http.get(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
       );
-      
+
       print('Test response status: ${response.statusCode}');
-      return response.statusCode < 500; // Any response means server is reachable
+      return response.statusCode <
+          500; // Any response means server is reachable
     } catch (e) {
       print('API connection test failed: $e');
       return false;
@@ -438,13 +465,14 @@ class TechnicianService {
   }
 
   /// Fetch technician profile by ID
-  Future<Technician> getTechnicianProfile(String token, int technicianId) async {
+  Future<Technician> getTechnicianProfile(
+      String token, int technicianId) async {
     try {
       final url = ApiConfig.getUrl('/technicians/$technicianId');
       print('Fetching technician profile from: $url');
       print('Using technician ID: $technicianId');
       print('Token length: ${token.length}');
-      
+
       final response = await http.get(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
@@ -457,7 +485,7 @@ class TechnicianService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         print('Parsed data: $data');
-        
+
         // Handle the case where data is wrapped in a 'technician' object
         Map<String, dynamic> technicianData;
         if (data.containsKey('technician')) {
@@ -465,7 +493,7 @@ class TechnicianService {
         } else {
           technicianData = data;
         }
-        
+
         return Technician.fromJson(technicianData);
       } else if (response.statusCode == 404) {
         throw Exception('Technician not found (404) - Endpoint may not exist');
@@ -474,7 +502,8 @@ class TechnicianService {
       } else if (response.statusCode == 403) {
         throw Exception('Forbidden (403) - Check permissions');
       } else {
-        throw Exception('Failed to load technician profile: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Failed to load technician profile: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error in getTechnicianProfile: $e');
@@ -484,11 +513,12 @@ class TechnicianService {
   }
 
   /// Update technician profile
-  Future<Technician> updateTechnicianProfile(String token, int technicianId, Map<String, dynamic> updateData) async {
+  Future<Technician> updateTechnicianProfile(
+      String token, int technicianId, Map<String, dynamic> updateData) async {
     try {
       final url = ApiConfig.getUrl('/technicians/$technicianId');
       print('Updating technician profile at: $url');
-      
+
       // Clean and validate the update data
       final cleanedData = <String, dynamic>{};
       updateData.forEach((key, value) {
@@ -496,9 +526,9 @@ class TechnicianService {
           cleanedData[key] = value;
         }
       });
-      
+
       print('Update data (cleaned): $cleanedData');
-      
+
       final response = await http.patch(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
@@ -510,7 +540,7 @@ class TechnicianService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         // Handle the case where data is wrapped in a 'technician' object
         Map<String, dynamic> technicianData;
         if (data.containsKey('technician')) {
@@ -518,18 +548,20 @@ class TechnicianService {
         } else {
           technicianData = data;
         }
-        
+
         return Technician.fromJson(technicianData);
       } else if (response.statusCode == 422) {
         // Validation error
         final errorData = json.decode(response.body);
-        throw Exception('Validation error: ${errorData['message'] ?? 'Invalid data'}');
+        throw Exception(
+            'Validation error: ${errorData['message'] ?? 'Invalid data'}');
       } else if (response.statusCode == 404) {
         throw Exception('Technician not found (404)');
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized (401) - Check token');
       } else {
-        throw Exception('Failed to update technician profile: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Failed to update technician profile: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error in updateTechnicianProfile: $e');
@@ -539,9 +571,11 @@ class TechnicianService {
   }
 
   /// Upload profile picture
-  Future<String> uploadProfilePicture(String token, int technicianId, List<int> imageBytes, String fileName) async {
+  Future<String> uploadProfilePicture(String token, int technicianId,
+      List<int> imageBytes, String fileName) async {
     try {
-      final url = ApiConfig.getUrl('/technicians/$technicianId/profile-picture');
+      final url =
+          ApiConfig.getUrl('/technicians/$technicianId/profile-picture');
       final request = http.MultipartRequest('POST', Uri.parse(url));
       request.headers['Authorization'] = 'Bearer $token';
       request.files.add(http.MultipartFile.fromBytes(
@@ -557,7 +591,8 @@ class TechnicianService {
         final data = json.decode(responseBody);
         return data['profile_picture_url'] ?? '';
       } else {
-        throw Exception('Failed to upload profile picture: ${response.statusCode} - $responseBody');
+        throw Exception(
+            'Failed to upload profile picture: ${response.statusCode} - $responseBody');
       }
     } catch (e) {
       throw Exception('Failed to upload profile picture: $e');
@@ -565,7 +600,8 @@ class TechnicianService {
   }
 
   /// Upload ID picture
-  Future<String> uploadIdPicture(String token, int technicianId, List<int> imageBytes, String fileName) async {
+  Future<String> uploadIdPicture(String token, int technicianId,
+      List<int> imageBytes, String fileName) async {
     try {
       final url = ApiConfig.getUrl('/technicians/$technicianId/id-picture');
       final request = http.MultipartRequest('POST', Uri.parse(url));
@@ -583,7 +619,8 @@ class TechnicianService {
         final data = json.decode(responseBody);
         return data['id_picture_url'] ?? '';
       } else {
-        throw Exception('Failed to upload ID picture: ${response.statusCode} - $responseBody');
+        throw Exception(
+            'Failed to upload ID picture: ${response.statusCode} - $responseBody');
       }
     } catch (e) {
       throw Exception('Failed to upload ID picture: $e');
