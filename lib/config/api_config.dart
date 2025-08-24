@@ -40,6 +40,7 @@ class ApiConfig {
 
   // Farm Worker endpoints
   static const String farmWorkers = '/farm-workers';
+  static const String farmWorkersByTechnician = '/farm-workers/by-technician';
   static const String farmWorkerTrashed = '/farm-workers/trashed';
   static const String farmWorkerRestore = '/farm-workers/{id}/restore';
   static const String farmWorkerForceDelete = '/farm-workers/{id}/force';

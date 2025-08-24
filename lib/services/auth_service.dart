@@ -146,7 +146,7 @@ class AuthService {
 class FarmWorkerService {
   Future<List<FarmWorker>> getAssignedFarmWorkers(
       String token, int technicianId) async {
-    final url = ApiConfig.getUrl(ApiConfig.farmWorkers);
+    final url = ApiConfig.getUrl(ApiConfig.farmWorkersByTechnician);
     final response = await http.get(Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token));
     if (response.statusCode == 200) {
