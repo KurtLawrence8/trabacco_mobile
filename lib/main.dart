@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'screens/technician_landing_screen.dart';
 
 void main() {
+  print('[main] Starting Trabacco Mobile App');
+  print('[main] App initialization started');
+
   runApp(
     MultiProvider(
       providers: [

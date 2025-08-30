@@ -5,13 +5,17 @@ import 'package:flutter/material.dart';
 class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://127.0.0.1:8000/api'; // For web
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000/api'; // For Android Emulator
-    } else {
-      return 'http://localhost:8000/api'; // For iOS Simulator and others
-    }
+    final url = kIsWeb
+        ? 'http://127.0.0.1:8000/api' // For web
+        : Platform.isAndroid
+            ? 'http://10.0.2.2:8000/api' // For Android Emulator
+            : 'http://localhost:8000/api'; // For iOS Simulator and others
+
+    print(
+        '[ApiConfig] [baseUrl] Platform: ${kIsWeb ? 'Web' : Platform.isAndroid ? 'Android' : 'iOS/Other'}');
+    print('[ApiConfig] [baseUrl] Generated URL: $url');
+
+    return url;
   }
 
   // API Endpoints
@@ -22,11 +26,16 @@ class ApiConfig {
 
   // Headers
   static Map<String, String> getHeaders({String? token}) {
-    return {
+    final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
+
+    print('[ApiConfig] [getHeaders] Token provided: ${token != null}');
+    print('[ApiConfig] [getHeaders] Headers: $headers');
+
+    return headers;
   }
 
   // Auth endpoints
