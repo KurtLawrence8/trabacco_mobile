@@ -275,20 +275,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     }
   }
 
-  Widget _buildNotifications() {
-    return const Center(
-      child: Text('Notifications',
-          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
-    );
-  }
-
-  Widget _buildReports() {
-    return const Center(
-      child: Text('Reports',
-          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
-    );
-  }
-
   Widget _buildManageProfile() {
     return FarmWorkerManageProfileScreen();
   }
@@ -298,8 +284,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     final List<Widget> pages = [
       _buildDashboard(),
       _buildSchedule(),
-      _buildNotifications(),
-      _buildReports(),
       _buildManageProfile(),
     ];
     return Scaffold(
@@ -339,14 +323,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.event_note),
                 label: 'Schedule',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.notifications),
-                label: 'Notification',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.assignment),
-                label: 'Report',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
