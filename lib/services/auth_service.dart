@@ -84,6 +84,30 @@ class AuthService {
     }
   }
 
+  // NEW ETO FORGOT PASSWORD FOR TECHNICIAN
+  Future<void> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/technician/forgot-password'),
+        headers: ApiConfig.getHeaders(),
+        body: json.encode({
+          'email': email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Success - email sent
+        return;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            errorData['message'] ?? 'Failed to send password reset email');
+      }
+    } catch (e) {
+      throw Exception('Failed to send password reset email: ${e.toString()}');
+    }
+  }
+
   // Get current user
   Future<User?> getCurrentUser() async {
     try {
@@ -144,14 +168,16 @@ class AuthService {
 }
 
 class FarmWorkerService {
+  // FETCH FARM WORKERS ASSIGNED TO SPECIFIC TECHNICIAN
   Future<List<FarmWorker>> getAssignedFarmWorkers(
       String token, int technicianId) async {
-    final url = ApiConfig.getUrl(ApiConfig.farmWorkersByTechnician);
+    // USE THE CORRECT ENDPOINT THAT FILTERS BY TECHNICIAN ID
+    final url = ApiConfig.getUrl('/farm-workers/by-technician');
     final response = await http.get(Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token));
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
-      // The backend now returns only the technician's assigned farm workers
+      // THE BACKEND NOW RETURNS ONLY THE TECHNICIAN'S ASSIGNED FARM WORKERS
       return data.map((e) => FarmWorker.fromJson(e)).toList();
     } else {
       print('Status: ${response.statusCode}');

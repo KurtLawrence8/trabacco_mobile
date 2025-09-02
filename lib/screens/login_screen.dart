@@ -16,13 +16,20 @@ class _LoginScreenState extends State<LoginScreen> {
   String _roleType = 'technician'; // default role (technician or farm_worker)
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  // NEW ETO FORGOT PASSWORD CONTROLLER
+  final TextEditingController _forgotPasswordEmailController =
+      TextEditingController();
   bool _isLoading = false;
+  // NEW ETO FORGOT PASSWORD SENDING RESET EMAIL
+  bool _isSendingResetEmail = false;
   final AuthService _authService = AuthService();
 
   @override
   void dispose() {
     _loginController.dispose();
     _passwordController.dispose();
+    // NEW ETO FORGOT PASSWORD CONTROLLER
+    _forgotPasswordEmailController.dispose();
     super.dispose();
   }
 
@@ -67,9 +74,56 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+// ETO BAGO TO FORGOT PASSWORD
+  Future<void> _sendForgotPasswordEmail() async {
+    if (_forgotPasswordEmailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email address')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSendingResetEmail = true;
+    });
+
+    try {
+      await _authService
+          .forgotPassword(_forgotPasswordEmailController.text.trim());
+
+      if (mounted) {
+        setState(() {
+          _isSendingResetEmail = false;
+        });
+
+        Navigator.of(context).pop(); // Close the dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Password reset email sent. Please check your email.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSendingResetEmail = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    print('[LoginScreen] [build] Building login screen');
     return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
@@ -133,6 +187,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? "Please enter a password."
                     : null,
               ),
+              const SizedBox(height: 16),
+              // NEW Forgot Password Link (only show for technicians)
+              if (_roleType == 'technician')
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _showForgotPasswordDialog,
+                    child: const Text(
+                      "Forgot Password?",
+                      style: TextStyle(
+                        color: Color(0xFF27AE60),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -154,6 +224,66 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // NEW ETO Show forgot password dialog
+  void _showForgotPasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Forgot Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter your email address to receive a password reset link.',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _forgotPasswordEmailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email Address',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF27AE60)),
+                  ),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                enabled: !_isSendingResetEmail,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: _isSendingResetEmail
+                  ? null
+                  : () {
+                      Navigator.of(context).pop();
+                    },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: _isSendingResetEmail ? null : _sendForgotPasswordEmail,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF27AE60),
+              ),
+              child: _isSendingResetEmail
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text('Send Reset Link'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -32,6 +32,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     super.initState();
     // _futureSchedules = _service.fetchTodaySchedules(widget.token); // Removed
     // _futureFarmWorkersWithTodaySchedules = _service.fetchFarmWorkersWithTodaySchedules(widget.token); // Only use if backend is implemented
+
+    // FETCH FARM WORKERS ASSIGNED TO THIS SPECIFIC TECHNICIAN
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FarmWorkerProvider>(context, listen: false)
           .fetchFarmWorkers(widget.token, widget.technicianId);
@@ -61,7 +63,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             if (value == 'profile') {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => ManageProfileScreen(technicianId: widget.technicianId)),
+                MaterialPageRoute(
+                    builder: (_) =>
+                        ManageProfileScreen(technicianId: widget.technicianId)),
               );
             } else if (value == 'logout') {
               await AuthService().logout();
@@ -331,7 +335,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   Widget _buildReports() {
-    return TechnicianReportScreen(token: widget.token, technicianId: widget.technicianId);
+    return TechnicianReportScreen(
+        token: widget.token, technicianId: widget.technicianId);
   }
 
   Widget _buildManageProfile() {
@@ -419,7 +424,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
   bool _loading = false;
   bool _editing = false;
   Technician? _technician;
-  
+
   // Form controllers
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
@@ -455,13 +460,15 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
       print('Token available: ${token != null}');
       print('Technician ID: ${widget.technicianId}');
       print('API Base URL: ${ApiConfig.baseUrl}');
-      
+
       if (token != null) {
         // Test API connection first
-        final isApiReachable = await _technicianService.testApiConnection(token);
+        final isApiReachable =
+            await _technicianService.testApiConnection(token);
         print('API reachable: $isApiReachable');
-        
-        final technician = await _technicianService.getTechnicianProfile(token, widget.technicianId);
+
+        final technician = await _technicianService.getTechnicianProfile(
+            token, widget.technicianId);
         setState(() {
           _technician = technician;
           _firstNameController.text = technician.firstName;
@@ -470,7 +477,8 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
           _emailController.text = technician.emailAddress;
           _phoneController.text = technician.phoneNumber ?? '';
           _addressController.text = technician.address ?? '';
-          _birthDateController.text = technician.birthDate?.toIso8601String().split('T')[0] ?? '';
+          _birthDateController.text =
+              technician.birthDate?.toIso8601String().split('T')[0] ?? '';
           _sex = technician.sex;
           _status = technician.status;
           _loading = false;
@@ -478,7 +486,9 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
       } else {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load technician data - No token available')),
+          const SnackBar(
+              content:
+                  Text('Failed to load technician data - No token available')),
         );
       }
     } catch (e) {
@@ -510,12 +520,13 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
         _emailController.text = _technician!.emailAddress;
         _phoneController.text = _technician!.phoneNumber ?? '';
         _addressController.text = _technician!.address ?? '';
-        _birthDateController.text = _technician!.birthDate?.toIso8601String().split('T')[0] ?? '';
+        _birthDateController.text =
+            _technician!.birthDate?.toIso8601String().split('T')[0] ?? '';
         _sex = _technician!.sex;
         _status = _technician!.status;
         _loading = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Using sample data. API error: ${e.toString()}'),
@@ -532,7 +543,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
       final token = await AuthService().getToken();
       if (token != null) {
         final updateData = <String, dynamic>{};
-        
+
         // Only add non-null and non-empty values
         if (_firstNameController.text.isNotEmpty) {
           updateData['first_name'] = _firstNameController.text;
@@ -561,17 +572,17 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
         if (_status != null && _status!.isNotEmpty) {
           updateData['status'] = _status;
         }
-        
+
         print('Sending update data: $updateData');
-        
-        final updatedTechnician = await _technicianService.updateTechnicianProfile(
-          token, widget.technicianId, updateData);
-        
+
+        final updatedTechnician = await _technicianService
+            .updateTechnicianProfile(token, widget.technicianId, updateData);
+
         setState(() {
           _technician = updatedTechnician;
           _editing = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully!')),
         );
@@ -644,14 +655,14 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Personal Information Section
             const Text(
               'Personal Information',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -661,7 +672,8 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
                       labelText: 'First Name *',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     enabled: _editing,
                   ),
                 ),
@@ -673,14 +685,15 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
                       labelText: 'Last Name *',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     enabled: _editing,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _middleNameController,
               decoration: const InputDecoration(
@@ -690,7 +703,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               enabled: _editing,
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -714,7 +727,8 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
                       DropdownMenuItem(value: 'Male', child: Text('Male')),
                       DropdownMenuItem(value: 'Female', child: Text('Female')),
                     ],
-                    onChanged: _editing ? (v) => setState(() => _sex = v) : null,
+                    onChanged:
+                        _editing ? (v) => setState(() => _sex = v) : null,
                     decoration: const InputDecoration(
                       labelText: 'Sex',
                       border: OutlineInputBorder(),
@@ -724,14 +738,14 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Contact Information Section
             const Text(
               'Contact Information',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -742,7 +756,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               enabled: _editing,
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _phoneController,
               decoration: const InputDecoration(
@@ -752,7 +766,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               enabled: _editing,
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _addressController,
               decoration: const InputDecoration(
@@ -763,14 +777,14 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               enabled: _editing,
             ),
             const SizedBox(height: 24),
-            
+
             // Status Section
             const Text(
               'Account Status',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             DropdownButtonFormField<String>(
               value: _status,
               items: const [
@@ -784,14 +798,14 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // ID Picture Section
             const Text(
               'ID Picture',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 _technician!.idPicture != null
@@ -821,7 +835,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            
+
             // Action Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -871,12 +885,14 @@ class FarmWorkerProvider with ChangeNotifier {
   bool get loading => _loading;
   String? get error => _error;
 
+  // FETCH FARM WORKERS ASSIGNED TO SPECIFIC TECHNICIAN
   Future<void> fetchFarmWorkers(String token, int technicianId) async {
     _loading = true;
     _error = null;
     notifyListeners();
     try {
       final service = FarmWorkerService();
+      // THIS WILL NOW ONLY RETURN FARM WORKERS ASSIGNED TO THIS TECHNICIAN
       _farmWorkers = await service.getAssignedFarmWorkers(token, technicianId);
     } catch (e) {
       _error = e.toString();

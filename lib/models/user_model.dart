@@ -127,7 +127,8 @@ class RequestModel {
       supplyId: json['supply_id'],
       supplyName: json['supply_name'],
       createdAt: DateTime.parse(
-          json['created_at'] ?? DateTime.now().toIso8601String()),
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
@@ -141,11 +142,7 @@ class InventoryItem {
   final String name;
   final int quantity;
 
-  InventoryItem({
-    required this.id,
-    required this.name,
-    required this.quantity,
-  });
+  InventoryItem({required this.id, required this.name, required this.quantity});
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
     return InventoryItem(
@@ -181,7 +178,8 @@ class NotificationModel {
       type: json['type'] ?? '-',
       data: json['data'],
       createdAt: DateTime.parse(
-          json['created_at'] ?? DateTime.now().toIso8601String()),
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }
@@ -227,7 +225,7 @@ class Technician {
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       middleName: json['middle_name'],
-      birthDate: json['birth_date'] != null 
+      birthDate: json['birth_date'] != null
           ? DateTime.tryParse(json['birth_date'])
           : null,
       sex: json['sex'],
@@ -237,13 +235,13 @@ class Technician {
       status: json['status'] ?? 'Active',
       profilePicture: json['profile_picture'],
       idPicture: json['id_picture'],
-      deletedAt: json['deleted_at'] != null 
+      deletedAt: json['deleted_at'] != null
           ? DateTime.tryParse(json['deleted_at'])
           : null,
-      createdAt: json['created_at'] != null 
+      createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
           : null,
-      updatedAt: json['updated_at'] != null 
+      updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'])
           : null,
     );
@@ -311,7 +309,7 @@ class FarmWorkerProfile {
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       middleName: json['middle_name'],
-      birthDate: json['birth_date'] != null 
+      birthDate: json['birth_date'] != null
           ? DateTime.tryParse(json['birth_date'])
           : null,
       sex: json['sex'],
@@ -321,13 +319,13 @@ class FarmWorkerProfile {
       profilePicture: json['profile_picture'],
       idPicture: json['id_picture'],
       technicianId: json['technician_id'] ?? 0,
-      deletedAt: json['deleted_at'] != null 
+      deletedAt: json['deleted_at'] != null
           ? DateTime.tryParse(json['deleted_at'])
           : null,
-      createdAt: json['created_at'] != null 
+      createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
           : null,
-      updatedAt: json['updated_at'] != null 
+      updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'])
           : null,
     );
