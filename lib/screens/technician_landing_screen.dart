@@ -44,14 +44,15 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   // BUILD APP BAR
   PreferredSizeWidget _buildAppBar() {
     return PreferredSize(
-      preferredSize: Size.fromHeight(140 + MediaQuery.of(context).padding.top),
+      preferredSize: Size.fromHeight(180 + MediaQuery.of(context).padding.top),
       child: Container(
         padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         color: Colors.white,
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // ====================================================
               // GREETING ROW
@@ -63,13 +64,13 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                       children: [
                         Text('Hi Technician!',
                             style: TextStyle(
-                                fontSize: 24,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF2C3E50))),
-                        SizedBox(height: 4),
+                        SizedBox(height: 2),
                         Text('May you always in a good condition',
                             style: TextStyle(
-                                fontSize: 14, color: Colors.grey[600])),
+                                fontSize: 12, color: Colors.grey[600])),
                       ],
                     ),
                   ),
@@ -164,14 +165,14 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 8),
               // ====================================================
               // SEARCH BAR ROW
               Row(
                 children: [
                   Expanded(
                     child: Container(
-                      height: 48,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -201,8 +202,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
                       ),
                     ),
@@ -211,8 +212,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   // FILTER BUTTON
                   SizedBox(width: 12),
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: Color(0xFFE8D5FF),
                       borderRadius: BorderRadius.circular(12),
