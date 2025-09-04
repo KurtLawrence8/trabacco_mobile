@@ -5,7 +5,12 @@ import '../models/schedule.dart';
 import '../config/api_config.dart';
 
 class ScheduleService {
-  Future<void> updateScheduleStatus(int id, String status, String token) async {
+  Future<void> updateScheduleStatus(
+      int? id, String status, String token) async {
+    if (id == null) {
+      throw Exception('Cannot update schedule status: Schedule ID is null');
+    }
+
     print(
         '[ScheduleService] [updateScheduleStatus] Starting update for schedule ID: $id with status: $status');
     print('[ScheduleService] [updateScheduleStatus] Using token: $token');
@@ -93,7 +98,7 @@ class ScheduleService {
 
             final schedule = Schedule.fromJson(json);
             print(
-                '[ScheduleService] [fetchSchedulesForFarmWorker] Successfully parsed schedule with ID: ${schedule.displayId}');
+                '[ScheduleService] [fetchSchedulesForFarmWorker] Successfully parsed schedule with ID: ${schedule.id}');
             return schedule;
           } catch (e) {
             print(

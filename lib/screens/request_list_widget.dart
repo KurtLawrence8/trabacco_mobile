@@ -19,6 +19,9 @@ class _RequestListWidgetState extends State<RequestListWidget> {
   @override
   void initState() {
     super.initState();
+    print(
+        'RequestListWidget: Initializing for farm worker ID: ${widget.farmWorkerId}');
+    print('RequestListWidget: Token length: ${widget.token.length}');
     _requestsFuture = RequestService()
         .getRequestsForFarmWorker(widget.token, widget.farmWorkerId);
   }
@@ -43,158 +46,312 @@ class _RequestListWidgetState extends State<RequestListWidget> {
     return FutureBuilder<List<RequestModel>>(
       future: _requestsFuture,
       builder: (context, snapshot) {
+        print(
+            'RequestListWidget: Connection state: ${snapshot.connectionState}');
+        print('RequestListWidget: Has data: ${snapshot.hasData}');
+        print('RequestListWidget: Has error: ${snapshot.hasError}');
+        if (snapshot.hasError) {
+          print('RequestListWidget: Error: ${snapshot.error}');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 80,
+                  color: Colors.red[300],
+                ),
+                SizedBox(height: 24),
+                Text(
+                  'Error loading requests',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.red[600],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '${snapshot.error}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _refresh,
+                  child: Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No requests found.'));
+          print('RequestListWidget: No data or empty list');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 80,
+                  color: Color(0xFFB0B0B0),
+                ),
+                SizedBox(height: 24),
+                Text(
+                  'No requests found.',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF808080),
+                  ),
+                ),
+              ],
+            ),
+          );
         }
         final requests = snapshot.data!;
-        return ListView.separated(
-          itemCount: requests.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 14),
-          itemBuilder: (context, i) {
-            final req = requests[i];
-            final isPending =
-                (req.status?.toLowerCase().trim() ?? '') == 'pending';
-            return Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(18.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+
+        // Group requests by date
+        Map<String, List<RequestModel>> groupedRequests = {};
+        for (var req in requests) {
+          String dateKey = _formatDate(req.createdAt);
+          if (!groupedRequests.containsKey(dateKey)) {
+            groupedRequests[dateKey] = [];
+          }
+          groupedRequests[dateKey]!.add(req);
+        }
+
+        // Create list of date groups
+        List<MapEntry<String, List<RequestModel>>> dateGroups = groupedRequests
+            .entries
+            .toList()
+          ..sort((a, b) => b.key.compareTo(a.key)); // Sort by date descending
+
+        return ListView.builder(
+          itemCount: dateGroups.length,
+          itemBuilder: (context, groupIndex) {
+            final dateGroup = dateGroups[groupIndex];
+            final date = dateGroup.key;
+            final requestsForDate = dateGroup.value;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Date header
+                Padding(
+                  padding:
+                      EdgeInsets.only(left: 8, right: 20, top: 2, bottom: 2),
+                  child: Text(
+                    date,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                ),
+                // Requests for this date
+                ...requestsForDate
+                    .map((req) => _buildNotificationStyleRequest(req)),
+                if (groupIndex < dateGroups.length - 1) SizedBox(height: 8),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Unknown Date';
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(Duration(days: 1));
+    final requestDate = DateTime(date.year, date.month, date.day);
+
+    if (requestDate == today) {
+      return 'Today';
+    } else if (requestDate == yesterday) {
+      return 'Yesterday';
+    } else {
+      return '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
+    }
+  }
+
+  Widget _buildNotificationStyleRequest(RequestModel req) {
+    final isPending = (req.status?.toLowerCase().trim() ?? '') == 'pending';
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icon
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: req.type == 'cash_advance'
+                  ? Colors.green[100]
+                  : Colors.blue[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              req.type == 'cash_advance'
+                  ? Icons.account_balance_wallet_rounded
+                  : Icons.inventory_2_rounded,
+              color: req.type == 'cash_advance'
+                  ? Colors.green[700]
+                  : Colors.blue[700],
+              size: 20,
+            ),
+          ),
+          SizedBox(width: 12),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title and status
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          req.type == 'cash_advance'
-                              ? Icons.attach_money
-                              : Icons.inventory_2,
-                          color: req.type == 'cash_advance'
-                              ? Colors.green
-                              : Colors.blue,
-                          size: 28,
+                    Expanded(
+                      child: Text(
+                        req.type == 'cash_advance'
+                            ? 'Cash Advance'
+                            : 'Supply Request',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2C3E50),
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          req.type == 'cash_advance'
-                              ? 'Cash Advance'
-                              : 'Supply',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: req.status == 'approved'
-                                ? Colors.green[100]
-                                : req.status == 'rejected'
-                                    ? Colors.red[100]
-                                    : Colors.orange[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            req.status!.toUpperCase(),
-                            style: TextStyle(
-                              color: req.status == 'approved'
-                                  ? Colors.green[800]
-                                  : req.status == 'rejected'
-                                      ? Colors.red[800]
-                                      : Colors.orange[800],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (isPending)
-                          IconButton(
-                            icon: const Icon(Icons.edit,
-                                color: Color(0xFF27AE60)),
-                            tooltip: 'Edit',
-                            onPressed: () => _editRequest(req),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    if (req.type == 'cash_advance' && req.amount != null)
-                      Row(
-                        children: [
-                          Icon(Icons.payments,
-                              size: 18, color: Colors.grey[600]),
-                          const SizedBox(width: 6),
-                          Text('Amount: ₱${req.amount!.toStringAsFixed(2)}',
-                              style: const TextStyle(fontSize: 16)),
-                        ],
                       ),
-                    if (req.type == 'supply' && req.supplyName != null)
-                      Row(
-                        children: [
-                          Icon(Icons.inventory,
-                              size: 18, color: Colors.grey[600]),
-                          const SizedBox(width: 6),
-                          Text('Supply: ${req.supplyName}',
-                              style: const TextStyle(fontSize: 16)),
-                        ],
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: req.status == 'approved'
+                            ? Colors.green[100]
+                            : req.status == 'rejected'
+                                ? Colors.red[100]
+                                : Colors.orange[100],
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.edit_note,
-                            size: 18, color: Colors.grey[600]),
-                        const SizedBox(width: 6),
-                        Expanded(
-                            child: Text(req.reason ?? '-',
-                                style: const TextStyle(fontSize: 15))),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.calendar_today,
-                            size: 16, color: Colors.grey[500]),
-                        const SizedBox(width: 6),
-                        Text(req.createdAt.toString() ?? '',
-                            style: TextStyle(
-                                fontSize: 13, color: Colors.grey[700])),
-                      ],
-                    ),
-                    if (req.adminNote != null &&
-                        req.adminNote!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(8),
+                      child: Text(
+                        req.status?.toUpperCase() ?? 'PENDING',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: req.status == 'approved'
+                              ? Colors.green[800]
+                              : req.status == 'rejected'
+                                  ? Colors.red[800]
+                                  : Colors.orange[800],
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.info_outline,
-                                color: Colors.blue, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                req.adminNote!,
-                                style: TextStyle(
-                                    fontSize: 14, color: Colors.blue[900]),
-                              ),
-                            ),
-                          ],
+                      ),
+                    ),
+                    if (isPending) ...[
+                      SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => _editRequest(req),
+                        child: Icon(
+                          Icons.edit,
+                          color: Color(0xFF27AE60),
+                          size: 18,
                         ),
                       ),
                     ],
                   ],
                 ),
-              ),
-            );
-          },
-        );
-      },
+                SizedBox(height: 4),
+                // Amount or supply
+                if (req.type == 'cash_advance' && req.amount != null)
+                  Text(
+                    'Amount: ₱${req.amount!.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  )
+                else if (req.type == 'supply' && req.supplyName != null)
+                  Text(
+                    'Supply: ${req.supplyName}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                SizedBox(height: 4),
+                // Description label
+                Text(
+                  'Description:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[500],
+                  ),
+                ),
+                SizedBox(height: 2),
+                // Reason
+                Text(
+                  req.reason ?? 'No reason provided',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // Admin note
+                if (req.adminNote != null &&
+                    req.adminNote!.trim().isNotEmpty) ...[
+                  SizedBox(height: 8),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue[700],
+                          size: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            req.adminNote!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.blue[900],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

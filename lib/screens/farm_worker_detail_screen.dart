@@ -38,138 +38,241 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
   Widget build(BuildContext context) {
     final details = widget.farmWorker;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Farm Worker Details'),
-        backgroundColor: const Color(0xFF27AE60),
-        elevation: 1,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+      //CHANGES STARTS HERE NA PART HANGGANG LAST LINE
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Header with back button and title
+          Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 10,
+              left: 20,
+              right: 20,
+              bottom: 10,
+            ),
+            color: Color(0xFF27AE60),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                  padding: EdgeInsets.zero,
+                ),
+                Expanded(
+                  child: Text(
+                    'Farm Worker Details',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 48), // Balance the back button
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Farm Worker Information Card
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor:
-                              const Color(0xFF27AE60).withOpacity(0.1),
-                          child: const Icon(Icons.person,
-                              size: 36, color: Color(0xFF27AE60)),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${details.firstName} ${details.lastName}',
-                                  style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold)),
-                              if (details.sex != null)
-                                Row(
-                                  children: [
-                                    Icon(Icons.wc,
-                                        size: 18, color: Colors.grey[600]),
-                                    const SizedBox(width: 4),
-                                    Text('${details.sex}',
-                                        style:
-                                            TextStyle(color: Colors.grey[700])),
-                                  ],
+                        // Profile Section
+                        Row(
+                          children: [
+                            // Profile picture
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFE8D5FF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  details.firstName[0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: Color(0xFF6B21A8),
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                            ],
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            // Name and Gender
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${details.firstName} ${details.lastName}',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                  if (details.sex != null) ...[
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.person_rounded,
+                                            size: 24, color: Colors.grey[600]),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          details.sex!,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 20),
+
+                        // Contact and Personal Details
+                        _buildDetailRow(
+                          icon: Icons.phone_rounded,
+                          iconColor: Colors.grey[600]!,
+                          text: details.phoneNumber,
+                        ),
+                        if (details.address != null) ...[
+                          SizedBox(height: 12),
+                          _buildDetailRow(
+                            icon: Icons.location_on_rounded,
+                            iconColor: Colors.grey[600]!,
+                            text: details.address!,
+                          ),
+                        ],
+                        if (details.birthDate != null) ...[
+                          SizedBox(height: 12),
+                          _buildDetailRow(
+                            icon: Icons.cake_rounded,
+                            iconColor: Colors.grey[600]!,
+                            text: details.birthDate!,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  // Create Request Button
+                  Container(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _openRequestScreen,
+                      icon: Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      label: Text(
+                        'Create Request',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF27AE60),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  // Requests Section
+                  Padding(
+                    padding: EdgeInsets.all(0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Requests',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
                           ),
                         ),
+                        Spacer(),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              requestListKey = UniqueKey();
+                            });
+                          },
+                          icon: Icon(Icons.refresh, color: Color(0xFF27AE60)),
+                          tooltip: 'Refresh requests',
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        const Icon(Icons.phone,
-                            color: Colors.blueGrey, size: 20),
-                        const SizedBox(width: 8),
-                        Text(details.phoneNumber,
-                            style: const TextStyle(fontSize: 16)),
-                      ],
+                  ),
+
+                  // Request List
+                  Container(
+                    height: 400, // Increased height for better visibility
+                    child: RequestListWidget(
+                      key: requestListKey,
+                      farmWorkerId: widget.farmWorker.id,
+                      token: widget.token,
                     ),
-                    if (details.address != null) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on,
-                              color: Colors.redAccent, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                              child: Text(details.address!,
-                                  style: const TextStyle(fontSize: 16))),
-                        ],
-                      ),
-                    ],
-                    if (details.birthDate != null) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const Icon(Icons.cake,
-                              color: Colors.orange, size: 20),
-                          const SizedBox(width: 8),
-                          Text(details.birthDate!,
-                              style: const TextStyle(fontSize: 16)),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Center(
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _openRequestScreen,
-                  icon: const Icon(Icons.add_circle_outline, size: 22),
-                  label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.0),
-                    child: Text('Create Request',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF27AE60),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 3,
-                  ),
-                ),
+                ],
               ),
             ),
-            const SizedBox(height: 28),
-            const Text('Requests',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF222B45))),
-            const SizedBox(height: 8),
-            Expanded(
-              child: RequestListWidget(
-                key: requestListKey,
-                farmWorkerId: widget.farmWorker.id,
-                token: widget.token,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required Color iconColor,
+    required String text,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 24),
+        SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

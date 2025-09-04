@@ -3,14 +3,14 @@ import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'technician_report_screen.dart';
 import 'schedule_page.dart';
-import '../models/schedule.dart';
-import '../services/schedule_service.dart';
+
 import 'package:provider/provider.dart';
 import 'farm_worker_detail_screen.dart';
 import 'technician_farms_screen.dart';
-import '../models/user_model.dart' show NotificationModel, Technician;
+import '../models/user_model.dart' show Technician;
 import '../services/auth_service.dart' show TechnicianService;
 import '../config/api_config.dart';
+import 'request_screen.dart';
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
@@ -40,300 +40,423 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     });
   }
 
+  // ====================================================
+  // BUILD APP BAR
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: const Color(0xFF27AE60),
-      elevation: 2,
-      title: const Row(
-        children: [
-          Icon(Icons.agriculture, color: Colors.white),
-          SizedBox(width: 8),
-          Text('Tabacco',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ],
-      ),
-      actions: [
-        PopupMenuButton<String>(
-          icon: const CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Icon(Icons.person, color: Color(0xFF27AE60)),
+    return PreferredSize(
+      preferredSize: Size.fromHeight(140 + MediaQuery.of(context).padding.top),
+      child: Container(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        color: Colors.white,
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ====================================================
+              // GREETING ROW
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Hi Technician!',
+                            style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3E50))),
+                        SizedBox(height: 4),
+                        Text('May you always in a good condition',
+                            style: TextStyle(
+                                fontSize: 14, color: Colors.grey[600])),
+                      ],
+                    ),
+                  ),
+                  // ====================================================
+                  // NOTIFICATIONS ROW
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          shape: BoxShape.circle,
+                        ),
+                        // ====================================================
+                        // NOTIFICATIONS BUTTON
+                        child: IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => NotificationsScreen()),
+                            );
+                          },
+                          icon: Icon(Icons.notifications_outlined,
+                              color: Colors.grey[700], size: 20),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                      // ====================================================
+                      // POPUP MENU BUTTON
+                      SizedBox(width: 12),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          shape: BoxShape.circle,
+                        ),
+                        child: PopupMenuButton<String>(
+                          icon: Icon(Icons.person,
+                              color: Colors.grey[700], size: 20),
+                          padding: EdgeInsets.zero,
+                          onSelected: (value) async {
+                            if (value == 'profile') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => ManageProfileScreen(
+                                        technicianId: widget.technicianId)),
+                              );
+                            } else if (value == 'logout') {
+                              await AuthService().logout();
+                              if (!mounted) return;
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginScreen()),
+                                (route) => false,
+                              );
+                            }
+                          },
+                          // ====================================================
+                          // POPUP MENU ITEM BUILDER
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'profile',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.settings,
+                                      color: Color(0xFF27AE60)),
+                                  SizedBox(width: 8),
+                                  Text('Manage Profile')
+                                ],
+                              ),
+                            ),
+                            // ====================================================
+                            // LOGOUT BUTTON
+                            const PopupMenuItem(
+                              value: 'logout',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.logout, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Logout')
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              // ====================================================
+              // SEARCH BAR ROW
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Color(0xFF9E9E9E),
+                          width: 1.0,
+                        ),
+                      ),
+                      // ====================================================
+                      // SEARCH BAR
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'farm worker, farm add...',
+                          hintStyle:
+                              TextStyle(color: Colors.grey[500], fontSize: 16),
+                          prefixIcon: Icon(Icons.search,
+                              color: Colors.grey[600], size: 22),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // ====================================================
+                  // FILTER BUTTON
+                  SizedBox(width: 12),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFE8D5FF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        // Filter functionality
+                      },
+                      icon:
+                          Icon(Icons.tune, color: Color(0xFF6B21A8), size: 22),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          onSelected: (value) async {
-            if (value == 'profile') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) =>
-                        ManageProfileScreen(technicianId: widget.technicianId)),
-              );
-            } else if (value == 'logout') {
-              await AuthService().logout();
-              if (!mounted) return;
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'profile',
-              child: Row(
-                children: [
-                  Icon(Icons.settings, color: Color(0xFF27AE60)),
-                  SizedBox(width: 8),
-                  Text('Manage Profile')
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'logout',
-              child: Row(
-                children: [
-                  Icon(Icons.logout, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Logout')
-                ],
-              ),
-            ),
-          ],
         ),
-      ],
-      iconTheme: const IconThemeData(color: Colors.white),
+      ),
     );
   }
 
   Widget _buildDashboard() {
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       children: [
-        const Text('Welcome, Technician!',
-            style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF222B45))),
-        const SizedBox(height: 16),
-        // Button to view farms of assigned farm workers
-        ElevatedButton.icon(
-          icon: Icon(Icons.map, color: Colors.white),
-          label: Text('View My Workers\' Farms on Map/List'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF27AE60),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => TechnicianFarmsScreen(),
-              ),
-            );
-          },
+        // ====================================================
+        // QUICK ACTIONS SECTION
+        Row(
+          children: [
+            Icon(Icons.rocket_launch, color: Color(0xFFFFC107), size: 20),
+            SizedBox(width: 8),
+            Text('Quick Actions',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF222B45))),
+          ],
         ),
         const SizedBox(height: 16),
-        Card(
-          elevation: 2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Assigned Farm Workers",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Color(0xFF2E5BFF))),
-                const SizedBox(height: 8),
-                Consumer<FarmWorkerProvider>(
-                  builder: (context, provider, _) {
-                    if (provider.loading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (provider.error != null) {
-                      return Center(child: Text('Error: \\${provider.error}'));
-                    }
-                    final farmWorkers = provider.farmWorkers;
-                    if (farmWorkers.isEmpty) {
-                      return const Text('No assigned farm workers.',
-                          style: TextStyle(color: Colors.grey));
-                    }
-                    return Column(
-                      children: farmWorkers
-                          .map((fw) => Card(
-                                elevation: 1,
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: ListTile(
-                                  title: Text("${fw.firstName} ${fw.lastName}",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  subtitle: Text(fw.phoneNumber),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => FarmWorkerDetailScreen(
-                                            farmWorker: fw,
-                                            token: widget.token),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ))
-                          .toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const Text("Today's Schedules",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Color(0xFF2E5BFF))),
-                const SizedBox(height: 8),
-                Consumer<FarmWorkerProvider>(
-                  builder: (context, provider, _) {
-                    if (provider.loading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (provider.error != null) {
-                      return Center(child: Text('Error: \\${provider.error}'));
-                    }
-                    final farmWorkers = provider.farmWorkers;
-                    if (farmWorkers.isEmpty) {
-                      return const Text('No assigned farm workers.',
-                          style: TextStyle(color: Colors.grey));
-                    }
-                    return Column(
-                      children: farmWorkers
-                          .map((fw) => Card(
-                                elevation: 1,
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: ListTile(
-                                  title: Text("${fw.firstName} ${fw.lastName}",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  subtitle: Text(fw.phoneNumber),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => SchedulePage(
-                                          userType: 'Technician',
-                                          token: widget.token,
-                                          farmWorkerId: fw.id,
-                                          farmWorkerName:
-                                              "${fw.firstName} ${fw.lastName}",
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ))
-                          .toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      final provider = Provider.of<FarmWorkerProvider>(context,
-                          listen: false);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AllFarmWorkerSchedulesPage(
-                            farmWorkers: provider.farmWorkers,
-                            token: widget.token,
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text('View All',
-                        style: TextStyle(color: Color(0xFF2E5BFF))),
+// ====================================================
+        // QUICK ACTIONS GRID
+        GridView.count(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.0,
+          children: [
+// ====================================================
+            _buildQuickActionCard(
+              icon: Icons.people_alt_rounded,
+              title: 'Assigned Farm workers',
+              subtitle: 'List of assigned farm workers',
+              color: Color(0xFF6366F1), // Indigo
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AssignedFarmWorkersScreen(
+                      token: widget.token,
+                      technicianId: widget.technicianId,
+                    ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
-          ),
+// ====================================================
+// TRANSPLANTING SCHEDULES
+            _buildQuickActionCard(
+              icon: Icons.calendar_today_rounded,
+              title: 'Transplanting schedules',
+              subtitle: 'List of schedule activities',
+              color: Color(0xFF10B981), // Emerald
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TransplantingSchedulesScreen(
+                      token: widget.token,
+                      technicianId: widget.technicianId,
+                    ),
+                  ),
+                );
+              },
+            ),
+// ====================================================
+// REQUEST SUBMISSION
+            _buildQuickActionCard(
+              icon: Icons.send_rounded,
+              title: 'Request Submission',
+              subtitle: 'Submit farm worker request',
+              color: Color(0xFFF59E0B), // Amber
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RequestSubmissionScreen(
+                      token: widget.token,
+                      technicianId: widget.technicianId,
+                    ),
+                  ),
+                );
+              },
+            ),
+// ====================================================
+// REPORT SUBMISSION
+            _buildQuickActionCard(
+              icon: Icons.assessment_rounded,
+              title: 'Report submission',
+              subtitle: 'Submit farm progress report',
+              color: Color(0xFFEF4444), // Red
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TechnicianReportScreen(
+                      token: widget.token,
+                      technicianId: widget.technicianId,
+                    ),
+                  ),
+                );
+              },
+            ),
+// ====================================================
+// FARM MAP
+            _buildQuickActionCard(
+              icon: Icons.map_rounded,
+              title: 'Farm Map',
+              subtitle: 'View assigned farm locations',
+              color: Color(0xFF3B82F6), // Blue
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TechnicianFarmsScreen(),
+                  ),
+                );
+              },
+            ),
+// ====================================================
+// NOTIFICATIONS
+            _buildQuickActionCard(
+              icon: Icons.notifications_active_rounded,
+              title: 'Notifications',
+              subtitle: 'View all notifications',
+              color: Color(0xFF8B5CF6), // Violet
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NotificationsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildSchedule() {
-    // Show a message instead of calling with ID 0
-    return const Center(
-        child: Text('Please select a farm worker to view schedules.'));
-  }
-
-  Widget _buildNotifications() {
-    return FutureBuilder<List<NotificationModel>>(
-      future: NotificationService().getNotifications(widget.token),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        final notifications = snapshot.data ?? [];
-        if (notifications.isEmpty) {
-          return const Center(
-              child: Text('No notifications found.',
-                  style: TextStyle(color: Colors.grey)));
-        }
-        return ListView.separated(
+// ====================================================
+// BUILD QUICK ACTION CARD
+  Widget _buildQuickActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08), // Light background color
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.15),
+            width: 1,
+          ),
+        ),
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          itemCount: notifications.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 14),
-          itemBuilder: (context, i) {
-            final n = notifications[i];
-            return Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(n.title,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: n.title.contains('Rejected')
-                                ? Colors.red
-                                : Colors.green)),
-                    const SizedBox(height: 8),
-                    Text(n.body, style: const TextStyle(fontSize: 15)),
-                    const SizedBox(height: 8),
-                    Text('Received: ${n.createdAt.toLocal()}',
-                        style:
-                            TextStyle(fontSize: 12, color: Colors.grey[600])),
-                  ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Simple icon container
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: Colors.white,
                 ),
               ),
-            );
-          },
-        );
-      },
+              SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                  height: 1.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 4),
+              Expanded(
+                child: Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
+  Widget _buildSchedule() {
+    // Navigate to transplanting schedules screen
+    return TransplantingSchedulesScreen(
+      token: widget.token,
+      technicianId: widget.technicianId,
+    );
+  }
+
+// ====================================================
+// BUILD REPORTS
   Widget _buildReports() {
     return TechnicianReportScreen(
         token: widget.token, technicianId: widget.technicianId);
@@ -343,66 +466,177 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     return ManageProfileScreen(technicianId: widget.technicianId);
   }
 
+  Widget _buildNavItem({
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _selectedIndex == index;
+    double iconSize = 32;
+    if (index == 1 || index == 2) {
+      iconSize = 28;
+    }
+// ====================================================
+// BUILD NAV ITEM
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected
+                  ? const Color(0xFF27AE60)
+                  : const Color(0xFF8F9BB3),
+              size: iconSize,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? const Color(0xFF27AE60)
+                    : const Color(0xFF8F9BB3),
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// ====================================================
+// BUILD CENTER REQUEST BUTTON
+  Widget _buildCenterRequestButton() {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to request submission
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RequestSubmissionScreen(
+              token: widget.token,
+              technicianId: widget.technicianId,
+            ),
+          ),
+        );
+      },
+      // ====================================================
+      // CENTER REQUEST BUTTON
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // QR-style icon with blue outline
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.green,
+                width: 2,
+              ),
+            ),
+            child: const Icon(
+              Icons.send_rounded,
+              color: Colors.green,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Label
+          const Text(
+            'Request',
+            style: TextStyle(
+              color: Color(0xFF8F9BB3),
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// ====================================================
+// BUILD TECHNICIAN LANDING SCREEN
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       _buildDashboard(),
       _buildSchedule(),
-      _buildNotifications(),
       _buildReports(),
       _buildManageProfile(),
     ];
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
+      appBar: _selectedIndex == 0
+          ? _buildAppBar()
+          : null, // Only show app bar for home tab
       body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.07),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
               offset: const Offset(0, -2),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFF27AE60),
-            unselectedItemColor: const Color(0xFF8F9BB3),
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            elevation: 0,
-            onTap: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard),
-                label: 'Dashboard',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.event_note),
-                label: 'Schedule',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.notifications),
-                label: 'Notification',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.assignment),
-                label: 'Report',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: 'Profile',
-              ),
-            ],
+        // ====================================================
+        // BOTTOM NAVIGATION BAR
+        child: SafeArea(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Home
+                _buildNavItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'Home',
+                  index: 0,
+                ),
+                // Schedule
+                _buildNavItem(
+                  icon: Icons.calendar_today_outlined,
+                  activeIcon: Icons.calendar_today,
+                  label: 'Schedule',
+                  index: 1,
+                ),
+                // Center Request Button (like GCash QR)
+                _buildCenterRequestButton(),
+                // Report
+                _buildNavItem(
+                  icon: Icons.assessment_outlined,
+                  activeIcon: Icons.assessment,
+                  label: 'Report',
+                  index: 2,
+                ),
+                // Profile
+                _buildNavItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Profile',
+                  index: 3,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -410,6 +644,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 }
 
+// ====================================================
+// MANAGE PROFILE SCREEN
 class ManageProfileScreen extends StatefulWidget {
   final int technicianId;
   const ManageProfileScreen({super.key, required this.technicianId});
@@ -418,6 +654,8 @@ class ManageProfileScreen extends StatefulWidget {
   State<ManageProfileScreen> createState() => _ManageProfileScreenState();
 }
 
+// ====================================================
+// MANAGE PROFILE SCREEN STATE
 class _ManageProfileScreenState extends State<ManageProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _technicianService = TechnicianService();
@@ -526,7 +764,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
         _status = _technician!.status;
         _loading = false;
       });
-
+// ====================================================
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Using sample data. API error: ${e.toString()}'),
@@ -536,6 +774,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
     }
   }
 
+// ====================================================
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -544,7 +783,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
       if (token != null) {
         final updateData = <String, dynamic>{};
 
-        // Only add non-null and non-empty values
+        // ONLY ADD NON-NULL AND NON-EMPTY VALUES
         if (_firstNameController.text.isNotEmpty) {
           updateData['first_name'] = _firstNameController.text;
         }
@@ -572,7 +811,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
         if (_status != null && _status!.isNotEmpty) {
           updateData['status'] = _status;
         }
-
+// ====================================================
         print('Sending update data: $updateData');
 
         final updatedTechnician = await _technicianService
@@ -582,7 +821,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
           _technician = updatedTechnician;
           _editing = false;
         });
-
+// ====================================================
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully!')),
         );
@@ -597,6 +836,8 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
     }
   }
 
+// ====================================================
+// PICK BIRTH DATE
   Future<void> _pickBirthDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -611,8 +852,9 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
     }
   }
 
+// ====================================================
+// PICK IMAGE
   Future<void> _pickImage(bool isProfile) async {
-    // TODO: Implement image picker
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Image picker not implemented in this demo.')),
     );
@@ -902,6 +1144,8 @@ class FarmWorkerProvider with ChangeNotifier {
   }
 }
 
+// ====================================================
+// ALL FARM WORKER SCHEDULES PAGE
 class AllFarmWorkerSchedulesPage extends StatelessWidget {
   final List farmWorkers;
   final String token;
@@ -942,6 +1186,841 @@ class AllFarmWorkerSchedulesPage extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+// DITO RIN MAY CHANGES HANNGANG SA LAST LINE NATO
+// Reusable Farm Worker List Widget
+class FarmWorkerListWidget extends StatefulWidget {
+  final String title;
+  final String token;
+  final int technicianId;
+  final List<Widget> Function(FarmWorker) actionButtons;
+  final String emptyStateTitle;
+  final String emptyStateSubtitle;
+  final IconData emptyStateIcon;
+
+  const FarmWorkerListWidget({
+    Key? key,
+    required this.title,
+    required this.token,
+    required this.technicianId,
+    required this.actionButtons,
+    required this.emptyStateTitle,
+    required this.emptyStateSubtitle,
+    required this.emptyStateIcon,
+  }) : super(key: key);
+
+  @override
+  State<FarmWorkerListWidget> createState() => _FarmWorkerListWidgetState();
+}
+
+// ====================================================
+// FARM WORKER LIST WIDGET STATE
+class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String? _selectedStatus;
+  String? _selectedLocation;
+  bool _showFilterCard = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+    });
+  }
+
+// ====================================================
+// FILTER FARM WORKERS
+  List<FarmWorker> _filterFarmWorkers(List<FarmWorker> farmWorkers) {
+    return farmWorkers.where((fw) {
+      // Search filter
+      bool matchesSearch = _searchQuery.isEmpty ||
+          fw.firstName.toLowerCase().contains(_searchQuery) ||
+          fw.lastName.toLowerCase().contains(_searchQuery) ||
+          fw.phoneNumber.toLowerCase().contains(_searchQuery) ||
+          (fw.address?.toLowerCase().contains(_searchQuery) ?? false);
+
+      bool matchesStatus = _selectedStatus == null || fw.sex == _selectedStatus;
+
+      // Location filter (based on address)
+      bool matchesLocation = _selectedLocation == null ||
+          (fw.address
+                  ?.toLowerCase()
+                  .contains(_selectedLocation!.toLowerCase()) ??
+              false);
+
+      return matchesSearch && matchesStatus && matchesLocation;
+    }).toList();
+  }
+
+// ====================================================
+// TOGGLE FILTER CARD
+  void _toggleFilterCard() {
+    setState(() {
+      _showFilterCard = !_showFilterCard;
+    });
+  }
+
+// ====================================================
+// BUILD FARM WORKER LIST WIDGET
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Main content
+          Column(
+            children: [
+              // Header with back button and title
+              Container(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 10,
+                  left: 20,
+                  right: 20,
+                  bottom: 10,
+                ),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        // Navigate to home screen instead of just going back
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TechnicianLandingScreen(
+                              token: widget.token,
+                              technicianId: widget.technicianId,
+                            ),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      icon: Icon(Icons.arrow_back,
+                          color: Color(0xFF2C3E50), size: 24),
+                      padding: EdgeInsets.zero,
+                    ),
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              // SEARCH AND FILTER SECTION
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Color(0xFF9E9E9E),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search Farm Worker',
+                            hintStyle: TextStyle(
+                                color: Colors.grey[500], fontSize: 16),
+                            prefixIcon: Icon(Icons.search,
+                                color: Colors.grey[600], size: 22),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(Icons.clear,
+                                        color: Colors.grey[600]),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: (_selectedStatus != null ||
+                                _selectedLocation != null)
+                            ? Color(0xFF6B21A8)
+                            : Color(0xFFE8D5FF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: _toggleFilterCard,
+                        icon: Icon(Icons.tune,
+                            color: (_selectedStatus != null ||
+                                    _selectedLocation != null)
+                                ? Colors.white
+                                : Color(0xFF6B21A8),
+                            size: 22),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // ====================================================
+              // LIST CONTENT
+              Expanded(
+                child: Consumer<FarmWorkerProvider>(
+                  builder: (context, provider, _) {
+                    if (provider.loading) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    if (provider.error != null) {
+                      return Center(child: Text('Error: ${provider.error}'));
+                    }
+                    final farmWorkers = provider.farmWorkers;
+                    final filteredFarmWorkers = _filterFarmWorkers(farmWorkers);
+                    if (filteredFarmWorkers.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              widget.emptyStateIcon,
+                              size: 80,
+                              color: Color(0xFFB0B0B0),
+                            ),
+                            SizedBox(height: 24),
+                            Text(
+                              farmWorkers.isEmpty
+                                  ? widget.emptyStateTitle
+                                  : 'No farm workers found',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF505050),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              farmWorkers.isEmpty
+                                  ? widget.emptyStateSubtitle
+                                  : 'Try adjusting your search or filter criteria',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF808080),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    // ====================================================
+                    // BUILD FARM WORKER LIST
+                    return ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: filteredFarmWorkers.length,
+                      itemBuilder: (context, index) {
+                        final fw = filteredFarmWorkers[index];
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 16),
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                spreadRadius: 1,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Profile picture
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFE8D5FF),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    fw.firstName[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: Color(0xFF6B21A8),
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              // Details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "${fw.firstName} ${fw.lastName}",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      fw.address ?? "No address provided",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      fw.phoneNumber,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Action buttons (customizable)
+                              Column(
+                                children: widget.actionButtons(fw),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          // ====================================================
+          // FILTER CARD OVERLAY (APPEARS ON TOP WITH HIGHER Z-INDEX)
+          if (_showFilterCard)
+            Positioned(
+              top: MediaQuery.of(context).padding.top +
+                  140, // POSITION BELOW SEARCH
+              left: 20,
+              right: 20,
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Color(0xFFE0E0E0),
+                      width: 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        children: [
+                          SizedBox(width: 8),
+                          Text(
+                            'Filter Options',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          Spacer(),
+                          GestureDetector(
+                            onTap: _toggleFilterCard,
+                            child: Icon(Icons.close,
+                                color: Colors.grey[600], size: 20),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      // Gender Filter
+                      DropdownButtonFormField<String>(
+                        value: _selectedStatus,
+                        decoration: InputDecoration(
+                          labelText: 'Gender',
+                          labelStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: Colors.grey[600],
+                            size: 20,
+                          ),
+                        ),
+                        dropdownColor: Colors.white,
+                        style: TextStyle(
+                          color: Color(0xFF2C3E50),
+                          fontSize: 14,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: null,
+                            child: Row(
+                              children: [
+                                Icon(Icons.all_inclusive,
+                                    color: Colors.grey[600], size: 16),
+                                SizedBox(width: 8),
+                                Text('All Gender',
+                                    style: TextStyle(color: Colors.grey[600])),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Male',
+                            child: Row(
+                              children: [
+                                Icon(Icons.male,
+                                    color: Colors.grey[600], size: 16),
+                                SizedBox(width: 8),
+                                Text('Male'),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Female',
+                            child: Row(
+                              children: [
+                                Icon(Icons.female,
+                                    color: Colors.grey[600], size: 16),
+                                SizedBox(width: 8),
+                                Text('Female'),
+                              ],
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedStatus = value;
+                          });
+                        },
+                      ),
+                      SizedBox(height: 12),
+                      // Location Filter
+                      TextFormField(
+                        initialValue: _selectedLocation ?? '',
+                        decoration: InputDecoration(
+                          labelText: 'Location (Address)',
+                          labelStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          prefixIcon: Icon(
+                            Icons.location_on_outlined,
+                            color: Colors.grey[600],
+                            size: 20,
+                          ),
+                          hintText: 'Enter city, province, or area',
+                          hintStyle:
+                              TextStyle(color: Colors.grey[500], fontSize: 14),
+                        ),
+                        style: TextStyle(
+                          color: Color(0xFF2C3E50),
+                          fontSize: 14,
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedLocation = value.isEmpty ? null : value;
+                          });
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      // Action Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedStatus = null;
+                                _selectedLocation = null;
+                              });
+                            },
+                            child: Text(
+                              'Clear All',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: _toggleFilterCard,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF6B21A8),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text('Apply'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ====================================================
+// ASSIGNED FARM WORKERS SCREEN
+class AssignedFarmWorkersScreen extends StatelessWidget {
+  final String token;
+  final int technicianId;
+
+  const AssignedFarmWorkersScreen({
+    Key? key,
+    required this.token,
+    required this.technicianId,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FarmWorkerListWidget(
+      title: 'Assigned Farm Workers',
+      token: token,
+      technicianId: technicianId,
+      emptyStateTitle: 'No assigned farm workers',
+      emptyStateSubtitle: 'Farm workers will appear here when assigned',
+      emptyStateIcon: Icons.people_outline,
+      actionButtons: (fw) => [
+        Container(
+          width: 80,
+          height: 32,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RequestScreen(
+                    token: token,
+                    farmWorker: fw,
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2196F3),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'Request',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          width: 80,
+          height: 32,
+          child: OutlinedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FarmWorkerDetailScreen(
+                    farmWorker: fw,
+                    token: token,
+                  ),
+                ),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Color(0xFF2C3E50),
+              side: BorderSide(color: Colors.grey[300]!),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'View',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ====================================================
+// TRANSPLANTING SCHEDULES SCREEN
+class TransplantingSchedulesScreen extends StatelessWidget {
+  final String token;
+  final int technicianId;
+
+  const TransplantingSchedulesScreen({
+    Key? key,
+    required this.token,
+    required this.technicianId,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FarmWorkerListWidget(
+      title: 'Transplanting Schedules',
+      token: token,
+      technicianId: technicianId,
+      emptyStateTitle: 'No farm workers assigned',
+      emptyStateSubtitle: 'Farm workers will appear here when assigned',
+      emptyStateIcon: Icons.calendar_today_outlined,
+      actionButtons: (fw) => [
+        Container(
+          width: 100,
+          height: 32,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SchedulePage(
+                    userType: 'Technician',
+                    token: token,
+                    farmWorkerId: fw.id,
+                    farmWorkerName: "${fw.firstName} ${fw.lastName}",
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF27AE60),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'View Schedule',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ====================================================
+// REQUEST SUBMISSION SCREEN
+class RequestSubmissionScreen extends StatelessWidget {
+  final String token;
+  final int technicianId;
+
+  const RequestSubmissionScreen({
+    Key? key,
+    required this.token,
+    required this.technicianId,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FarmWorkerListWidget(
+      title: 'Request Submission',
+      token: token,
+      technicianId: technicianId,
+      emptyStateTitle: 'No farm workers assigned',
+      emptyStateSubtitle: 'Farm workers will appear here when assigned',
+      emptyStateIcon: Icons.message_outlined,
+      actionButtons: (fw) => [
+        Container(
+          width: 100,
+          height: 32,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RequestScreen(
+                    token: token,
+                    farmWorker: fw,
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF27AE60),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Text(
+              'Send Request',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ====================================================
+// NOTIFICATIONS SCREEN
+class NotificationsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Notifications'),
+        backgroundColor: Color(0xFF27AE60),
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+        color: Color(0xFFF8F8F8),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.notifications_none,
+                size: 80,
+                color: Color(0xFFB0B0B0),
+              ),
+              SizedBox(height: 24),
+              Text(
+                'No notifications yet',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF505050),
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'You\'ll see notifications here when they arrive',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF808080),
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

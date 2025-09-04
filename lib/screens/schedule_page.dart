@@ -33,6 +33,8 @@ class _SchedulePageState extends State<SchedulePage> {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
   final DateFormat _dateFormatter = DateFormat('MM/dd/yyyy');
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
     _focusedDay = DateTime.now();
     _selectedDay = _focusedDay;
+    _searchController.addListener(_onSearchChanged);
 
     if (widget.farmWorkerId != 0) {
       print(
@@ -58,22 +61,55 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+    });
+
+    // Navigate to search result if there's a query
+    if (_searchQuery.isNotEmpty) {
+      _futureSchedules.then((schedules) {
+        final filtered = _filterSchedules(schedules);
+        if (filtered.isNotEmpty) {
+          _navigateToSearchResult(filtered);
+        }
+      });
+    }
+  }
+
+  List<Schedule> _filterSchedules(List<Schedule> schedules) {
+    if (_searchQuery.isEmpty) return schedules;
+    return schedules.where((schedule) {
+      return schedule.activity.toLowerCase().contains(_searchQuery) ||
+          (schedule.remarks?.toLowerCase().contains(_searchQuery) ?? false);
+    }).toList();
+  }
+
+  void _navigateToSearchResult(List<Schedule> schedules) {
+    if (_searchQuery.isNotEmpty && schedules.isNotEmpty) {
+      final firstMatch = schedules.first;
+      if (firstMatch.date != null) {
+        setState(() {
+          _selectedDay = firstMatch.date!;
+          _focusedDay = firstMatch.date!;
+        });
+      }
+    }
+  }
+
   void _updateStatus(Schedule schedule, String status) async {
     print(
-        '[SchedulePage] [_updateStatus] Updating schedule ID: ${schedule.displayId} to status: $status');
-
-    // Don't allow status updates for template schedules
-    if (schedule.isTemplate) {
-      print(
-          '[SchedulePage] [_updateStatus] Cannot update template schedule status');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot update template schedule status')),
-      );
-      return;
-    }
+        '[SchedulePage] [_updateStatus] Updating schedule ID: ${schedule.id} to status: $status');
 
     try {
-      await _service.updateScheduleStatus(schedule.id!, status, widget.token);
+      await _service.updateScheduleStatus(schedule.id, status, widget.token);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Status updated to $status')),
@@ -103,44 +139,191 @@ class _SchedulePageState extends State<SchedulePage> {
       print('[SchedulePage] [build] Today\'s date: $todayDate');
 
       return Scaffold(
+        backgroundColor: Colors.white,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: Text('${widget.farmWorkerName} Schedule'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          centerTitle: true,
+          title: Text(
+            '${widget.farmWorkerName} Schedule',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
         ),
-        body: widget.farmWorkerId == 0
-            ? const Center(
-                child: Text('PLEASE SELECT A FARM WORKER TO VIEW SCHEDULES.'))
-            : FutureBuilder<List<Schedule>>(
-                future: _futureSchedules,
-                builder: (context, snapshot) {
-                  print(
-                      '[SchedulePage] [build] FutureBuilder state: ${snapshot.connectionState}');
-                  print(
-                      '[SchedulePage] [build] FutureBuilder has error: ${snapshot.hasError}');
-                  if (snapshot.hasError) {
+        body: SingleChildScrollView(
+          child: widget.farmWorkerId == 0
+              ? _buildEmptyState(
+                  'Please select a farm worker to view schedules')
+              : FutureBuilder<List<Schedule>>(
+                  future: _futureSchedules,
+                  builder: (context, snapshot) {
                     print(
-                        '[SchedulePage] [build] FutureBuilder error: ${snapshot.error}');
+                        '[SchedulePage] [build] FutureBuilder state: ${snapshot.connectionState}');
                     print(
-                        '[SchedulePage] [build] FutureBuilder error stack trace: ${snapshot.stackTrace}');
-                  }
-                  print(
-                      '[SchedulePage] [build] FutureBuilder has data: ${snapshot.hasData}');
+                        '[SchedulePage] [build] FutureBuilder has error: ${snapshot.hasError}');
+                    if (snapshot.hasError) {
+                      print(
+                          '[SchedulePage] [build] FutureBuilder error: ${snapshot.error}');
+                      print(
+                          '[SchedulePage] [build] FutureBuilder error stack trace: ${snapshot.stackTrace}');
+                    }
+                    print(
+                        '[SchedulePage] [build] FutureBuilder has data: ${snapshot.hasData}');
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    print('[SchedulePage] [build] Showing loading indicator');
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    print(
-                        '[SchedulePage] [build] Showing error: ${snapshot.error}');
-                    print(
-                        '[SchedulePage] [build] Error type: ${snapshot.error.runtimeType}');
-                    print(
-                        '[SchedulePage] [build] Error stack trace: ${snapshot.stackTrace}');
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      print('[SchedulePage] [build] Showing loading indicator');
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                color: Color(0xFF4CAF50),
+                                strokeWidth: 3,
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Loading schedules...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF2C3E50),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      print(
+                          '[SchedulePage] [build] Showing error: ${snapshot.error}');
+                      print(
+                          '[SchedulePage] [build] Error type: ${snapshot.error.runtimeType}');
+                      print(
+                          '[SchedulePage] [build] Error stack trace: ${snapshot.stackTrace}');
 
-                    // Display detailed error information
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                      // Display detailed error information
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    size: 64, color: Colors.red),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Error Loading Schedules',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Error Type: ${snapshot.error.runtimeType}',
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.red.shade700),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Error Details: ${snapshot.error}',
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.red.shade600),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      // This will trigger a rebuild and retry
+                                    });
+                                  },
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final schedules = snapshot.data ?? [];
+                    print(
+                        '[SchedulePage] [build] Received ${schedules.length} schedules');
+
+                    // Filter out schedules with invalid data
+                    final validSchedules = schedules
+                        .where((s) => s.activity.isNotEmpty && s.date != null)
+                        .toList();
+                    print(
+                        '[SchedulePage] [build] Valid schedules: ${validSchedules.length}');
+
+                    // Show empty state if no valid schedules - NO CALENDAR
+                    if (validSchedules.isEmpty) {
+                      print(
+                          '[SchedulePage] [build] No valid schedules, showing empty state');
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: _buildEmptyState('No schedule yet assigned'),
+                      );
+                    }
+
+                    if (validSchedules.isNotEmpty) {
+                      print(
+                          '[SchedulePage] [build] First valid schedule: ${validSchedules.first}');
+                      print(
+                          '[SchedulePage] [build] First valid schedule ID: ${validSchedules.first.id} (type: ${validSchedules.first.id.runtimeType})');
+                      print(
+                          '[SchedulePage] [build] First valid schedule farm worker ID: ${validSchedules.first.farmWorkerId} (type: ${validSchedules.first.farmWorkerId.runtimeType})');
+                    }
+
+                    // Group valid schedules by their calendar date
+                    final Map<DateTime, List<Schedule>> dateToSchedules = {};
+                    try {
+                      for (final s in validSchedules) {
+                        print(
+                            '[SchedulePage] [build] Processing schedule ID: ${s.id} (type: ${s.id.runtimeType})');
+                        if (s.date == null) {
+                          print(
+                              '[SchedulePage] [build] Skipping schedule with null date: ${s.id}');
+                          continue;
+                        }
+                        final key =
+                            DateTime(s.date!.year, s.date!.month, s.date!.day);
+                        dateToSchedules.putIfAbsent(key, () => []);
+                        dateToSchedules[key]!.add(s);
+                      }
+
+                      print(
+                          '[SchedulePage] [build] Grouped schedules into ${dateToSchedules.length} dates');
+
+                      // Double check: if no dates have schedules, show empty state
+                      if (dateToSchedules.isEmpty) {
+                        print(
+                            '[SchedulePage] [build] No grouped schedules, showing empty state');
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.7,
+                          child: _buildEmptyState('No schedule yet assigned'),
+                        );
+                      }
+                    } catch (e) {
+                      print(
+                          '[SchedulePage] [build] ERROR grouping schedules: $e');
+                      print(
+                          '[SchedulePage] [build] Error type: ${e.runtimeType}');
+                      return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -148,271 +331,431 @@ class _SchedulePageState extends State<SchedulePage> {
                                 size: 64, color: Colors.red),
                             const SizedBox(height: 16),
                             const Text(
-                              'Error Loading Schedules',
+                              'Error Processing Schedules',
                               style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.red),
-                              textAlign: TextAlign.center,
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              'Error Type: ${snapshot.error.runtimeType}',
-                              style: TextStyle(
-                                  fontSize: 16, color: Colors.red.shade700),
-                              textAlign: TextAlign.center,
-                            ),
+                            Text('Error Type: ${e.runtimeType}',
+                                style: const TextStyle(color: Colors.red)),
                             const SizedBox(height: 8),
-                            Text(
-                              'Error Details: ${snapshot.error}',
-                              style: TextStyle(
-                                  fontSize: 14, color: Colors.red.shade600),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  // This will trigger a rebuild and retry
-                                });
-                              },
-                              child: const Text('Retry'),
-                            ),
+                            Text('Error Details: $e',
+                                style: const TextStyle(color: Colors.red)),
                           ],
                         ),
-                      ),
-                    );
-                  }
-
-                  final schedules = snapshot.data ?? [];
-                  print(
-                      '[SchedulePage] [build] Received ${schedules.length} schedules');
-
-                  if (schedules.isNotEmpty) {
-                    print(
-                        '[SchedulePage] [build] First schedule: ${schedules.first}');
-                    print(
-                        '[SchedulePage] [build] First schedule ID: ${schedules.first.displayId} (type: ${schedules.first.id?.runtimeType})');
-                    print(
-                        '[SchedulePage] [build] First schedule farm worker ID: ${schedules.first.farmWorkerId} (type: ${schedules.first.farmWorkerId.runtimeType})');
-                  }
-
-                  // Group schedules by their calendar date
-                  final Map<DateTime, List<Schedule>> dateToSchedules = {};
-                  try {
-                    for (final s in schedules) {
-                      print(
-                          '[SchedulePage] [build] Processing schedule ID: ${s.displayId} (type: ${s.id?.runtimeType})');
-                      if (s.date == null) {
-                        print(
-                            '[SchedulePage] [build] Skipping schedule with null date: ${s.displayId}');
-                        continue;
-                      }
-                      final key =
-                          DateTime(s.date!.year, s.date!.month, s.date!.day);
-                      dateToSchedules.putIfAbsent(key, () => []);
-                      dateToSchedules[key]!.add(s);
+                      );
                     }
 
+                    final selectedKey = _selectedDay != null
+                        ? DateTime(_selectedDay!.year, _selectedDay!.month,
+                            _selectedDay!.day)
+                        : DateTime(
+                            todayDate.year, todayDate.month, todayDate.day);
+                    final selectedSchedules =
+                        dateToSchedules[selectedKey] ?? [];
+
+                    print('[SchedulePage] [build] Selected date: $selectedKey');
                     print(
-                        '[SchedulePage] [build] Grouped schedules into ${dateToSchedules.length} dates');
-                  } catch (e) {
-                    print(
-                        '[SchedulePage] [build] ERROR grouping schedules: $e');
-                    print(
-                        '[SchedulePage] [build] Error type: ${e.runtimeType}');
-                    return Center(
+                        '[SchedulePage] [build] Schedules for selected date: ${selectedSchedules.length}');
+
+                    return Container(
+                      color: Colors.white,
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline,
-                              size: 64, color: Colors.red),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Error Processing Schedules',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                          // Search Bar
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: 'Search schedules...',
+                                prefixIcon: Icon(Icons.search,
+                                    color: Colors.grey.shade600),
+                                suffixIcon: _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.clear,
+                                            color: Colors.grey.shade600),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                        },
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide:
+                                      BorderSide(color: Colors.grey.shade300),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide:
+                                      BorderSide(color: Colors.grey.shade300),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey.shade50,
+                              ),
+                            ),
+                          ),
+                          // Calendar with padding and container
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.15),
+                                    spreadRadius: 1,
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: TableCalendar<Schedule>(
+                                  firstDay: DateTime.utc(2000, 1, 1),
+                                  lastDay: DateTime.utc(2100, 12, 31),
+                                  focusedDay: _focusedDay,
+                                  selectedDayPredicate: (day) =>
+                                      isSameDay(_selectedDay, day),
+                                  calendarFormat: _calendarFormat,
+                                  startingDayOfWeek: StartingDayOfWeek.monday,
+                                  eventLoader: (day) {
+                                    final key =
+                                        DateTime(day.year, day.month, day.day);
+                                    final events = dateToSchedules[key] ?? [];
+                                    if (events.isNotEmpty) {
+                                      print(
+                                          '[SchedulePage] [build] Calendar event loader: ${events.length} events for $key');
+                                    }
+                                    return events;
+                                  },
+                                  onDaySelected: (selectedDay, focusedDay) {
+                                    print(
+                                        '[SchedulePage] [build] Day selected: $selectedDay');
+                                    setState(() {
+                                      _selectedDay = selectedDay;
+                                      _focusedDay = focusedDay;
+                                    });
+                                  },
+                                  onPageChanged: (focusedDay) {
+                                    print(
+                                        '[SchedulePage] [build] Calendar page changed to: $focusedDay');
+                                    _focusedDay = focusedDay;
+                                  },
+                                  onFormatChanged: (format) {
+                                    print(
+                                        '[SchedulePage] [build] Calendar format changed to: $format');
+                                    setState(() {
+                                      _calendarFormat = format;
+                                    });
+                                  },
+                                  headerStyle: HeaderStyle(
+                                    formatButtonVisible: true,
+                                    titleCentered: true,
+                                    formatButtonShowsNext: false,
+                                    formatButtonDecoration: BoxDecoration(
+                                      color: const Color(0xFF4CAF50),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    formatButtonTextStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    titleTextStyle: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2C3E50),
+                                    ),
+                                    leftChevronIcon: const Icon(
+                                      Icons.chevron_left,
+                                      color: Color(0xFF4CAF50),
+                                      size: 28,
+                                    ),
+                                    rightChevronIcon: const Icon(
+                                      Icons.chevron_right,
+                                      color: Color(0xFF4CAF50),
+                                      size: 28,
+                                    ),
+                                  ),
+                                  calendarStyle: CalendarStyle(
+                                    // Today styling
+                                    todayDecoration: BoxDecoration(
+                                      color: const Color(0xFF4CAF50)
+                                          .withOpacity(0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    todayTextStyle: const TextStyle(
+                                      color: Color(0xFF4CAF50),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    // Selected day styling
+                                    selectedDecoration: const BoxDecoration(
+                                      color: Color(0xFF4CAF50),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    selectedTextStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    // Marker styling (for events)
+                                    markersMaxCount: 3,
+                                    markerDecoration: const BoxDecoration(
+                                      color: Color(0xFF2196F3),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    markerMargin: const EdgeInsets.symmetric(
+                                        horizontal: 1),
+                                    // Weekend styling
+                                    weekendTextStyle: TextStyle(
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    // Outside month styling
+                                    outsideTextStyle: TextStyle(
+                                      color: Colors.grey.shade400,
+                                    ),
+                                  ),
+                                  calendarBuilders: CalendarBuilders(
+                                    // Custom marker builder for better event display
+                                    markerBuilder: (context, day, events) {
+                                      if (events.isNotEmpty) {
+                                        return Positioned(
+                                          bottom: 2,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children:
+                                                events.take(3).map((event) {
+                                              final schedule = event;
+                                              Color markerColor;
+                                              switch (schedule.status
+                                                  .toLowerCase()) {
+                                                case 'completed':
+                                                  markerColor =
+                                                      const Color(0xFF4CAF50);
+                                                  break;
+                                                case 'cancelled':
+                                                  markerColor =
+                                                      const Color(0xFFF44336);
+                                                  break;
+                                                case 'in_progress':
+                                                  markerColor =
+                                                      const Color(0xFF2196F3);
+                                                  break;
+                                                default:
+                                                  markerColor =
+                                                      const Color(0xFFFF9800);
+                                              }
+                                              return Container(
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 1),
+                                                width: 6,
+                                                height: 6,
+                                                decoration: BoxDecoration(
+                                                  color: markerColor,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        );
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          Text('Error Type: ${e.runtimeType}',
-                              style: const TextStyle(color: Colors.red)),
-                          const SizedBox(height: 8),
-                          Text('Error Details: $e',
-                              style: const TextStyle(color: Colors.red)),
+                          // Selected Date Container
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0, vertical: 16.0),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.15),
+                                    spreadRadius: 1,
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  // Date header
+                                  Row(
+                                    children: [
+                                      Icon(Icons.calendar_month_rounded,
+                                          size: 18,
+                                          color: Colors.grey.shade600),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Selected Date',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey.shade700,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        _selectedDay != null
+                                            ? _dateFormatter
+                                                .format(_selectedDay!.toLocal())
+                                            : _dateFormatter
+                                                .format(todayDate.toLocal()),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Status legend
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      _buildLegendItem(
+                                          'Pending', const Color(0xFFFF9800)),
+                                      _buildLegendItem('In Progress',
+                                          const Color(0xFF2196F3)),
+                                      _buildLegendItem(
+                                          'Completed', const Color(0xFF4CAF50)),
+                                      _buildLegendItem(
+                                          'Cancelled', const Color(0xFFF44336)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Activity section header
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            child: Row(
+                              children: [
+                                Text(
+                                  selectedSchedules.length == 1
+                                      ? 'Activity'
+                                      : 'Activities',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF2C3E50),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          selectedSchedules.isEmpty
+                              ? _buildEmptyState('No activities for this day')
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: selectedSchedules.length,
+                                  itemBuilder: (context, index) {
+                                    try {
+                                      final s = selectedSchedules[index];
+                                      print(
+                                          '[SchedulePage] [build] Building schedule card for index $index: ${s.id}');
+                                      return _buildScheduleCard(
+                                        s,
+                                        todayDate,
+                                        (status) => _updateStatus(s, status),
+                                      );
+                                    } catch (e) {
+                                      print(
+                                          '[SchedulePage] [build] ERROR building schedule card at index $index: $e');
+                                      return Card(
+                                        color: Colors.red.shade50,
+                                        child: ListTile(
+                                          title: Text(
+                                            'Error displaying schedule',
+                                            style: TextStyle(
+                                                color: Colors.red.shade700),
+                                          ),
+                                          subtitle: Text(
+                                            'Error: $e',
+                                            style: TextStyle(
+                                                color: Colors.red.shade600),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
                         ],
                       ),
                     );
-                  }
-
-                  final selectedKey = _selectedDay != null
-                      ? DateTime(_selectedDay!.year, _selectedDay!.month,
-                          _selectedDay!.day)
-                      : DateTime(
-                          todayDate.year, todayDate.month, todayDate.day);
-                  final selectedSchedules = dateToSchedules[selectedKey] ?? [];
-
-                  print('[SchedulePage] [build] Selected date: $selectedKey');
-                  print(
-                      '[SchedulePage] [build] Schedules for selected date: ${selectedSchedules.length}');
-
-                  return Column(
-                    children: [
-                      TableCalendar<Schedule>(
-                        firstDay: DateTime.utc(2000, 1, 1),
-                        lastDay: DateTime.utc(2100, 12, 31),
-                        focusedDay: _focusedDay,
-                        selectedDayPredicate: (day) =>
-                            isSameDay(_selectedDay, day),
-                        calendarFormat: _calendarFormat,
-                        startingDayOfWeek: StartingDayOfWeek.monday,
-                        eventLoader: (day) {
-                          final key = DateTime(day.year, day.month, day.day);
-                          final events = dateToSchedules[key] ?? [];
-                          if (events.isNotEmpty) {
-                            print(
-                                '[SchedulePage] [build] Calendar event loader: ${events.length} events for $key');
-                          }
-                          return events;
-                        },
-                        onDaySelected: (selectedDay, focusedDay) {
-                          print(
-                              '[SchedulePage] [build] Day selected: $selectedDay');
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                          });
-                        },
-                        onPageChanged: (focusedDay) {
-                          print(
-                              '[SchedulePage] [build] Calendar page changed to: $focusedDay');
-                          _focusedDay = focusedDay;
-                        },
-                        onFormatChanged: (format) {
-                          print(
-                              '[SchedulePage] [build] Calendar format changed to: $format');
-                          setState(() {
-                            _calendarFormat = format;
-                          });
-                        },
-                        headerStyle: const HeaderStyle(
-                          formatButtonVisible: true,
-                          titleCentered: true,
-                        ),
-                        calendarStyle: const CalendarStyle(
-                          todayDecoration: BoxDecoration(
-                            color: Color(0xFFBBDEFB),
-                            shape: BoxShape.circle,
-                          ),
-                          selectedDecoration: BoxDecoration(
-                            color: Color(0xFF27AE60),
-                            shape: BoxShape.circle,
-                          ),
-                          markerDecoration: BoxDecoration(
-                            color: Color(0xFF2E5BFF),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 8.0),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.circle,
-                                size: 10, color: Color(0xFF2E5BFF)),
-                            const SizedBox(width: 6),
-                            const Text('Has activities'),
-                            const Spacer(),
-                            Text(
-                              _selectedDay != null
-                                  ? _dateFormatter
-                                      .format(_selectedDay!.toLocal())
-                                  : _dateFormatter.format(todayDate.toLocal()),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      Expanded(
-                        child: selectedSchedules.isEmpty
-                            ? const Center(
-                                child: Text('No activities for this day.'))
-                            : ListView.builder(
-                                itemCount: selectedSchedules.length,
-                                itemBuilder: (context, index) {
-                                  try {
-                                    final s = selectedSchedules[index];
-                                    print(
-                                        '[SchedulePage] [build] Building schedule card for index $index: ${s.displayId}');
-                                    return _buildScheduleCard(
-                                      s,
-                                      todayDate,
-                                      (status) => _updateStatus(s, status),
-                                    );
-                                  } catch (e) {
-                                    print(
-                                        '[SchedulePage] [build] ERROR building schedule card at index $index: $e');
-                                    return Card(
-                                      color: Colors.red.shade50,
-                                      child: ListTile(
-                                        title: Text(
-                                          'Error displaying schedule',
-                                          style: TextStyle(
-                                              color: Colors.red.shade700),
-                                        ),
-                                        subtitle: Text(
-                                          'Error: $e',
-                                          style: TextStyle(
-                                              color: Colors.red.shade600),
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                  },
+                ),
+        ),
       );
     } catch (e, stackTrace) {
       print('[SchedulePage] [build] EXCEPTION during build: $e');
       print('[SchedulePage] [build] Stack trace: $stackTrace');
       return Scaffold(
+        backgroundColor: Colors.white,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: Text('${widget.farmWorkerName} Schedule'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          centerTitle: true,
+          title: Text(
+            '${widget.farmWorkerName} Schedule',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
         ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              const Text(
-                'An error occurred while building the schedule page',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Error: $e',
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    // This will trigger a rebuild
-                  });
-                },
-                child: const Text('Retry'),
-              ),
-            ],
+        body: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'An error occurred while building the schedule page',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Error: $e',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      // This will trigger a rebuild
+                    });
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -423,122 +766,439 @@ class _SchedulePageState extends State<SchedulePage> {
   Widget _buildScheduleCard(
       Schedule s, DateTime todayDate, void Function(String)? onStatusChange) {
     print(
-        '[SchedulePage] [_buildScheduleCard] Building card for schedule ID: ${s.displayId}');
-    print('[SchedulePage] [_buildScheduleCard] Schedule date: ${s.date}');
-    print(
-        '[SchedulePage] [_buildScheduleCard] Schedule activity: ${s.activity}');
-    print('[SchedulePage] [_buildScheduleCard] Schedule status: ${s.status}');
+        '[SchedulePage] [_buildScheduleCard] Building card for schedule ID: ${s.id}');
 
     // DETERMINE IF THIS SCHEDULE IS FOR TODAY
     final isToday = s.date != null &&
         s.date!.year == todayDate.year &&
         s.date!.month == todayDate.month &&
         s.date!.day == todayDate.day;
-    // DETERMINE IF THIS SCHEDULE IS UPCOMING
-    final isUpcoming = s.date != null && s.date!.isAfter(todayDate);
+    final isPast = s.date != null && s.date!.isBefore(todayDate) && !isToday;
     final actionsEnabled = widget.userType == 'Technician';
-
-    print('[SchedulePage] [_buildScheduleCard] Is today: $isToday');
-    print('[SchedulePage] [_buildScheduleCard] Is upcoming: $isUpcoming');
-    print(
-        '[SchedulePage] [_buildScheduleCard] Actions enabled: $actionsEnabled');
 
     // SET COLORS BASED ON STATUS
     final isCompleted = s.status.toLowerCase() == 'completed';
     final isCancelled = s.status.toLowerCase() == 'cancelled';
-    final cardColor = isToday
-        ? K_TODAY_HIGHLIGHT
-        : isUpcoming
-            ? K_UPCOMING_DISABLED
-            : null;
-    final textColor =
-        isUpcoming && !actionsEnabled || isCompleted || isCancelled
-            ? K_DISABLED_TEXT
-            : Colors.black;
-    final iconCheckColor = actionsEnabled && !isCompleted && !isCancelled
-        ? Colors.green
-        : K_DISABLED_TEXT;
-    final iconCancelColor = actionsEnabled && !isCompleted && !isCancelled
-        ? Colors.red
-        : K_DISABLED_TEXT;
 
-    // RETURN THE CARD WIDGET
-    return Card(
-      color: cardColor,
-      child: ListTile(
-        title: Text(
-          s.activity,
-          style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+    // START CARD DESIGN
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.15),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Card(
+        color: Colors.white,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (s.date != null)
-              Text('DATE:  [${_dateFormatter.format(s.date!.toLocal())}',
-                  style: TextStyle(color: textColor)),
-            if (s.remarks != null && s.remarks!.isNotEmpty)
-              Text('REMARKS:  [${s.remarks}',
-                  style: TextStyle(color: textColor)),
-            if (s.numLaborers != null)
-              Text('LABORERS:  [${s.numLaborers}',
-                  style: TextStyle(color: textColor)),
-            if (s.unit != null && s.unit!.isNotEmpty)
-              Text('UNIT:  [${s.unit}', style: TextStyle(color: textColor)),
-            if (s.budget != null)
-              Text('BUDGET:  [${s.budget}', style: TextStyle(color: textColor)),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                if (s.status.isNotEmpty)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isCompleted
-                          ? const Color(0xFFE8F5E9)
-                          : isCancelled
-                              ? const Color(0xFFFFEBEE)
-                              : const Color(0xFFE3F2FD),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 6),
+              // Header with activity and status
+              Row(
+                children: [
+                  Expanded(
                     child: Text(
-                      s.status.toUpperCase(),
+                      s.activity,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: isCompleted
-                            ? const Color(0xFF2E7D32)
-                            : isCancelled
-                                ? const Color(0xFFC62828)
-                                : const Color(0xFF1565C0),
+                        color: isPast
+                            ? Colors.grey.shade600
+                            : const Color(0xFF2C3E50),
                       ),
                     ),
                   ),
-              ],
-            ),
-          ],
-        ),
-        trailing: widget.userType == 'Technician'
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
+                  _buildStatusChip(s.status, isToday, isPast),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Date and details
+              Row(
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.check, color: iconCheckColor),
-                    onPressed: actionsEnabled && !isCompleted && !isCancelled
-                        ? () => onStatusChange?.call('Completed')
-                        : null,
-                    tooltip: 'MARK AS FINISHED',
+                  Text(
+                    'DATE: ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.cancel, color: iconCancelColor),
-                    onPressed: actionsEnabled && !isCompleted && !isCancelled
-                        ? () => onStatusChange?.call('Cancelled')
-                        : null,
-                    tooltip: 'CANCEL',
+                  Text(
+                    s.date != null ? _dateFormatter.format(s.date!) : 'No date',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: const Color(0xFF2C3E50),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
-              )
-            : null,
+              ),
+
+              if (s.remarks != null && s.remarks!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'REMARKS: ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        s.remarks!,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: const Color(0xFF34495E),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // Additional details row
+              if (s.numLaborers != null || s.budget != null) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (s.numLaborers != null) ...[
+                      Icon(
+                        Icons.people,
+                        size: 18,
+                        color: const Color(0xFFE67E22),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${s.numLaborers} laborers',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: const Color(0xFF2C3E50),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (s.budget != null) const SizedBox(width: 20),
+                    ],
+                    if (s.budget != null) ...[
+                      Icon(
+                        Icons.attach_money,
+                        size: 18,
+                        color: const Color(0xFF27AE60),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '₱${s.budget!.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: const Color(0xFF2C3E50),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+
+              // Action buttons for technicians
+              if (actionsEnabled &&
+                  !isPast &&
+                  !isCompleted &&
+                  !isCancelled) ...[
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Colors.grey),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showConfirmationDialog(
+                          context,
+                          'Complete Task',
+                          'Are you sure you want to mark "${s.activity}" as completed?',
+                          'Complete',
+                          const Color(0xFF4CAF50),
+                          () => onStatusChange?.call('completed'),
+                        ),
+                        icon: const Icon(Icons.check_circle, size: 20),
+                        label: const Text('Complete'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4CAF50),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showConfirmationDialog(
+                          context,
+                          'Cancel Task',
+                          'Are you sure you want to cancel "${s.activity}"?',
+                          'Cancel Task',
+                          const Color(0xFFE74C3C),
+                          () => onStatusChange?.call('cancelled'),
+                        ),
+                        icon: const Icon(Icons.cancel, size: 20),
+                        label: const Text('Cancel'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE74C3C),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+    // END CARD DESIGN
+  }
+
+  Widget _buildStatusChip(String status, bool isToday, bool isPast) {
+    Color backgroundColor;
+    Color textColor;
+    IconData icon;
+
+    switch (status.toLowerCase()) {
+      case 'completed':
+        backgroundColor = const Color(0xFF4CAF50);
+        textColor = Colors.white;
+        icon = Icons.check_circle;
+        break;
+      case 'cancelled':
+        backgroundColor = const Color(0xFFE74C3C);
+        textColor = Colors.white;
+        icon = Icons.cancel;
+        break;
+      case 'in_progress':
+      case 'in progress':
+        backgroundColor = const Color(0xFF2196F3);
+        textColor = Colors.white;
+        icon = Icons.play_circle;
+        break;
+      case 'pending':
+      case 'scheduled':
+        backgroundColor = const Color(0xFFFF9800);
+        textColor = Colors.white;
+        icon = Icons.schedule;
+        break;
+      default:
+        backgroundColor = Colors.grey.shade400;
+        textColor = Colors.white;
+        icon = Icons.help;
+    }
+
+    if (isPast) {
+      backgroundColor = backgroundColor.withOpacity(0.6);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            status.toUpperCase(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmationDialog(
+    BuildContext context,
+    String title,
+    String message,
+    String confirmButtonText,
+    Color confirmColor,
+    VoidCallback onConfirm,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                confirmButtonText == 'Complete'
+                    ? Icons.check_circle
+                    : Icons.warning,
+                color: confirmColor,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onConfirm();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: confirmColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(
+                confirmButtonText,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.calendar_today_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message == 'No activities for this day'
+                ? 'No activities for this day'
+                : 'No schedule yet',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (message != 'No activities for this day') ...[
+            const SizedBox(height: 8),
+            Text(
+              'Schedules will appear here when assigned',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

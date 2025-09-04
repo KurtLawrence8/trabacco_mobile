@@ -391,13 +391,79 @@ class RequestService {
   Future<List<RequestModel>> getRequestsForFarmWorker(
       String token, int farmWorkerId) async {
     final url = ApiConfig.getUrl('/requests?farm_worker_id=$farmWorkerId');
+    print('RequestService: Fetching requests from: $url');
+    print('RequestService: Farm worker ID: $farmWorkerId');
+    print('RequestService: Token length: ${token.length}');
+
     final response = await http.get(Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token));
+
+    print('RequestService: Response status: ${response.statusCode}');
+    print('RequestService: Response body: ${response.body}');
+
     if (response.statusCode == 200) {
-      final List data = json.decode(response.body);
-      return data.map((e) => RequestModel.fromJson(e)).toList();
+      final responseData = json.decode(response.body);
+      print('RequestService: Response data type: ${responseData.runtimeType}');
+      print('RequestService: Response data: $responseData');
+
+      List data;
+      if (responseData is List) {
+        // Direct array response
+        data = responseData;
+      } else if (responseData is Map) {
+        // Object response - check common keys
+        if (responseData.containsKey('data')) {
+          data = responseData['data'] ?? [];
+        } else if (responseData.containsKey('requests')) {
+          data = responseData['requests'] ?? [];
+        } else if (responseData.containsKey('results')) {
+          data = responseData['results'] ?? [];
+        } else {
+          // If it's a single request object, wrap it in a list
+          data = [responseData];
+        }
+      } else {
+        data = [];
+      }
+
+      print('RequestService: Parsed ${data.length} requests');
+      try {
+        final allRequests = data.map((e) => RequestModel.fromJson(e)).toList();
+
+        // Filter requests to only include those for the specific farm worker
+        final filteredRequests = allRequests
+            .where((request) => request.farmWorkerId == farmWorkerId)
+            .toList();
+
+        print(
+            'RequestService: Filtered to ${filteredRequests.length} requests for farm worker $farmWorkerId');
+
+        // Log any requests that were filtered out
+        final otherRequests = allRequests
+            .where((request) => request.farmWorkerId != farmWorkerId)
+            .toList();
+
+        if (otherRequests.isNotEmpty) {
+          print(
+              'RequestService: WARNING - Found ${otherRequests.length} requests for other farm workers:');
+          for (var req in otherRequests) {
+            print(
+                'RequestService: - Request ID ${req.id} belongs to farm worker ${req.farmWorkerId}');
+          }
+        }
+
+        return filteredRequests;
+      } catch (e) {
+        print('RequestService: Error parsing request data: $e');
+        print(
+            'RequestService: Sample data: ${data.isNotEmpty ? data.first : 'No data'}');
+        throw Exception('Failed to parse request data: $e');
+      }
     } else {
-      throw Exception('Failed to load requests');
+      print(
+          'RequestService: Error response: ${response.statusCode} - ${response.body}');
+      throw Exception(
+          'Failed to load requests: ${response.statusCode} - ${response.body}');
     }
   }
 
