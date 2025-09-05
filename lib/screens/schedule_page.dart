@@ -109,17 +109,17 @@ class _SchedulePageState extends State<SchedulePage> {
         '[SchedulePage] [_updateStatus] Updating schedule ID: ${schedule.id} to status: $status');
 
     try {
-      await _service.updateScheduleStatus(schedule.id, status, widget.token);
+    await _service.updateScheduleStatus(schedule.id, status, widget.token);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Status updated to $status')),
       );
-      setState(() {
+    setState(() {
         print(
             '[SchedulePage] [_updateStatus] Refreshing schedules after status update');
-        _futureSchedules = _service.fetchSchedulesForFarmWorker(
-            widget.farmWorkerId, widget.token);
-      });
+      _futureSchedules = _service.fetchSchedulesForFarmWorker(
+          widget.farmWorkerId, widget.token);
+    });
     } catch (e) {
       print('[SchedulePage] [_updateStatus] ERROR updating status: $e');
       if (!mounted) return;
@@ -132,8 +132,8 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     try {
-      // GET TODAY'S DATE
-      final todayDate = DateTime.now();
+    // GET TODAY'S DATE
+    final todayDate = DateTime.now();
       print('[SchedulePage] [build] Building SchedulePage UI');
       print('[SchedulePage] [build] Farm worker ID: ${widget.farmWorkerId}');
       print('[SchedulePage] [build] Today\'s date: $todayDate');
@@ -146,7 +146,7 @@ class _SchedulePageState extends State<SchedulePage> {
         child: Scaffold(
           backgroundColor: Colors.white,
           resizeToAvoidBottomInset: true,
-          appBar: AppBar(
+      appBar: AppBar(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
             elevation: 0,
@@ -164,9 +164,9 @@ class _SchedulePageState extends State<SchedulePage> {
             child: widget.farmWorkerId == 0
                 ? _buildEmptyState(
                     'Please select a farm worker to view schedules')
-                : FutureBuilder<List<Schedule>>(
-                    future: _futureSchedules,
-                    builder: (context, snapshot) {
+          : FutureBuilder<List<Schedule>>(
+              future: _futureSchedules,
+              builder: (context, snapshot) {
                       print(
                           '[SchedulePage] [build] FutureBuilder state: ${snapshot.connectionState}');
                       print(
@@ -180,7 +180,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       print(
                           '[SchedulePage] [build] FutureBuilder has data: ${snapshot.hasData}');
 
-                      if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                         print(
                             '[SchedulePage] [build] Showing loading indicator');
                         return SizedBox(
@@ -206,8 +206,8 @@ class _SchedulePageState extends State<SchedulePage> {
                             ),
                           ),
                         );
-                      }
-                      if (snapshot.hasError) {
+                }
+                if (snapshot.hasError) {
                         print(
                             '[SchedulePage] [build] Showing error: ${snapshot.error}');
                         print(
@@ -267,7 +267,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         );
                       }
 
-                      final schedules = snapshot.data ?? [];
+                final schedules = snapshot.data ?? [];
                       print(
                           '[SchedulePage] [build] Received ${schedules.length} schedules');
 
@@ -370,7 +370,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       return Container(
                         color: Colors.white,
                         child: Column(
-                          children: [
+                  children: [
                             // Search Bar
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -606,7 +606,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                   children: [
                                     // Date header
                                     Row(
-                                      children: [
+                              children: [
                                         Icon(Icons.calendar_month_rounded,
                                             size: 16, // Reduced from 18
                                             color: Colors.grey.shade600),
@@ -621,7 +621,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                           ),
                                         ),
                                         const Spacer(),
-                                        Text(
+                                  Text(
                                           _selectedDay != null
                                               ? _dateFormatter.format(
                                                   _selectedDay!.toLocal())
@@ -650,6 +650,8 @@ class _SchedulePageState extends State<SchedulePage> {
                                             const Color(0xFF4CAF50)),
                                         _buildLegendItem('Cancelled',
                                             const Color(0xFFF44336)),
+                                        _buildLegendItem('Future',
+                                            const Color(0xFF9C27B0)),
                                       ],
                                     ),
                                   ],
@@ -661,7 +663,7 @@ class _SchedulePageState extends State<SchedulePage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                               child: Row(
-                                children: [
+                              children: [
                                   Text(
                                     selectedSchedules.length == 1
                                         ? 'Activity'
@@ -788,11 +790,15 @@ class _SchedulePageState extends State<SchedulePage> {
         s.date!.month == todayDate.month &&
         s.date!.day == todayDate.day;
     final isPast = s.date != null && s.date!.isBefore(todayDate) && !isToday;
+    final isFuture = s.date != null && s.date!.isAfter(todayDate);
     final actionsEnabled = widget.userType == 'Technician';
 
     // SET COLORS BASED ON STATUS
     final isCompleted = s.status.toLowerCase() == 'completed';
     final isCancelled = s.status.toLowerCase() == 'cancelled';
+    
+    // CANNOT COMPLETE FUTURE SCHEDULES - only allow completion for today or past dates
+    final canComplete = actionsEnabled && !isCompleted && !isCancelled && !isFuture;
 
     // START CARD DESIGN
     return Container(
@@ -827,7 +833,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 children: [
                   Expanded(
                     child: Text(
-                      s.activity,
+          s.activity,
                       style: TextStyle(
                         fontSize: 14, // Further reduced from 16
                         fontWeight: FontWeight.bold,
@@ -837,7 +843,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       ),
                     ),
                   ),
-                  _buildStatusChip(s.status, isToday, isPast),
+                  _buildStatusChip(s.status, isToday, isPast, isFuture),
                 ],
               ),
               const SizedBox(height: 12),
@@ -867,8 +873,8 @@ class _SchedulePageState extends State<SchedulePage> {
               if (s.remarks != null && s.remarks!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
                     Text(
                       'REMARKS: ',
                       style: TextStyle(
@@ -911,7 +917,7 @@ class _SchedulePageState extends State<SchedulePage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (s.budget != null)
+            if (s.budget != null)
                         const SizedBox(width: 16), // Reduced spacing
                     ],
                     if (s.budget != null) ...[
@@ -939,57 +945,92 @@ class _SchedulePageState extends State<SchedulePage> {
                 const SizedBox(height: 16),
                 const Divider(height: 1, color: Colors.grey),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showConfirmationDialog(
-                          context,
-                          'Complete Task',
-                          'Are you sure you want to mark "${s.activity}" as completed?',
-                          'Complete',
-                          const Color(0xFF4CAF50),
-                          () => onStatusChange?.call('Completed'),
+                
+                // Show different UI based on whether it's a future schedule
+                if (isFuture) ...[
+                  // Future schedule - show info message instead of buttons
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue.shade600,
+                          size: 20,
                         ),
-                        icon: const Icon(Icons.check_circle, size: 20),
-                        label: const Text('Complete'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CAF50),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'This schedule is for a future date. You can only complete it on or after ${s.date != null ? _dateFormatter.format(s.date!) : "the scheduled date"}.',
+                            style: TextStyle(
+                              color: Colors.blue.shade700,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                          elevation: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  // Today or past schedule - show action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: canComplete ? () => _showConfirmationDialog(
+                            context,
+                            'Complete Task',
+                            'Are you sure you want to mark "${s.activity}" as completed?',
+                            'Complete',
+                            const Color(0xFF4CAF50),
+                            () => onStatusChange?.call('Completed'),
+                          ) : null,
+                          icon: const Icon(Icons.check_circle, size: 20),
+                          label: const Text('Complete'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: canComplete ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+                            foregroundColor: canComplete ? Colors.white : Colors.grey.shade600,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: canComplete ? 2 : 0,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showConfirmationDialog(
-                          context,
-                          'Cancel Task',
-                          'Are you sure you want to cancel "${s.activity}"?',
-                          'Cancel Task',
-                          const Color(0xFFE74C3C),
-                          () => onStatusChange?.call('Cancelled'),
-                        ),
-                        icon: const Icon(Icons.cancel, size: 20),
-                        label: const Text('Cancel'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE74C3C),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showConfirmationDialog(
+                            context,
+                            'Cancel Task',
+                            'Are you sure you want to cancel "${s.activity}"?',
+                            'Cancel Task',
+                            const Color(0xFFE74C3C),
+                            () => onStatusChange?.call('Cancelled'),
                           ),
-                          elevation: 2,
+                          icon: const Icon(Icons.cancel, size: 20),
+                          label: const Text('Cancel'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE74C3C),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),
@@ -999,38 +1040,45 @@ class _SchedulePageState extends State<SchedulePage> {
     // END CARD DESIGN
   }
 
-  Widget _buildStatusChip(String status, bool isToday, bool isPast) {
+  Widget _buildStatusChip(String status, bool isToday, bool isPast, bool isFuture) {
     Color backgroundColor;
     Color textColor;
     IconData icon;
 
-    switch (status.toLowerCase()) {
-      case 'completed':
-        backgroundColor = const Color(0xFF4CAF50);
-        textColor = Colors.white;
-        icon = Icons.check_circle;
-        break;
-      case 'cancelled':
-        backgroundColor = const Color(0xFFE74C3C);
-        textColor = Colors.white;
-        icon = Icons.cancel;
-        break;
-      case 'in_progress':
-      case 'in progress':
-        backgroundColor = const Color(0xFF2196F3);
-        textColor = Colors.white;
-        icon = Icons.play_circle;
-        break;
-      case 'pending':
-      case 'scheduled':
-        backgroundColor = const Color(0xFFFF9800);
-        textColor = Colors.white;
-        icon = Icons.schedule;
-        break;
-      default:
-        backgroundColor = Colors.grey.shade400;
-        textColor = Colors.white;
-        icon = Icons.help;
+    // For future schedules, show a different color to indicate they can't be completed yet
+    if (isFuture && (status.toLowerCase() == 'pending' || status.toLowerCase() == 'scheduled')) {
+      backgroundColor = const Color(0xFF9C27B0); // Purple for future schedules
+      textColor = Colors.white;
+      icon = Icons.schedule;
+    } else {
+      switch (status.toLowerCase()) {
+        case 'completed':
+          backgroundColor = const Color(0xFF4CAF50);
+          textColor = Colors.white;
+          icon = Icons.check_circle;
+          break;
+        case 'cancelled':
+          backgroundColor = const Color(0xFFE74C3C);
+          textColor = Colors.white;
+          icon = Icons.cancel;
+          break;
+        case 'in_progress':
+        case 'in progress':
+          backgroundColor = const Color(0xFF2196F3);
+          textColor = Colors.white;
+          icon = Icons.play_circle;
+          break;
+        case 'pending':
+        case 'scheduled':
+          backgroundColor = const Color(0xFFFF9800);
+          textColor = Colors.white;
+          icon = Icons.schedule;
+          break;
+        default:
+          backgroundColor = Colors.grey.shade400;
+          textColor = Colors.white;
+          icon = Icons.help;
+      }
     }
 
     if (isPast) {
@@ -1052,8 +1100,8 @@ class _SchedulePageState extends State<SchedulePage> {
         ],
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+          mainAxisSize: MainAxisSize.min,
+          children: [
           Icon(icon, size: 14, color: textColor), // Reduced icon size
           const SizedBox(width: 3), // Reduced spacing
           Text(
@@ -1192,9 +1240,9 @@ class _SchedulePageState extends State<SchedulePage> {
                 color: color.withOpacity(0.3),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
         ),
         const SizedBox(width: 4), // Reduced spacing
         Text(

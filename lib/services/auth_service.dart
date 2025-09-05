@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import '../models/user_model.dart';
+import 'offline_first_service.dart';
 
 export '../models/user_model.dart'
     show FarmWorker, RequestModel, InventoryItem, Technician, FarmWorkerProfile;
@@ -388,6 +389,8 @@ class InventoryService {
 }
 
 class RequestService {
+  final OfflineFirstService _offlineService = OfflineFirstService();
+
   Future<List<RequestModel>> getRequestsForFarmWorker(
       String token, int farmWorkerId) async {
     final url = ApiConfig.getUrl('/requests?farm_worker_id=$farmWorkerId');
@@ -469,44 +472,8 @@ class RequestService {
 
   Future<void> createRequest(
       String token, Map<String, dynamic> requestData) async {
-    final url = ApiConfig.getUrl('/requests');
-    final now = DateTime.now().toIso8601String();
-    final payload = {
-      'technician_id': requestData['technician_id'],
-      'farm_worker_id': requestData['farm_worker_id'],
-      'request_type':
-          requestData['type'] == 'cash_advance' ? 'Cash Advance' : 'Supply',
-      'description': requestData['reason'],
-      'status': 'Pending',
-      'timestamp': now,
-      if (requestData['amount'] != null) 'amount': requestData['amount'],
-      if (requestData['supply_id'] != null)
-        'supply_id': requestData['supply_id'],
-      if (requestData['quantity'] != null) 'quantity': requestData['quantity'],
-    };
-
-    print('RequestService: Sending payload: $payload');
-    final response = await http.post(Uri.parse(url),
-        headers: ApiConfig.getHeaders(token: token),
-        body: json.encode(payload));
-
-    if (response.statusCode == 201) {
-      // Request created successfully
-      return;
-    } else if (response.statusCode == 409) {
-      // Daily limit exceeded
-      final errorData = json.decode(response.body);
-      throw Exception(
-          errorData['message'] ?? 'Daily limit exceeded for this request type');
-    } else if (response.statusCode == 422) {
-      // Validation error
-      final errorData = json.decode(response.body);
-      throw Exception(errorData['message'] ?? 'Invalid request data');
-    } else {
-      // Other errors
-      throw Exception(
-          json.decode(response.body)['message'] ?? 'Failed to create request');
-    }
+    // Use offline-first service
+    await _offlineService.createRequest(token, requestData);
   }
 
   Future<void> updateRequest(
