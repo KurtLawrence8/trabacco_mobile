@@ -33,9 +33,9 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
   String _diseaseDetected = 'None';
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _farms = [];
-  List<File> _selectedImages = []; // FOR MOBILE COMPATIBILITY
-  List<Uint8List> _selectedImageBytes = []; // FOR WEB COMPATIBILITY
-  final ImagePicker _picker = ImagePicker(); // FOR WEB COMPATIBILITY
+  List<File> _selectedImages = [];
+  List<Uint8List> _selectedImageBytes = []; // For web compatibility
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -100,7 +100,6 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
     }
   }
 
-//IMAGE UPLOAD SECTION STARTS HERE YUNG CHANGES
   Future<void> _pickImages() async {
     try {
       final List<XFile> images = await _picker.pickMultiImage();
@@ -134,7 +133,7 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
       if (image != null) {
         setState(() {
           _selectedImages.add(File(image.path));
-          // FOR WEB COMPATIBILITY, ALSO STORE BYTES
+          // For web compatibility, also store bytes
           if (kIsWeb) {
             image.readAsBytes().then((bytes) {
               _selectedImageBytes.add(bytes);
@@ -160,7 +159,6 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
       }
     });
   }
-//IMAGE UPLOAD SECTION ENDS HERE YUNG CHANGES
 
   Future<void> _submitReport() async {
     if (!_formKey.currentState!.validate()) return;
@@ -172,7 +170,9 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
     try {
       final report = {
         'technician_id': widget.technicianId ?? 1,
-        'farm_id': 1,
+        // Use a hardcoded farm_id that exists in your tbl_farms table
+        'farm_id':
+            1, // Change this to an actual farm ID from your tbl_farms table
         'accomplishments': _accomplishmentsController.text,
         'issues_observed': _issuesController.text,
         'disease_detected': _diseaseDetected,
@@ -208,7 +208,7 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
       _diseaseTypeController.clear();
       _diseaseDetected = 'None';
       _selectedDate = DateTime.now();
-      _selectedImages.clear(); // CHANGES DIN HERE LINE 211 - 212
+      _selectedImages.clear();
       _selectedImageBytes.clear();
     } catch (e) {
       if (!mounted) return;
@@ -269,7 +269,7 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                     )
                   : DropdownButtonFormField<String>(
                       value: _selectedFarmId.isEmpty ? null : _selectedFarmId,
-                      isExpanded: true, // CHANGES DIN HERE LINE 272 - 273
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'Select Farm',
                         border: const OutlineInputBorder(),
@@ -420,8 +420,7 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
               ),
               const SizedBox(height: 16),
 
-//IMAGE UPLOAD SECTION STARTS HERE YUNG CHANGES
-
+              // Image Upload Section
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -543,7 +542,6 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-//IMAGE UPLOAD SECTION ENDS HERE YUNG CHANGES
 
               // Submit Button
               ElevatedButton(
@@ -562,8 +560,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white), // CHANGES DIN HERE LINE 565 - 566
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : const Text(

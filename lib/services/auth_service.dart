@@ -482,7 +482,10 @@ class RequestService {
       if (requestData['amount'] != null) 'amount': requestData['amount'],
       if (requestData['supply_id'] != null)
         'supply_id': requestData['supply_id'],
+      if (requestData['quantity'] != null) 'quantity': requestData['quantity'],
     };
+
+    print('RequestService: Sending payload: $payload');
     final response = await http.post(Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
         body: json.encode(payload));

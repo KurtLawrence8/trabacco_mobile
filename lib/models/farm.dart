@@ -52,6 +52,17 @@ class Farm {
     return null;
   }
 
+  /// Get center coordinates for distance calculation
+  double get centerLatitude {
+    final coords = getCoordinates();
+    return coords?.latitude ?? 0.0;
+  }
+
+  double get centerLongitude {
+    final coords = getCoordinates();
+    return coords?.longitude ?? 0.0;
+  }
+
   /// Parse polygon coordinates
   List<LatLng> getPolygonCoordinates() {
     if (coordinates == null || coordinates!.isEmpty) return [];

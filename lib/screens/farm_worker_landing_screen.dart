@@ -68,7 +68,8 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             if (value == 'profile') {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => FarmWorkerManageProfileScreen()),
+                MaterialPageRoute(
+                    builder: (_) => FarmWorkerManageProfileScreen()),
               );
             } else if (value == 'logout') {
               await AuthService().logout();
@@ -166,7 +167,8 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       if (s.date != null)
-                                        Text('Date: \\${dateFormatter.format(s.date!.toLocal())}'),
+                                        Text(
+                                            'Date: \\${dateFormatter.format(s.date!.toLocal())}'),
                                       if (s.remarks != null &&
                                           s.remarks!.isNotEmpty)
                                         Text('Remarks: \\${s.remarks}'),
@@ -275,6 +277,20 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     }
   }
 
+  Widget _buildNotifications() {
+    return const Center(
+      child: Text('Notifications',
+          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
+    );
+  }
+
+  Widget _buildReports() {
+    return const Center(
+      child: Text('Reports',
+          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
+    );
+  }
+
   Widget _buildManageProfile() {
     return FarmWorkerManageProfileScreen();
   }
@@ -284,6 +300,8 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     final List<Widget> pages = [
       _buildDashboard(),
       _buildSchedule(),
+      _buildNotifications(),
+      _buildReports(),
       _buildManageProfile(),
     ];
     return Scaffold(
@@ -325,6 +343,14 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                 label: 'Schedule',
               ),
               BottomNavigationBarItem(
+                icon: Icon(Icons.notifications),
+                label: 'Notification',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.assignment),
+                label: 'Report',
+              ),
+              BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
                 label: 'Profile',
               ),
@@ -340,16 +366,18 @@ class FarmWorkerManageProfileScreen extends StatefulWidget {
   const FarmWorkerManageProfileScreen({super.key});
 
   @override
-  State<FarmWorkerManageProfileScreen> createState() => _FarmWorkerManageProfileScreenState();
+  State<FarmWorkerManageProfileScreen> createState() =>
+      _FarmWorkerManageProfileScreenState();
 }
 
-class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileScreen> {
+class _FarmWorkerManageProfileScreenState
+    extends State<FarmWorkerManageProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _farmWorkerService = FarmWorkerProfileService();
   bool _loading = false;
   bool _editing = false;
   FarmWorkerProfile? _farmWorker;
-  
+
   // Form controllers
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
@@ -384,13 +412,15 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
       print('Token available: ${token != null}');
       print('User ID: ${user?.id}');
       print('API Base URL: ${ApiConfig.baseUrl}');
-      
+
       if (token != null && user != null) {
         // Test API connection first
-        final isApiReachable = await _farmWorkerService.testApiConnection(token);
+        final isApiReachable =
+            await _farmWorkerService.testApiConnection(token);
         print('API reachable: $isApiReachable');
-        
-        final farmWorker = await _farmWorkerService.getFarmWorkerProfile(token, user.id);
+
+        final farmWorker =
+            await _farmWorkerService.getFarmWorkerProfile(token, user.id);
         setState(() {
           _farmWorker = farmWorker;
           _firstNameController.text = farmWorker.firstName;
@@ -398,7 +428,8 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
           _middleNameController.text = farmWorker.middleName ?? '';
           _phoneController.text = farmWorker.phoneNumber;
           _addressController.text = farmWorker.address ?? '';
-          _birthDateController.text = farmWorker.birthDate?.toIso8601String().split('T')[0] ?? '';
+          _birthDateController.text =
+              farmWorker.birthDate?.toIso8601String().split('T')[0] ?? '';
           _sex = farmWorker.sex;
           _status = farmWorker.status;
           _loading = false;
@@ -406,7 +437,9 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
       } else {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load farm worker data - No token available')),
+          const SnackBar(
+              content:
+                  Text('Failed to load farm worker data - No token available')),
         );
       }
     } catch (e) {
@@ -437,12 +470,13 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
         _middleNameController.text = _farmWorker!.middleName ?? '';
         _phoneController.text = _farmWorker!.phoneNumber;
         _addressController.text = _farmWorker!.address ?? '';
-        _birthDateController.text = _farmWorker!.birthDate?.toIso8601String().split('T')[0] ?? '';
+        _birthDateController.text =
+            _farmWorker!.birthDate?.toIso8601String().split('T')[0] ?? '';
         _sex = _farmWorker!.sex;
         _status = _farmWorker!.status;
         _loading = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Using sample data. API error: ${e.toString()}'),
@@ -460,7 +494,7 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
       final user = await AuthService().getCurrentUser();
       if (token != null && user != null) {
         final updateData = <String, dynamic>{};
-        
+
         // Only add non-null and non-empty values
         if (_firstNameController.text.isNotEmpty) {
           updateData['first_name'] = _firstNameController.text;
@@ -486,17 +520,17 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
         if (_status != null && _status!.isNotEmpty) {
           updateData['status'] = _status;
         }
-        
+
         print('Sending update data: $updateData');
-        
-        final updatedFarmWorker = await _farmWorkerService.updateFarmWorkerProfile(
-          token, user.id, updateData);
-        
+
+        final updatedFarmWorker = await _farmWorkerService
+            .updateFarmWorkerProfile(token, user.id, updateData);
+
         setState(() {
           _farmWorker = updatedFarmWorker;
           _editing = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully!')),
         );
@@ -569,14 +603,14 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Personal Information Section
             const Text(
               'Personal Information',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -586,7 +620,8 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
                       labelText: 'First Name *',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     enabled: _editing,
                   ),
                 ),
@@ -598,14 +633,15 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
                       labelText: 'Last Name *',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     enabled: _editing,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _middleNameController,
               decoration: const InputDecoration(
@@ -615,7 +651,7 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
               enabled: _editing,
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -639,7 +675,8 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
                       DropdownMenuItem(value: 'Male', child: Text('Male')),
                       DropdownMenuItem(value: 'Female', child: Text('Female')),
                     ],
-                    onChanged: _editing ? (v) => setState(() => _sex = v) : null,
+                    onChanged:
+                        _editing ? (v) => setState(() => _sex = v) : null,
                     decoration: const InputDecoration(
                       labelText: 'Sex',
                       border: OutlineInputBorder(),
@@ -649,14 +686,14 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Contact Information Section
             const Text(
               'Contact Information',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _phoneController,
               decoration: const InputDecoration(
@@ -667,7 +704,7 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
               enabled: _editing,
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _addressController,
               decoration: const InputDecoration(
@@ -678,14 +715,14 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
               enabled: _editing,
             ),
             const SizedBox(height: 24),
-            
+
             // Status Section
             const Text(
               'Account Status',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             DropdownButtonFormField<String>(
               value: _status,
               items: const [
@@ -699,14 +736,14 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // ID Picture Section
             const Text(
               'ID Picture',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 _farmWorker!.idPicture != null
@@ -736,7 +773,7 @@ class _FarmWorkerManageProfileScreenState extends State<FarmWorkerManageProfileS
               ],
             ),
             const SizedBox(height: 32),
-            
+
             // Action Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

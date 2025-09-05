@@ -88,6 +88,7 @@ class RequestModel {
   final int technicianId;
   final String? type; // 'CASH ADVANCE' or 'SUPPLY'
   final double? amount;
+  final int? quantity;
   final String? reason;
   final String? status;
   final int? supplyId;
@@ -102,6 +103,7 @@ class RequestModel {
     required this.technicianId,
     this.type,
     this.amount,
+    this.quantity,
     this.reason,
     this.status,
     this.supplyId,
@@ -121,6 +123,9 @@ class RequestModel {
           : (json['request_type']?.toLowerCase() == 'supply' ? 'supply' : null),
       amount: json['amount'] != null
           ? double.tryParse(json['amount'].toString())
+          : null,
+      quantity: json['quantity'] != null
+          ? int.tryParse(json['quantity'].toString())
           : null,
       reason: json['description'] ?? '-',
       status: json['status'] ?? '-',

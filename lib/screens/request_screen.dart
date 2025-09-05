@@ -19,6 +19,8 @@ class _RequestScreenState extends State<RequestScreen> {
       TextEditingController(); //DITO RIN MAY CHANGES
   final TextEditingController _amountController =
       TextEditingController(); //DITO RIN MAY CHANGES
+  final TextEditingController _quantityController =
+      TextEditingController(); //DITO RIN MAY CHANGES
   final TextEditingController _reasonController = TextEditingController();
   int? _selectedSupplyId;
   List<InventoryItem> _supplies = [];
@@ -49,8 +51,9 @@ class _RequestScreenState extends State<RequestScreen> {
     setState(() {
       bool hasRequiredFields = false;
       if (_requestType == 'Farm supply') {
-        hasRequiredFields =
-            _selectedSupplyId != null && _reasonController.text.isNotEmpty;
+        hasRequiredFields = _selectedSupplyId != null &&
+            _quantityController.text.isNotEmpty &&
+            _reasonController.text.isNotEmpty;
       } else if (_requestType == 'Cash advance') {
         hasRequiredFields = _amountController.text.isNotEmpty &&
             _reasonController.text.isNotEmpty;
@@ -70,9 +73,13 @@ class _RequestScreenState extends State<RequestScreen> {
       'type': _requestType == 'Farm supply' ? 'supply' : 'cash_advance',
       'reason': _reasonController.text,
       if (_requestType == 'Farm supply') 'supply_id': _selectedSupplyId,
+      if (_requestType == 'Farm supply')
+        'quantity': int.tryParse(_quantityController.text),
       if (_requestType == 'Cash advance')
         'amount': double.tryParse(_amountController.text),
     };
+
+    print('Request data being sent: $requestData');
     try {
       await RequestService().createRequest(widget.token, requestData);
       if (!mounted) return;
@@ -335,6 +342,51 @@ class _RequestScreenState extends State<RequestScreen> {
                                 return null;
                               },
                             ),
+                      SizedBox(height: 16),
+                      // Quantity Field for Supply
+                      Text(
+                        'Quantity',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      TextFormField(
+                        controller: _quantityController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: 'Enter quantity (e.g. 5)',
+                          hintStyle: TextStyle(color: Colors.grey[500]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Color(0xFF27AE60)),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        onChanged: (value) => _checkSubmitEnabled(),
+                        validator: (val) {
+                          if (val == null || val.isEmpty)
+                            return 'Enter quantity';
+                          if (int.tryParse(val) == null) {
+                            return 'Invalid quantity';
+                          }
+                          if (int.parse(val) <= 0) {
+                            return 'Quantity must be greater than 0';
+                          }
+                          return null;
+                        },
+                      ),
                     ] else if (_requestType == 'Cash advance') ...[
                       // Cash Amount Field
                       Text(
@@ -436,13 +488,19 @@ class _RequestScreenState extends State<RequestScreen> {
                         children: [
                           _buildSummaryRow('Request type', _requestType),
                           SizedBox(height: 8),
-                          if (_requestType == 'Farm supply')
+                          if (_requestType == 'Farm supply') ...[
                             _buildSummaryRow(
                                 'Supply name',
                                 _supplyNameController.text.isEmpty
                                     ? 'Not selected'
-                                    : _supplyNameController.text)
-                          else if (_requestType == 'Cash advance')
+                                    : _supplyNameController.text),
+                            SizedBox(height: 8),
+                            _buildSummaryRow(
+                                'Quantity',
+                                _quantityController.text.isEmpty
+                                    ? 'Not entered'
+                                    : _quantityController.text),
+                          ] else if (_requestType == 'Cash advance')
                             _buildSummaryRow(
                                 'Cash amount',
                                 _amountController.text.isEmpty

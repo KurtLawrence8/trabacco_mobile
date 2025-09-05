@@ -5,7 +5,8 @@ import '../models/farm.dart';
 import '../services/auth_service.dart';
 
 class TechnicianFarmsScreen extends StatefulWidget {
-  const TechnicianFarmsScreen({Key? key}) : super(key: key);
+  final int? focusFarmId; // Optional farm ID to focus on
+  const TechnicianFarmsScreen({Key? key, this.focusFarmId}) : super(key: key);
 
   @override
   _TechnicianFarmsScreenState createState() => _TechnicianFarmsScreenState();
@@ -25,6 +26,33 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
   void initState() {
     super.initState();
     _loadFarms();
+  }
+
+  /// Focus on a specific farm if focusFarmId is provided
+  void _focusOnFarm(List<Farm> farms) {
+    if (widget.focusFarmId != null && _mapController != null) {
+      try {
+        final targetFarm = farms.firstWhere(
+          (farm) => farm.id == widget.focusFarmId,
+        );
+
+        final coordinates = targetFarm.getCoordinates();
+        if (coordinates != null) {
+          // Add a small delay to ensure map is fully loaded
+          Future.delayed(Duration(milliseconds: 500), () {
+            if (_mapController != null) {
+              _mapController!.animateCamera(
+                CameraUpdate.newLatLngZoom(
+                    coordinates, 18.0), // Increased zoom level
+              );
+            }
+          });
+        }
+      } catch (e) {
+        // Farm not found, do nothing
+        print('Farm with ID ${widget.focusFarmId} not found');
+      }
+    }
   }
 
   /// Load farms for the current technician
@@ -120,7 +148,8 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                 final coordinates = farm.getCoordinates();
                 if (coordinates != null) {
                   _mapController!.animateCamera(
-                    CameraUpdate.newLatLng(coordinates),
+                    CameraUpdate.newLatLngZoom(
+                        coordinates, 18.0), // Increased zoom level
                   );
                 } else {
                   // Don't center on farms without coordinates
@@ -745,13 +774,25 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                         return GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: centerFarm,
-                            zoom: 10,
+                            zoom: 12, // Increased initial zoom
                           ),
                           markers: _markers,
                           polygons: _polygons,
                           mapType: _currentMapType, // Use selected map type
+                          zoomControlsEnabled: true, // Enable zoom controls
+                          zoomGesturesEnabled: true, // Enable zoom gestures
+                          scrollGesturesEnabled: true, // Enable pan gestures
+                          tiltGesturesEnabled: true, // Enable tilt gestures
+                          rotateGesturesEnabled: true, // Enable rotate gestures
+                          myLocationButtonEnabled:
+                              true, // Enable location button
+                          myLocationEnabled: true, // Enable current location
                           onMapCreated: (GoogleMapController controller) {
                             _mapController = controller;
+                            // Focus on specific farm if provided
+                            if (widget.focusFarmId != null) {
+                              _focusOnFarm(farms);
+                            }
                           },
                         );
                       } catch (e) {

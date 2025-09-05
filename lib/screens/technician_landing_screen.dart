@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
-import 'technician_report_screen.dart';
+import 'camera_report_screen.dart';
 import 'schedule_page.dart';
 
 import 'package:provider/provider.dart';
@@ -30,8 +30,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   @override
   void initState() {
     super.initState();
-    // _futureSchedules = _service.fetchTodaySchedules(widget.token); // Removed
-    // _futureFarmWorkersWithTodaySchedules = _service.fetchFarmWorkersWithTodaySchedules(widget.token); // Only use if backend is implemented
 
     // FETCH FARM WORKERS ASSIGNED TO THIS SPECIFIC TECHNICIAN
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -44,12 +42,12 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   // BUILD APP BAR
   PreferredSizeWidget _buildAppBar() {
     return PreferredSize(
-      preferredSize: Size.fromHeight(180 + MediaQuery.of(context).padding.top),
+      preferredSize: Size.fromHeight(100 + MediaQuery.of(context).padding.top),
       child: Container(
         padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         color: Colors.white,
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -61,6 +59,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text('Hi Technician!',
                             style: TextStyle(
@@ -77,10 +76,11 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   // ====================================================
                   // NOTIFICATIONS ROW
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           shape: BoxShape.circle,
@@ -96,23 +96,23 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                             );
                           },
                           icon: Icon(Icons.notifications_outlined,
-                              color: Colors.grey[700], size: 20),
+                              color: Colors.grey[700], size: 16),
                           padding: EdgeInsets.zero,
                         ),
                       ),
                       // ====================================================
                       // POPUP MENU BUTTON
-                      SizedBox(width: 12),
+                      SizedBox(width: 4),
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           shape: BoxShape.circle,
                         ),
                         child: PopupMenuButton<String>(
                           icon: Icon(Icons.person,
-                              color: Colors.grey[700], size: 20),
+                              color: Colors.grey[700], size: 16),
                           padding: EdgeInsets.zero,
                           onSelected: (value) async {
                             if (value == 'profile') {
@@ -165,14 +165,14 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 16),
               // ====================================================
               // SEARCH BAR ROW
               Row(
                 children: [
                   Expanded(
                     child: Container(
-                      height: 40,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -187,9 +187,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         decoration: InputDecoration(
                           hintText: 'farm worker, farm add...',
                           hintStyle:
-                              TextStyle(color: Colors.grey[500], fontSize: 16),
+                              TextStyle(color: Colors.grey[500], fontSize: 14),
                           prefixIcon: Icon(Icons.search,
-                              color: Colors.grey[600], size: 22),
+                              color: Colors.grey[600], size: 20),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -202,18 +202,18 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
                         ),
                       ),
                     ),
                   ),
                   // ====================================================
                   // FILTER BUTTON
-                  SizedBox(width: 12),
+                  SizedBox(width: 10),
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: Color(0xFFE8D5FF),
                       borderRadius: BorderRadius.circular(12),
@@ -223,7 +223,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         // Filter functionality
                       },
                       icon:
-                          Icon(Icons.tune, color: Color(0xFF6B21A8), size: 22),
+                          Icon(Icons.tune, color: Color(0xFF6B21A8), size: 20),
                       padding: EdgeInsets.zero,
                     ),
                   ),
@@ -237,143 +237,146 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   Widget _buildDashboard() {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-      children: [
-        // ====================================================
-        // QUICK ACTIONS SECTION
-        Row(
-          children: [
-            Icon(Icons.rocket_launch, color: Color(0xFFFFC107), size: 20),
-            SizedBox(width: 8),
-            Text('Quick Actions',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF222B45))),
-          ],
-        ),
-        const SizedBox(height: 16),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
+      child: Column(
+        children: [
+          // ====================================================
+          // QUICK ACTIONS SECTION
+          Row(
+            children: [
+              Icon(Icons.rocket_launch, color: Color(0xFFFFC107), size: 20),
+              SizedBox(width: 8),
+              Text('Quick Actions',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF222B45))),
+            ],
+          ),
+          const SizedBox(height: 16),
 // ====================================================
-        // QUICK ACTIONS GRID
-        GridView.count(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.0,
-          children: [
+          // QUICK ACTIONS GRID
+          GridView.count(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 1.1,
+            children: [
 // ====================================================
-            _buildQuickActionCard(
-              icon: Icons.people_alt_rounded,
-              title: 'Assigned Farm workers',
-              subtitle: 'List of assigned farm workers',
-              color: Color(0xFF6366F1), // Indigo
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AssignedFarmWorkersScreen(
-                      token: widget.token,
-                      technicianId: widget.technicianId,
+              _buildQuickActionCard(
+                icon: Icons.people_alt_rounded,
+                title: 'Assigned Farm workers',
+                subtitle: 'List of assigned farm workers',
+                color: Color(0xFF6366F1), // Indigo
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AssignedFarmWorkersScreen(
+                        token: widget.token,
+                        technicianId: widget.technicianId,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
 // ====================================================
 // TRANSPLANTING SCHEDULES
-            _buildQuickActionCard(
-              icon: Icons.calendar_today_rounded,
-              title: 'Transplanting schedules',
-              subtitle: 'List of schedule activities',
-              color: Color(0xFF10B981), // Emerald
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TransplantingSchedulesScreen(
-                      token: widget.token,
-                      technicianId: widget.technicianId,
+              _buildQuickActionCard(
+                icon: Icons.calendar_today_rounded,
+                title: 'Transplanting schedules',
+                subtitle: 'List of schedule activities',
+                color: Color(0xFF10B981), // Emerald
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TransplantingSchedulesScreen(
+                        token: widget.token,
+                        technicianId: widget.technicianId,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
 // ====================================================
 // REQUEST SUBMISSION
-            _buildQuickActionCard(
-              icon: Icons.send_rounded,
-              title: 'Request Submission',
-              subtitle: 'Submit farm worker request',
-              color: Color(0xFFF59E0B), // Amber
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RequestSubmissionScreen(
-                      token: widget.token,
-                      technicianId: widget.technicianId,
+              _buildQuickActionCard(
+                icon: Icons.send_rounded,
+                title: 'Request Submission',
+                subtitle: 'Submit farm worker request',
+                color: Color(0xFFF59E0B), // Amber
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RequestSubmissionScreen(
+                        token: widget.token,
+                        technicianId: widget.technicianId,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
 // ====================================================
 // REPORT SUBMISSION
-            _buildQuickActionCard(
-              icon: Icons.assessment_rounded,
-              title: 'Report submission',
-              subtitle: 'Submit farm progress report',
-              color: Color(0xFFEF4444), // Red
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TechnicianReportScreen(
-                      token: widget.token,
-                      technicianId: widget.technicianId,
+              _buildQuickActionCard(
+                icon: Icons.assessment_rounded,
+                title: 'Report submission',
+                subtitle: 'Submit farm progress report',
+                color: Color(0xFFEF4444), // Red
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CameraReportScreen(
+                        token: widget.token,
+                        technicianId: widget.technicianId,
+                        showCloseButton: true, // Show X button for quick action
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
 // ====================================================
 // FARM MAP
-            _buildQuickActionCard(
-              icon: Icons.map_rounded,
-              title: 'Farm Map',
-              subtitle: 'View assigned farm locations',
-              color: Color(0xFF3B82F6), // Blue
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TechnicianFarmsScreen(),
-                  ),
-                );
-              },
-            ),
+              _buildQuickActionCard(
+                icon: Icons.map_rounded,
+                title: 'Farm Map',
+                subtitle: 'View assigned farm locations',
+                color: Color(0xFF3B82F6), // Blue
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TechnicianFarmsScreen(),
+                    ),
+                  );
+                },
+              ),
 // ====================================================
 // NOTIFICATIONS
-            _buildQuickActionCard(
-              icon: Icons.notifications_active_rounded,
-              title: 'Notifications',
-              subtitle: 'View all notifications',
-              color: Color(0xFF8B5CF6), // Violet
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NotificationsScreen(),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ],
+              _buildQuickActionCard(
+                icon: Icons.notifications_active_rounded,
+                title: 'Notifications',
+                subtitle: 'View all notifications',
+                color: Color(0xFF8B5CF6), // Violet
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => NotificationsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -398,29 +401,29 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Simple icon container
               Container(
-                width: 48,
-                height: 48,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   icon,
-                  size: 24,
+                  size: 20,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 8),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1A1A),
                   height: 1.2,
@@ -428,12 +431,12 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 4),
-              Expanded(
+              SizedBox(height: 2),
+              Flexible(
                 child: Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: Colors.grey[600],
                     height: 1.3,
                   ),
@@ -459,8 +462,10 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 // ====================================================
 // BUILD REPORTS
   Widget _buildReports() {
-    return TechnicianReportScreen(
-        token: widget.token, technicianId: widget.technicianId);
+    return CameraReportScreen(
+        token: widget.token,
+        technicianId: widget.technicianId,
+        showCloseButton: false); // No X button for navigation bar
   }
 
   Widget _buildManageProfile() {
@@ -474,9 +479,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     required int index,
   }) {
     final isSelected = _selectedIndex == index;
-    double iconSize = 32;
+    double iconSize = 24;
     if (index == 1 || index == 2) {
-      iconSize = 28;
+      iconSize = 22;
     }
 // ====================================================
 // BUILD NAV ITEM
@@ -487,7 +492,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -498,14 +503,14 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   : const Color(0xFF8F9BB3),
               size: iconSize,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 color: isSelected
                     ? const Color(0xFF27AE60)
                     : const Color(0xFF8F9BB3),
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -538,11 +543,11 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         children: [
           // QR-style icon with blue outline
           Container(
-            width: 56,
-            height: 56,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(
                 color: Colors.green,
                 width: 2,
@@ -551,16 +556,16 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             child: const Icon(
               Icons.send_rounded,
               color: Colors.green,
-              size: 28,
+              size: 24,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           // Label
           const Text(
             'Request',
             style: TextStyle(
               color: Color(0xFF8F9BB3),
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -601,7 +606,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         child: SafeArea(
           child: Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -1392,8 +1397,8 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                       decoration: BoxDecoration(
                         color: (_selectedStatus != null ||
                                 _selectedLocation != null)
-                            ? Color(0xFF6B21A8)
-                            : Color(0xFFE8D5FF),
+                            ? Color.fromARGB(255, 33, 168, 33)
+                            : Color.fromARGB(163, 128, 255, 149),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
@@ -1402,7 +1407,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                             color: (_selectedStatus != null ||
                                     _selectedLocation != null)
                                 ? Colors.white
-                                : Color(0xFF6B21A8),
+                                : Color.fromARGB(255, 49, 168, 33),
                             size: 22),
                         padding: EdgeInsets.zero,
                       ),
@@ -1487,14 +1492,15 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                 width: 60,
                                 height: 60,
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFE8D5FF),
+                                  color: Color.fromARGB(104, 217, 154, 254),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
                                   child: Text(
                                     fw.firstName[0].toUpperCase(),
                                     style: TextStyle(
-                                      color: Color(0xFF6B21A8),
+                                      color: const Color.fromARGB(
+                                          255, 118, 31, 165),
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1746,7 +1752,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           ElevatedButton(
                             onPressed: _toggleFilterCard,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF6B21A8),
+                              backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -1805,7 +1811,7 @@ class AssignedFarmWorkersScreen extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2196F3),
+              backgroundColor: Colors.green,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import 'request_list_widget.dart';
 import 'request_screen.dart';
+import 'technician_farms_screen.dart';
 
 class FarmWorkerDetailScreen extends StatefulWidget {
   final FarmWorker farmWorker;
@@ -38,7 +39,6 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
   Widget build(BuildContext context) {
     final details = widget.farmWorker;
     return Scaffold(
-      //CHANGES STARTS HERE NA PART HANGGANG LAST LINE
       backgroundColor: Colors.white,
       body: Column(
         children: [
@@ -122,7 +122,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                                   Text(
                                     '${details.firstName} ${details.lastName}',
                                     style: TextStyle(
-                                      fontSize: 20,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF2C3E50),
                                     ),
@@ -132,12 +132,12 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                                     Row(
                                       children: [
                                         Icon(Icons.person_rounded,
-                                            size: 24, color: Colors.grey[600]),
+                                            size: 20, color: Colors.grey[600]),
                                         SizedBox(width: 6),
                                         Text(
                                           details.sex!,
                                           style: TextStyle(
-                                            fontSize: 14,
+                                            fontSize: 13,
                                             color: Colors.grey[600],
                                           ),
                                         ),
@@ -173,6 +173,14 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                             text: details.birthDate!,
                           ),
                         ],
+
+                        // Farm Information Section
+                        if (details.farms != null &&
+                            details.farms!.isNotEmpty) ...[
+                          SizedBox(height: 20),
+                          _buildFarmInfo(
+                              details.farms!.first), // Show only first farm
+                        ],
                       ],
                     ),
                   ),
@@ -181,19 +189,19 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                   // Create Request Button
                   Container(
                     width: double.infinity,
-                    height: 56,
+                    height: 48,
                     child: ElevatedButton.icon(
                       onPressed: _openRequestScreen,
                       icon: Icon(
                         Icons.add,
                         color: Colors.white,
-                        size: 20,
+                        size: 18,
                       ),
                       label: Text(
                         'Create Request',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
                       ),
@@ -201,9 +209,9 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                         backgroundColor: Color(0xFF27AE60),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        elevation: 0,
+                        elevation: 2,
                       ),
                     ),
                   ),
@@ -217,7 +225,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                         Text(
                           'Requests',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF2C3E50),
                           ),
@@ -235,14 +243,16 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                       ],
                     ),
                   ),
-
                   // Request List
-                  Container(
-                    height: 400, // Increased height for better visibility
-                    child: RequestListWidget(
-                      key: requestListKey,
-                      farmWorkerId: widget.farmWorker.id,
-                      token: widget.token,
+                  Transform.translate(
+                    offset: Offset(0, -8), // Move up by 8 pixels
+                    child: Container(
+                      height: 400, // Increased height for better visibility
+                      child: RequestListWidget(
+                        key: requestListKey,
+                        farmWorkerId: widget.farmWorker.id,
+                        token: widget.token,
+                      ),
                     ),
                   ),
                 ],
@@ -261,15 +271,182 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, color: iconColor, size: 24),
+        Icon(icon, color: iconColor, size: 20),
         SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: Color(0xFF2C3E50),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFarmInfo(dynamic farm) {
+    // Parse coordinates to show only lat, lng
+    String coordinatesDisplay = '';
+    if (farm['coordinates'] != null) {
+      try {
+        // Try to parse as JSON array first
+        if (farm['coordinates'].toString().startsWith('[')) {
+          final coords = farm['coordinates'].toString();
+          // Extract first two numbers (lat, lng)
+          final regex = RegExp(r'-?\d+\.?\d*');
+          final matches = regex.allMatches(coords);
+          if (matches.length >= 2) {
+            final lat = matches.elementAt(0).group(0);
+            final lng = matches.elementAt(1).group(0);
+            coordinatesDisplay = '$lat, $lng';
+          }
+        } else {
+          // Simple comma-separated format
+          final coords = farm['coordinates'].toString().split(',');
+          if (coords.length >= 2) {
+            coordinatesDisplay = '${coords[0].trim()}, ${coords[1].trim()}';
+          }
+        }
+      } catch (e) {
+        coordinatesDisplay = farm['coordinates'].toString();
+      }
+    }
+
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFE9ECEF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with Farm icon and title
+          Row(
+            children: [
+              Icon(Icons.agriculture, color: Color(0xFF27AE60), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Farm Information',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+
+          // Farm Address
+          _buildFarmDetailRow(
+            icon: Icons.location_on,
+            label: 'Farm Address',
+            value: farm['farm_address'] ?? 'Unknown Farm',
+            iconColor: Color(0xFF27AE60),
+          ),
+
+          // Farm Size
+          if (farm['farm_size'] != null) ...[
+            SizedBox(height: 12),
+            _buildFarmDetailRow(
+              icon: Icons.straighten,
+              label: 'Farm Size',
+              value: '${farm['farm_size'].toString()} hectares',
+              iconColor: Colors.grey[600]!,
+            ),
+          ],
+
+          // Coordinates (simplified)
+          if (coordinatesDisplay.isNotEmpty) ...[
+            SizedBox(height: 12),
+            _buildFarmDetailRow(
+              icon: Icons.my_location,
+              label: 'Coordinates',
+              value: coordinatesDisplay,
+              iconColor: Colors.grey[600]!,
+            ),
+          ],
+
+          SizedBox(height: 16),
+
+          // View Farm Button
+          Container(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // Navigate to technician farms screen with farm focus
+                final farmId = farm['id'];
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TechnicianFarmsScreen(
+                      focusFarmId: farmId,
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(Icons.visibility, color: Colors.white, size: 16),
+              label: Text(
+                'View Farm',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF27AE60),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: iconColor, size: 16),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF2C3E50),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ],

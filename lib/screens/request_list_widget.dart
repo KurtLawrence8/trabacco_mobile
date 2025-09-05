@@ -146,7 +146,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                 // Date header
                 Padding(
                   padding:
-                      EdgeInsets.only(left: 8, right: 20, top: 2, bottom: 2),
+                      EdgeInsets.only(left: 8, right: 20, top: 0, bottom: 0),
                   child: Text(
                     date,
                     style: TextStyle(
@@ -265,12 +265,29 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                     ),
                     if (isPending) ...[
                       SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => _editRequest(req),
-                        child: Icon(
-                          Icons.edit,
-                          color: Color(0xFF27AE60),
-                          size: 18,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF27AE60).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Color(0xFF27AE60).withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _editRequest(req),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.edit,
+                                color: Color(0xFF27AE60),
+                                size: 16,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -288,7 +305,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                   )
                 else if (req.type == 'supply' && req.supplyName != null)
                   Text(
-                    'Supply: ${req.supplyName}',
+                    'Supply: ${req.supplyName}${req.quantity != null ? ' (Qty: ${req.quantity})' : ''}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[700],
@@ -369,6 +386,7 @@ class EditRequestDialog extends StatefulWidget {
 
 class _EditRequestDialogState extends State<EditRequestDialog> {
   late TextEditingController _amountController;
+  late TextEditingController _quantityController;
   late TextEditingController _reasonController;
   int? _selectedSupplyId;
   List<InventoryItem> _supplies = [];
@@ -379,6 +397,8 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     super.initState();
     _amountController =
         TextEditingController(text: widget.request.amount?.toString() ?? '');
+    _quantityController =
+        TextEditingController(text: widget.request.quantity?.toString() ?? '');
     _reasonController =
         TextEditingController(text: widget.request.reason ?? '');
     if (widget.request.type == 'supply') {
@@ -405,6 +425,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     }
     if (widget.request.type == 'supply') {
       updateData['supply_id'] = _selectedSupplyId;
+      updateData['quantity'] = int.tryParse(_quantityController.text);
     }
     try {
       await RequestService()
@@ -446,7 +467,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                       borderRadius: BorderRadius.circular(10)),
                 ),
               ),
-            if (widget.request.type == 'supply')
+            if (widget.request.type == 'supply') ...[
               _loadingSupplies
                   ? const Center(child: CircularProgressIndicator())
                   : DropdownButtonFormField<int>(
@@ -476,6 +497,25 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                             borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _quantityController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Quantity',
+                  prefixIcon: const Icon(Icons.numbers),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Enter quantity';
+                  if (int.tryParse(val) == null) return 'Invalid quantity';
+                  if (int.parse(val) <= 0)
+                    return 'Quantity must be greater than 0';
+                  return null;
+                },
+              ),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               controller: _reasonController,
