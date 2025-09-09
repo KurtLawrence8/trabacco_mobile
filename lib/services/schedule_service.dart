@@ -3,19 +3,45 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/schedule.dart';
 import '../config/api_config.dart';
-import 'offline_first_service.dart';
 
 class ScheduleService {
-  final OfflineFirstService _offlineService = OfflineFirstService();
-
   Future<void> updateScheduleStatus(
       int? id, String status, String token) async {
     if (id == null) {
       throw Exception('Cannot update schedule status: Schedule ID is null');
     }
 
-    // Use offline-first service
-    await _offlineService.updateScheduleStatus(id, status, token);
+    print(
+        '[ScheduleService] [updateScheduleStatus] Starting update for schedule ID: $id with status: $status');
+    print('[ScheduleService] [updateScheduleStatus] Using token: $token');
+    print(
+        '[ScheduleService] [updateScheduleStatus] API URL: ${ApiConfig.baseUrl}/schedules/$id');
+
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/schedules/$id'),
+        headers: ApiConfig.getHeaders(token: token),
+        body: json.encode({'status': status}),
+      );
+
+      print(
+          '[ScheduleService] [updateScheduleStatus] Response status code: ${response.statusCode}');
+      print(
+          '[ScheduleService] [updateScheduleStatus] Response body: ${response.body}');
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        print(
+            '[ScheduleService] [updateScheduleStatus] ERROR: HTTP ${response.statusCode}');
+        throw Exception(
+            'Failed to update schedule. Code: ${response.statusCode}. Body: ${response.body}');
+      }
+
+      print(
+          '[ScheduleService] [updateScheduleStatus] Successfully updated schedule status');
+    } catch (e) {
+      print('[ScheduleService] [updateScheduleStatus] EXCEPTION: $e');
+      rethrow;
+    }
   }
 
   // Fetch all schedules for a specific farm worker

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
-import 'camera_report_screen.dart';
+import 'technician_report_screen.dart';
 import 'schedule_page.dart';
 
 import 'package:provider/provider.dart';
@@ -11,7 +11,8 @@ import '../models/user_model.dart' show Technician;
 import '../services/auth_service.dart' show TechnicianService;
 import '../config/api_config.dart';
 import 'request_screen.dart';
-import 'notification_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
@@ -28,6 +29,10 @@ class TechnicianLandingScreen extends StatefulWidget {
 class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   int _selectedIndex = 0;
 
+  // Notification state
+  List<Map<String, dynamic>> _notifications = [];
+  int _unreadCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +41,36 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FarmWorkerProvider>(context, listen: false)
           .fetchFarmWorkers(widget.token, widget.technicianId);
+      // Fetch notifications on app start
+      _fetchNotifications();
     });
+  }
+
+  // ====================================================
+  // FETCH NOTIFICATIONS
+  Future<void> _fetchNotifications() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/notifications'),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _notifications = List<Map<String, dynamic>>.from(data['data'] ?? []);
+          _unreadCount =
+              _notifications.where((n) => n['read_at'] == null).length;
+        });
+      } else {
+        print('Failed to fetch notifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching notifications: $e');
+    }
   }
 
   // ====================================================
@@ -79,38 +113,60 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          shape: BoxShape.circle,
-                        ),
-                        // ====================================================
-                        // NOTIFICATIONS BUTTON
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => NotificationScreen(
-                                  token: widget.token,
-                                  technician: Technician(
-                                    id: widget.technicianId,
-                                    firstName: 'Technician',
-                                    lastName: 'User',
-                                    emailAddress: 'technician@example.com',
-                                    phoneNumber: '',
-                                    status: 'active',
+                      Stack(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            // ====================================================
+                            // NOTIFICATIONS BUTTON
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => NotificationsScreen(),
                                   ),
+                                );
+                              },
+                              icon: Icon(Icons.notifications_outlined,
+                                  color: Colors.grey[700], size: 16),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                          // Unread count badge
+                          if (_unreadCount > 0)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                padding: EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  _unreadCount > 99
+                                      ? '99+'
+                                      : _unreadCount.toString(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
-                            );
-                          },
-                          icon: Icon(Icons.notifications_outlined,
-                              color: Colors.grey[700], size: 16),
-                          padding: EdgeInsets.zero,
-                        ),
+                            ),
+                        ],
                       ),
                       // ====================================================
                       // POPUP MENU BUTTON
@@ -249,155 +305,159 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   Widget _buildDashboard() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
-      child: Column(
-        children: [
-          // ====================================================
-          // QUICK ACTIONS SECTION
-          Row(
-            children: [
-              Icon(Icons.rocket_launch, color: Color(0xFFFFC107), size: 20),
-              SizedBox(width: 8),
-              Text('Quick Actions',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF222B45))),
-            ],
-          ),
-          const SizedBox(height: 16),
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Refresh farm workers and notifications
+        Provider.of<FarmWorkerProvider>(context, listen: false)
+            .fetchFarmWorkers(widget.token, widget.technicianId);
+        await _fetchNotifications();
+      },
+      child: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
+        child: Column(
+          children: [
+            // ====================================================
+            // QUICK ACTIONS SECTION
+            Row(
+              children: [
+                Icon(Icons.rocket_launch,
+                    color: Color.fromARGB(255, 0, 0, 0), size: 20),
+                SizedBox(width: 8),
+                Text('Quick Actions',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF222B45))),
+              ],
+            ),
+            const SizedBox(height: 16),
 // ====================================================
-          // QUICK ACTIONS GRID
-          GridView.count(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.1,
-            children: [
+            // QUICK ACTIONS GRID
+            GridView.count(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.1,
+              children: [
 // ====================================================
-              _buildQuickActionCard(
-                icon: Icons.people_alt_rounded,
-                title: 'Assigned Farm workers',
-                subtitle: 'List of assigned farm workers',
-                color: Color(0xFF6366F1), // Indigo
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AssignedFarmWorkersScreen(
-                        token: widget.token,
-                        technicianId: widget.technicianId,
-                      ),
-                    ),
-                  );
-                },
-              ),
-// ====================================================
-// TRANSPLANTING SCHEDULES
-              _buildQuickActionCard(
-                icon: Icons.calendar_today_rounded,
-                title: 'Transplanting schedules',
-                subtitle: 'List of schedule activities',
-                color: Color(0xFF10B981), // Emerald
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TransplantingSchedulesScreen(
-                        token: widget.token,
-                        technicianId: widget.technicianId,
-                      ),
-                    ),
-                  );
-                },
-              ),
-// ====================================================
-// REQUEST SUBMISSION
-              _buildQuickActionCard(
-                icon: Icons.send_rounded,
-                title: 'Request Submission',
-                subtitle: 'Submit farm worker request',
-                color: Color(0xFFF59E0B), // Amber
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => RequestSubmissionScreen(
-                        token: widget.token,
-                        technicianId: widget.technicianId,
-                      ),
-                    ),
-                  );
-                },
-              ),
-// ====================================================
-// REPORT SUBMISSION
-              _buildQuickActionCard(
-                icon: Icons.assessment_rounded,
-                title: 'Report submission',
-                subtitle: 'Submit farm progress report',
-                color: Color(0xFFEF4444), // Red
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CameraReportScreen(
-                        token: widget.token,
-                        technicianId: widget.technicianId,
-                        showCloseButton: true, // Show X button for quick action
-                      ),
-                    ),
-                  );
-                },
-              ),
-// ====================================================
-// FARM MAP
-              _buildQuickActionCard(
-                icon: Icons.map_rounded,
-                title: 'Farm Map',
-                subtitle: 'View assigned farm locations',
-                color: Color(0xFF3B82F6), // Blue
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TechnicianFarmsScreen(),
-                    ),
-                  );
-                },
-              ),
-// ====================================================
-// NOTIFICATIONS
-              _buildQuickActionCard(
-                icon: Icons.notifications_active_rounded,
-                title: 'Notifications',
-                subtitle: 'View all notifications',
-                color: Color(0xFF8B5CF6), // Violet
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => NotificationScreen(
-                        token: widget.token,
-                        technician: Technician(
-                          id: widget.technicianId,
-                          firstName: 'Technician',
-                          lastName: 'User',
-                          emailAddress: 'technician@example.com',
-                          phoneNumber: '',
-                          status: 'active',
+                _buildQuickActionCard(
+                  icon: Icons.people_alt_rounded,
+                  title: 'Assigned Farm workers',
+                  subtitle: 'List of assigned farm workers',
+                  color: Color(0xFF6366F1), // Indigo
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AssignedFarmWorkersScreen(
+                          token: widget.token,
+                          technicianId: widget.technicianId,
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
+                    );
+                  },
+                ),
+// ====================================================
+// TRANSPLANTING SCHEDULES
+                _buildQuickActionCard(
+                  icon: Icons.calendar_today_rounded,
+                  title: 'Transplanting schedules',
+                  subtitle: 'List of schedule activities',
+                  color: Color(0xFF10B981), // Emerald
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TransplantingSchedulesScreen(
+                          token: widget.token,
+                          technicianId: widget.technicianId,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+// ====================================================
+// REQUEST SUBMISSION
+                _buildQuickActionCard(
+                  icon: Icons.send_rounded,
+                  title: 'Request Submission',
+                  subtitle: 'Submit farm worker request',
+                  color: Color(0xFFF59E0B), // Amber
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RequestSubmissionScreen(
+                          token: widget.token,
+                          technicianId: widget.technicianId,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+// ====================================================
+// REPORT SUBMISSION
+                _buildQuickActionCard(
+                  icon: Icons.assessment_rounded,
+                  title: 'Report submission',
+                  subtitle: 'Submit farm progress report',
+                  color: Color(0xFFEF4444), // Red
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TechnicianReportScreen(
+                          token: widget.token,
+                          technicianId: widget.technicianId,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+// ====================================================
+// FARM MAP
+                _buildQuickActionCard(
+                  icon: Icons.map_rounded,
+                  title: 'Farm Map',
+                  subtitle: 'View assigned farm locations',
+                  color: Color(0xFF3B82F6), // Blue
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TechnicianFarmsScreen(),
+                      ),
+                    );
+                  },
+                ),
+// ====================================================
+// NOTIFICATIONS
+                _buildQuickActionCard(
+                  icon: Icons.notifications_active_rounded,
+                  title: 'Notifications',
+                  subtitle: _unreadCount > 0
+                      ? '$_unreadCount unread notifications'
+                      : 'View all notifications',
+                  color: Color(0xFF8B5CF6), // Violet
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NotificationsScreen(),
+                      ),
+                    ).then((_) {
+                      // Refresh notifications when returning from notification screen
+                      _fetchNotifications();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -484,10 +544,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 // ====================================================
 // BUILD REPORTS
   Widget _buildReports() {
-    return CameraReportScreen(
-        token: widget.token,
-        technicianId: widget.technicianId,
-        showCloseButton: false); // No X button for navigation bar
+    return TechnicianReportScreen(
+        token: widget.token, technicianId: widget.technicianId);
   }
 
   Widget _buildManageProfile() {
@@ -2052,5 +2110,79 @@ class NotificationsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ====================================================
+// NOTIFICATION SERVICE
+class NotificationService {
+  static String get _baseUrl => ApiConfig.baseUrl;
+
+  // Fetch notifications
+  static Future<List<Map<String, dynamic>>> fetchNotifications(
+      String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/notifications'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return List<Map<String, dynamic>>.from(data['data'] ?? []);
+      } else {
+        throw Exception(
+            'Failed to fetch notifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching notifications: $e');
+    }
+  }
+
+  // Mark notification as read
+  static Future<bool> markAsRead(String token, int notificationId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/notifications/$notificationId/mark-read'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Mark all notifications as read
+  static Future<bool> markAllAsRead(String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/notifications/mark-all-read'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Get unread count
+  static Future<int> getUnreadCount(String token) async {
+    try {
+      final notifications = await fetchNotifications(token);
+      return notifications.where((n) => n['read_at'] == null).length;
+    } catch (e) {
+      return 0;
+    }
   }
 }

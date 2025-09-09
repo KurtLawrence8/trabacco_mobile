@@ -6,13 +6,18 @@ class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
     final url = kIsWeb
-        ? 'http://localhost:8000/api' // For web - use localhost instead of 127.0.0.1
+        ? 'http://127.0.0.1:8000/api' // For web - use localhost instead of 127.0.0.1
         : Platform.isAndroid
-            ? 'http://10.0.2.2:8000/api' // For Android Emulator
-            : 'http://localhost:8000/api'; // For iOS Simulator and others
+        ? 'http://localhost:8000/api' // For Android Emulator
+        : 'http://localhost:8000/api'; // For iOS Simulator and others
 
     print(
-        '[ApiConfig] [baseUrl] Platform: ${kIsWeb ? 'Web' : Platform.isAndroid ? 'Android' : 'iOS/Other'}');
+      '[ApiConfig] [baseUrl] Platform: ${kIsWeb
+          ? 'Web'
+          : Platform.isAndroid
+          ? 'Android'
+          : 'iOS/Other'}',
+    );
     print('[ApiConfig] [baseUrl] Generated URL: $url');
 
     return url;
@@ -61,7 +66,9 @@ class ApiConfig {
 
   // Helper method to replace path parameters
   static String replacePathParams(
-      String endpoint, Map<String, dynamic> params) {
+    String endpoint,
+    Map<String, dynamic> params,
+  ) {
     String result = endpoint;
     params.forEach((key, value) {
       result = result.replaceAll('{$key}', value.toString());
@@ -74,8 +81,11 @@ class SidebarMenu extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTap;
 
-  const SidebarMenu(
-      {super.key, required this.selectedIndex, required this.onTap});
+  const SidebarMenu({
+    super.key,
+    required this.selectedIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
