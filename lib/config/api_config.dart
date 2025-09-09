@@ -6,7 +6,7 @@ class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
     final url = kIsWeb
-        ? 'http://127.0.0.1:8000/api' // For web
+        ? 'http://localhost:8000/api' // For web - use localhost instead of 127.0.0.1
         : Platform.isAndroid
             ? 'http://10.0.2.2:8000/api' // For Android Emulator
             : 'http://localhost:8000/api'; // For iOS Simulator and others

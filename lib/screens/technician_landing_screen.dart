@@ -11,6 +11,7 @@ import '../models/user_model.dart' show Technician;
 import '../services/auth_service.dart' show TechnicianService;
 import '../config/api_config.dart';
 import 'request_screen.dart';
+import 'notification_screen.dart';
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
@@ -92,7 +93,18 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (_) => NotificationsScreen()),
+                                builder: (_) => NotificationScreen(
+                                  token: widget.token,
+                                  technician: Technician(
+                                    id: widget.technicianId,
+                                    firstName: 'Technician',
+                                    lastName: 'User',
+                                    emailAddress: 'technician@example.com',
+                                    phoneNumber: '',
+                                    status: 'active',
+                                  ),
+                                ),
+                              ),
                             );
                           },
                           icon: Icon(Icons.notifications_outlined,
@@ -368,7 +380,17 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => NotificationsScreen(),
+                      builder: (_) => NotificationScreen(
+                        token: widget.token,
+                        technician: Technician(
+                          id: widget.technicianId,
+                          firstName: 'Technician',
+                          lastName: 'User',
+                          emailAddress: 'technician@example.com',
+                          phoneNumber: '',
+                          status: 'active',
+                        ),
+                      ),
                     ),
                   );
                 },
