@@ -74,6 +74,32 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   }
 
   // ====================================================
+  // BUILD NAVIGATION APP BAR
+  PreferredSizeWidget _buildNavAppBar(String title) {
+    return AppBar(
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
+      ),
+      backgroundColor: Colors.white,
+      foregroundColor: Color(0xFF2C3E50),
+      elevation: 0,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
+        onPressed: () {
+          setState(() {
+            _selectedIndex = 0; // Go back to dashboard
+          });
+        },
+      ),
+    );
+  }
+
+  // ====================================================
   // BUILD APP BAR
   PreferredSizeWidget _buildAppBar() {
     return PreferredSize(
@@ -175,22 +201,15 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
+                          color: const Color.fromARGB(255, 255, 255, 255),
                           shape: BoxShape.circle,
                         ),
                         child: PopupMenuButton<String>(
                           icon: Icon(Icons.person,
-                              color: Colors.grey[700], size: 16),
+                              color: const Color.fromARGB(255, 180, 180, 180), size: 16),
                           padding: EdgeInsets.zero,
                           onSelected: (value) async {
-                            if (value == 'profile') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => ManageProfileScreen(
-                                        technicianId: widget.technicianId)),
-                              );
-                            } else if (value == 'logout') {
+                            if (value == 'logout') {
                               await AuthService().logout();
                               if (!mounted) return;
                               Navigator.of(context).pushAndRemoveUntil(
@@ -203,19 +222,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                           // ====================================================
                           // POPUP MENU ITEM BUILDER
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'profile',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.settings,
-                                      color: Color(0xFF27AE60)),
-                                  SizedBox(width: 8),
-                                  Text('Manage Profile')
-                                ],
-                              ),
-                            ),
-                            // ====================================================
-                            // LOGOUT BUTTON
                             const PopupMenuItem(
                               value: 'logout',
                               child: Row(
@@ -230,70 +236,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         ),
                       ),
                     ],
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              // ====================================================
-              // SEARCH BAR ROW
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Color(0xFF9E9E9E),
-                          width: 1.0,
-                        ),
-                      ),
-                      // ====================================================
-                      // SEARCH BAR
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'farm worker, farm add...',
-                          hintStyle:
-                              TextStyle(color: Colors.grey[500], fontSize: 14),
-                          prefixIcon: Icon(Icons.search,
-                              color: Colors.grey[600], size: 20),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // ====================================================
-                  // FILTER BUTTON
-                  SizedBox(width: 10),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Color(0xFFE8D5FF),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Filter functionality
-                      },
-                      icon:
-                          Icon(Icons.tune, color: Color(0xFF6B21A8), size: 20),
-                      padding: EdgeInsets.zero,
-                    ),
                   ),
                 ],
               ),
@@ -602,49 +544,43 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
 // ====================================================
 // BUILD CENTER REQUEST BUTTON
-  Widget _buildCenterRequestButton() {
+  Widget _buildCenterReportButton() {
+    final isSelected = _selectedIndex == 2;
     return GestureDetector(
       onTap: () {
-        // Navigate to request submission
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => RequestSubmissionScreen(
-              token: widget.token,
-              technicianId: widget.technicianId,
-            ),
-          ),
-        );
+        setState(() {
+          _selectedIndex = 2;
+        });
       },
       // ====================================================
-      // CENTER REQUEST BUTTON
+      // CENTER REPORT BUTTON
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // QR-style icon with blue outline
+          // Circular icon with green outline
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isSelected ? const Color(0xFF27AE60) : Colors.white,
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: Colors.green,
+                color: isSelected ? const Color(0xFF27AE60) : const Color(0xFF8F9BB3),
                 width: 2,
               ),
             ),
-            child: const Icon(
-              Icons.send_rounded,
-              color: Colors.green,
+            child: Icon(
+              isSelected ? Icons.assessment : Icons.assessment_outlined,
+              color: isSelected ? Colors.white : const Color(0xFF8F9BB3),
               size: 24,
             ),
           ),
           const SizedBox(height: 2),
           // Label
-          const Text(
-            'Request',
+          Text(
+            'Report',
             style: TextStyle(
-              color: Color(0xFF8F9BB3),
+              color: isSelected ? const Color(0xFF27AE60) : const Color(0xFF8F9BB3),
               fontSize: 10,
               fontWeight: FontWeight.normal,
             ),
@@ -663,12 +599,20 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
       _buildSchedule(),
       _buildReports(),
       _buildManageProfile(),
+      RequestSubmissionScreen(
+        token: widget.token,
+        technicianId: widget.technicianId,
+      ),
     ];
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _selectedIndex == 0
-          ? _buildAppBar()
-          : null, // Only show app bar for home tab
+      appBar: _selectedIndex == 0 
+          ? _buildAppBar() 
+          : _selectedIndex == 2 
+              ? _buildNavAppBar('Reports')
+              : _selectedIndex == 3 
+                  ? _buildNavAppBar('Profile')
+                  : null,
       body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -705,14 +649,14 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   label: 'Schedule',
                   index: 1,
                 ),
-                // Center Request Button (like GCash QR)
-                _buildCenterRequestButton(),
-                // Report
+                // Center Report Button (special circular button)
+                _buildCenterReportButton(),
+                // Request
                 _buildNavItem(
-                  icon: Icons.assessment_outlined,
-                  activeIcon: Icons.assessment,
-                  label: 'Report',
-                  index: 2,
+                  icon: Icons.send_outlined,
+                  activeIcon: Icons.send,
+                  label: 'Request',
+                  index: 4,
                 ),
                 // Profile
                 _buildNavItem(

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'schedule_page.dart';
-import '../models/schedule.dart';
-import '../services/schedule_service.dart';
 import 'login_screen.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart' show FarmWorkerProfile;
@@ -10,9 +8,10 @@ import '../config/api_config.dart';
 import '../models/user_model.dart';
 import '../models/request_model.dart';
 import '../services/request_service.dart' as request_service;
-import '../models/distribution_model.dart';
-import '../services/distribution_service.dart';
+import 'supply_cash_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class FarmWorkerLandingScreen extends StatefulWidget {
   final String token;
@@ -26,19 +25,20 @@ class FarmWorkerLandingScreen extends StatefulWidget {
 
 class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   int _selectedIndex = 0;
-  late Future<List<Schedule>> _futureSchedules;
   late Future<List<Request>> _futureRequests;
-  late Future<List<SupplyDistribution>> _futureSupplyDistributions;
-  late Future<List<CashDistribution>> _futureCashDistributions;
-  final ScheduleService _service = ScheduleService();
   final request_service.RequestService _requestService = request_service.RequestService();
-  final DistributionService _distributionService = DistributionService();
   User? _user;
+
+  // Notification state
+  List<Map<String, dynamic>> _notifications = [];
+  int _unreadCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    // Fetch notifications on app start
+    _fetchNotifications();
   }
 
   Future<void> _loadUser() async {
@@ -47,46 +47,175 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
       setState(() {
         _user = user;
         if (_user != null) {
-          _futureSchedules =
-              _service.fetchSchedulesForFarmWorker(_user!.id, widget.token);
           _futureRequests =
               _requestService.fetchRequestsForFarmWorker(_user!.id, widget.token);
-          _futureSupplyDistributions =
-              _distributionService.fetchSupplyDistributionsForFarmWorker(_user!.id, widget.token);
-          _futureCashDistributions =
-              _distributionService.fetchCashDistributionsForFarmWorker(_user!.id, widget.token);
         }
       });
     }
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  // ====================================================
+  // FETCH NOTIFICATIONS
+  Future<void> _fetchNotifications() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/notifications'),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _notifications = List<Map<String, dynamic>>.from(data['data'] ?? []);
+          _unreadCount =
+              _notifications.where((n) => n['read_at'] == null).length;
+        });
+      } else {
+        print('Failed to fetch notifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching notifications: $e');
+    }
+  }
+
+  // ====================================================
+  // BUILD APP BAR
+  PreferredSizeWidget _buildNavAppBar(String title) {
     return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: const Row(
-        children: [
-          Icon(Icons.agriculture, color: Color(0xFF4CAF50)),
-          SizedBox(width: 8),
-          Text('Tabacco',
-              style:
-                  TextStyle(color: Color(0xFF2C3E50), fontWeight: FontWeight.bold)),
-        ],
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
       ),
-      actions: [
-        PopupMenuButton<String>(
-          icon: CircleAvatar(
-            backgroundColor: const Color(0xFF4CAF50).withOpacity(0.1),
-            child: const Icon(Icons.person, color: Color(0xFF4CAF50)),
-          ),
+      backgroundColor: Colors.white,
+      foregroundColor: Color(0xFF2C3E50),
+      elevation: 0,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
+        onPressed: () {
+          setState(() {
+            _selectedIndex = 0; // Go back to dashboard
+          });
+        },
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return PreferredSize(
+      preferredSize: Size.fromHeight(100 + MediaQuery.of(context).padding.top),
+      child: Container(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        color: Colors.white,
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+        children: [
+              // ====================================================
+              // GREETING ROW
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Hi Farm Worker!',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3E50))),
+                        SizedBox(height: 2),
+                        Text('May you always in a good condition',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600])),
+                      ],
+                    ),
+                  ),
+                  // ====================================================
+                  // NOTIFICATIONS ROW
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            // ====================================================
+                            // NOTIFICATIONS BUTTON
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => NotificationsScreen(),
+                                  ),
+                                );
+                              },
+                              icon: Icon(Icons.notifications_outlined,
+                                  color: Colors.grey[700], size: 16),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                          // Unread count badge
+                          if (_unreadCount > 0)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                padding: EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  _unreadCount > 99
+                                      ? '99+'
+                                      : _unreadCount.toString(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      // ====================================================
+                      // POPUP MENU BUTTON
+                      SizedBox(width: 4),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                          shape: BoxShape.circle,
+                        ),
+                        child: PopupMenuButton<String>(
+                          icon: Icon(Icons.person,
+                              color: const Color.fromARGB(255, 180, 180, 180), size: 16),
+                          padding: EdgeInsets.zero,
           onSelected: (value) async {
-            if (value == 'profile') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => FarmWorkerManageProfileScreen()),
-              );
-            } else if (value == 'logout') {
+            if (value == 'logout') {
               await AuthService().logout();
               if (!mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
@@ -95,17 +224,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
               );
             }
           },
+                          // ====================================================
+                          // POPUP MENU ITEM BUILDER
           itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'profile',
-              child: Row(
-                children: [
-                  Icon(Icons.settings, color: Color(0xFF4CAF50)),
-                  SizedBox(width: 8),
-                  Text('Manage Profile')
-                ],
-              ),
-            ),
             const PopupMenuItem(
               value: 'logout',
               child: Row(
@@ -118,958 +239,245 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             ),
           ],
         ),
-        const SizedBox(width: 12),
-      ],
-      iconTheme: const IconThemeData(color: Color(0xFF2C3E50)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildDashboard() {
-    final DateFormat dateFormatter = DateFormat('MM/dd/yyyy');
-    final today = DateTime.now();
-    
-    return ListView(
-      padding: const EdgeInsets.all(20),
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Refresh data
+        _loadUser();
+        await _fetchNotifications();
+      },
+      child: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
+        child: Column(
       children: [
-        // Welcome Header
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.agriculture,
-                      color: Color(0xFF4CAF50),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Welcome, Farm Worker!',
-            style: TextStyle(
-                                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2C3E50))),
-                        Text(
-                          'Today: ${dateFormatter.format(today)}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF7F8C8D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Today's Schedules
-        Container(
-          decoration: BoxDecoration(
-          color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // ====================================================
+            // QUICK ACTIONS SECTION
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.event_note,
-                        color: Color(0xFF4CAF50),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                const Text("Today's Schedules",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                Icon(Icons.rocket_launch,
+                    color: Color.fromARGB(255, 0, 0, 0), size: 20),
+                SizedBox(width: 8),
+                Text('Quick Actions',
+            style: TextStyle(
                         fontSize: 18,
-                            color: Color(0xFF2C3E50))),
-                  ],
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF222B45))),
+              ],
+            ),
+        const SizedBox(height: 16),
+// ====================================================
+            // QUICK ACTIONS GRID
+            GridView.count(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.1,
+              children: [
+// ====================================================
+                _buildQuickActionCard(
+                  icon: Icons.calendar_today_rounded,
+                  title: 'My Schedules',
+                  subtitle: 'View my work schedules',
+                  color: Color(0xFF10B981), // Emerald
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 1; // Switch to Schedule tab
+                    });
+                  },
                 ),
-                const SizedBox(height: 16),
-                FutureBuilder<List<Schedule>>(
-                  future: _futureSchedules,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF4CAF50),
+// ====================================================
+// REQUESTS
+                _buildQuickActionCard(
+                  icon: Icons.request_quote_rounded,
+                  title: 'My Requests',
+                  subtitle: 'View my submitted requests',
+                  color: Color(0xFFF59E0B), // Amber
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 2; // Switch to Requests tab
+                    });
+                  },
+                ),
+// ====================================================
+// SUPPLY DISTRIBUTIONS
+                _buildQuickActionCard(
+                  icon: Icons.inventory_rounded,
+                  title: 'Supply Records',
+                  subtitle: 'View supply distributions',
+                  color: Color(0xFF3B82F6), // Blue
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SupplyCashScreen(
+                          token: widget.token,
+                          user: _user,
                         ),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline, color: Colors.red.shade600),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Error loading schedules',
-                                style: TextStyle(color: Colors.red.shade700),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    
-                    final schedules = snapshot.data ?? [];
-                    final todaySchedules = schedules.where((s) {
-                      if (s.date == null) return false;
-                      final scheduleDate = s.date!;
-                      return scheduleDate.year == today.year &&
-                             scheduleDate.month == today.month &&
-                             scheduleDate.day == today.day;
-                    }).toList();
-                    
-                    if (todaySchedules.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.2),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.event_available,
-                              size: 48,
-                              color: const Color(0xFF4CAF50).withOpacity(0.6),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No schedules for today',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Enjoy your day off!',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: const Color(0xFF7F8C8D),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    
-                    return Column(
-                      children: todaySchedules.map((s) => Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.3),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.08),
-                              spreadRadius: 1,
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(s.status).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Icon(
-                                      _getStatusIcon(s.status),
-                                      color: _getStatusColor(s.status),
-                                      size: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      s.activity,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Color(0xFF2C3E50),
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(s.status),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      s.status.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (s.remarks != null && s.remarks!.isNotEmpty) ...[
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(
-                                        Icons.note,
-                                        size: 16,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          s.remarks!,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  if (s.numLaborers != null) ...[
-                                    Icon(
-                                      Icons.people,
-                                      size: 16,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    const SizedBox(width: 4),
-                                        Text(
-                                      '${s.numLaborers} laborers',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                  ],
-                                  if (s.budget != null) ...[
-                                    Icon(
-                                      Icons.attach_money,
-                                      size: 16,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '₱${s.budget!.toStringAsFixed(0)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      )).toList(),
+                      ),
                     );
                   },
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF4CAF50).withOpacity(0.3),
-                          spreadRadius: 1,
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  child: TextButton(
-                    onPressed: () {
-                      if (_user != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SchedulePage(
-                              userType: 'Farmer',
-                              token: widget.token,
-                              farmWorkerId: _user!.id,
-                              farmWorkerName: _user!.name,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+// ====================================================
+// CASH DISTRIBUTIONS
+                _buildQuickActionCard(
+                  icon: Icons.attach_money_rounded,
+                  title: 'Cash Records',
+                  subtitle: 'View cash distributions',
+                  color: Color(0xFF8B5CF6), // Violet
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SupplyCashScreen(
+                          token: widget.token,
+                          user: _user,
                         ),
                       ),
-                    child: const Text('View All',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          )),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Recent Requests Section
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-            child: Padding(
-            padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.request_page,
-                        color: Color(0xFF4CAF50),
-                        size: 20,
-                      ),
-                    ),
-                      const SizedBox(width: 12),
-                    const Text(
-                      'Recent Requests',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                FutureBuilder<List<Request>>(
-                  future: _futureRequests,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF4CAF50),
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.red.shade200,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.red.shade600,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Error loading requests: ${snapshot.error}',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.2),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.request_page_outlined,
-                              size: 48,
-                              color: const Color(0xFF4CAF50).withOpacity(0.6),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No Requests Yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Your requests will appear here',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: const Color(0xFF7F8C8D),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      final requests = snapshot.data!;
-                      final recentRequests = requests.take(3).toList(); // Show only 3 most recent
-                      
-                      return Column(
-                        children: recentRequests.map((request) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _buildRequestCard(request),
-                          );
-                        }).toList(),
-                      );
-                    }
+                    );
                   },
                 ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4CAF50).withOpacity(0.3),
-                        spreadRadius: 1,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+// ====================================================
+// NOTIFICATIONS
+                _buildQuickActionCard(
+                  icon: Icons.notifications_active_rounded,
+                  title: 'Notifications',
+                  subtitle: _unreadCount > 0
+                      ? '$_unreadCount unread notifications'
+                      : 'View all notifications',
+                  color: Color(0xFFEF4444), // Red
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NotificationsScreen(),
                       ),
-                    ],
-                  ),
-                  child: TextButton(
-                    onPressed: () {
-                      // Navigate to full requests page
-                      setState(() {
-                        _selectedIndex = 2; // Switch to requests tab
-                      });
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'View All Requests',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+                    ).then((_) {
+                      // Refresh notifications when returning from notification screen
+                      _fetchNotifications();
+                    });
+                  },
                 ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Supply Distributions Section
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.inventory_2,
-                        color: Color(0xFF4CAF50),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Supply Distributions',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                FutureBuilder<List<SupplyDistribution>>(
-                  future: _futureSupplyDistributions,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF4CAF50),
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.red.shade200,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.red.shade600,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Error loading supply distributions: ${snapshot.error}',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.2),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 48,
-                              color: const Color(0xFF4CAF50).withOpacity(0.6),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No Supply Distributions',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Your supply distributions will appear here',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: const Color(0xFF7F8C8D),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      final distributions = snapshot.data!;
-                      final recentDistributions = distributions.take(3).toList();
-                      
-                      return Column(
-                        children: recentDistributions.map((distribution) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _buildSupplyDistributionCard(distribution),
-                          );
-                        }).toList(),
-                      );
-                    }
+// ====================================================
+// PROFILE
+                _buildQuickActionCard(
+                  icon: Icons.person_rounded,
+                  title: 'My Profile',
+                  subtitle: 'Manage my profile',
+                  color: Color(0xFF6366F1), // Indigo
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 3; // Switch to Profile tab
+                    });
                   },
                 ),
               ],
             ),
-          ),
+          ],
         ),
-        const SizedBox(height: 20),
-
-        // Cash Distributions Section
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.attach_money,
-                        color: Color(0xFF4CAF50),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Cash Distributions',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                FutureBuilder<List<CashDistribution>>(
-                  future: _futureCashDistributions,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF4CAF50),
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.red.shade200,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Colors.red.shade600,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Error loading cash distributions: ${snapshot.error}',
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.2),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.attach_money_outlined,
-                              size: 48,
-                              color: const Color(0xFF4CAF50).withOpacity(0.6),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No Cash Distributions',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Your cash distributions will appear here',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: const Color(0xFF7F8C8D),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      final distributions = snapshot.data!;
-                      final recentDistributions = distributions.take(3).toList();
-                      
-                      return Column(
-                        children: recentDistributions.map((distribution) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _buildCashDistributionCard(distribution),
-                          );
-                        }).toList(),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        if (_user != null)
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.account_circle,
-                            size: 32, color: Color(0xFF4CAF50)),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(_user!.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                    color: Color(0xFF2C3E50))),
-                          if (_user!.email != null)
-                            Text(_user!.email!,
-                                  style: const TextStyle(
-                                    color: Color(0xFF7F8C8D),
-                                    fontSize: 14,
-                                  )),
-                        ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_user!.roles != null && _user!.roles!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFF4CAF50).withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.badge,
-                              size: 16, color: Color(0xFF4CAF50)),
-                          const SizedBox(width: 8),
-                        Text(_user!.roles!.join(', '),
-                              style: const TextStyle(
-                                color: Color(0xFF4CAF50),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                              )),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
+
+// ====================================================
+// BUILD QUICK ACTION CARD
+  Widget _buildQuickActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08), // Light background color
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.15),
+            width: 1,
+          ),
+        ),
+          child: Padding(
+          padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+              // Simple icon container
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                title,
+                    style: TextStyle(
+                  fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                  height: 1.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 2),
+              Flexible(
+                child: Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildSchedule() {
     if (_user != null && _user!.id != 0) {
       return SchedulePage(
-        userType: 'Farmer',
-        token: widget.token,
-        farmWorkerId: _user!.id,
-        farmWorkerName: _user!.name,
+                              userType: 'Farmer',
+                              token: widget.token,
+                              farmWorkerId: _user!.id,
+                              farmWorkerName: _user!.name,
       );
     } else {
       return const Center(child: Text('Please log in as a valid farm worker.'));
     }
   }
+
 
   Widget _buildRequests() {
     return Scaffold(
@@ -1122,9 +530,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       color: Colors.red.shade600,
                     ),
                     textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                ),
+              ],
+            ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
@@ -1175,50 +583,12 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     );
   }
 
-  Widget _buildNotifications() {
-    return const Center(
-      child: Text('Notifications',
-          style: TextStyle(fontSize: 20, color: Color(0xFF222B45))),
-    );
-  }
+
+
 
 
   Widget _buildManageProfile() {
     return FarmWorkerManageProfileScreen();
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return const Color(0xFF4CAF50);
-      case 'cancelled':
-        return const Color(0xFFE74C3C);
-      case 'in_progress':
-      case 'in progress':
-        return const Color(0xFF2196F3);
-      case 'pending':
-      case 'scheduled':
-        return const Color(0xFFFF9800);
-      default:
-        return Colors.grey.shade400;
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Icons.check_circle;
-      case 'cancelled':
-        return Icons.cancel;
-      case 'in_progress':
-      case 'in progress':
-        return Icons.play_circle;
-      case 'pending':
-      case 'scheduled':
-        return Icons.schedule;
-      default:
-        return Icons.help;
-    }
   }
 
   Color _getRequestStatusColor(String status) {
@@ -1273,11 +643,11 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
@@ -1290,12 +660,12 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   size: 16,
                 ),
               ),
-              const SizedBox(width: 12),
+                      const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   request.requestType,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Color(0xFF2C3E50),
                   ),
@@ -1315,9 +685,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ],
-          ),
+                      ),
+                    ],
+                  ),
           const SizedBox(height: 8),
           Text(
             request.description,
@@ -1327,8 +697,8 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
+                    Row(
+                      children: [
               Icon(
                 Icons.access_time,
                 size: 14,
@@ -1402,10 +772,10 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                         fontSize: 12,
                         color: const Color(0xFF4CAF50),
                         fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
+              ),
+            ),
+          ),
+      ],
               ),
             ),
           ],
@@ -1414,247 +784,56 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     );
   }
 
-  Color _getDistributionStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'distributed':
-        return const Color(0xFF4CAF50);
-      case 'pending':
-        return Colors.orange;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
 
-  IconData _getDistributionStatusIcon(String status) {
-    switch (status.toLowerCase()) {
-      case 'distributed':
-        return Icons.check_circle;
-      case 'pending':
-        return Icons.schedule;
-      case 'cancelled':
-        return Icons.cancel;
-      default:
-        return Icons.help;
-    }
-  }
 
-  Widget _buildSupplyDistributionCard(SupplyDistribution distribution) {
-    final statusColor = _getDistributionStatusColor(distribution.status);
-    final statusIcon = _getDistributionStatusIcon(distribution.status);
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: statusColor.withOpacity(0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  statusIcon,
-                  color: statusColor,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  distribution.inventory?.productName ?? 'Unknown Supply',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  distribution.status.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Category: ${distribution.inventory?.category ?? 'N/A'}',
-            style: TextStyle(
-              fontSize: 14,
-              color: const Color(0xFF7F8C8D),
+  Widget _buildNavItem({
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _selectedIndex == index;
+    double iconSize = 24;
+    if (index == 1) {
+      iconSize = 22;
+    }
+// ====================================================
+// BUILD NAV ITEM
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected
+                  ? const Color(0xFF27AE60)
+                  : const Color(0xFF8F9BB3),
+              size: iconSize,
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                size: 14,
-                color: Colors.grey.shade600,
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? const Color(0xFF27AE60)
+                    : const Color(0xFF8F9BB3),
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
-              const SizedBox(width: 4),
-              Text(
-                DateFormat('MMM dd, yyyy').format(DateTime.parse(distribution.dateDistributed)),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Icon(
-                Icons.inventory,
-                size: 14,
-                color: Colors.grey.shade600,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Qty: ${distribution.quantity}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCashDistributionCard(CashDistribution distribution) {
-    final statusColor = _getDistributionStatusColor(distribution.status);
-    final statusIcon = _getDistributionStatusIcon(distribution.status);
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: statusColor.withOpacity(0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  statusIcon,
-                  color: statusColor,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  distribution.description,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFF2C3E50),
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  distribution.status.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                size: 14,
-                color: Colors.grey.shade600,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                DateFormat('MMM dd, yyyy').format(DateTime.parse(distribution.timestamp)),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Icon(
-                Icons.attach_money,
-                size: 14,
-                color: Colors.grey.shade600,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '₱${distribution.amount.toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1662,68 +841,64 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
       _buildDashboard(),
       _buildSchedule(),
       _buildRequests(),
-      _buildNotifications(),
       _buildManageProfile(),
     ];
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
+      appBar: _selectedIndex == 0 
+          ? _buildAppBar() 
+          : _selectedIndex == 1 
+              ? _buildNavAppBar('Schedule')
+              : _selectedIndex == 2 
+                  ? _buildNavAppBar('Requests')
+                  : _selectedIndex == 3 
+                      ? _buildNavAppBar('Profile')
+                      : null,
       body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.07),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
               offset: const Offset(0, -2),
             ),
           ],
         ),
+        // ====================================================
+        // BOTTOM NAVIGATION BAR
+        child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFF4CAF50),
-            unselectedItemColor: const Color(0xFF7F8C8D),
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            elevation: 0,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-            ),
-            onTap: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard),
-                label: 'Dashboard',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.event_note),
-                label: 'Schedule',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.request_page),
-                label: 'Requests',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.notifications),
-                label: 'Notification',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: 'Profile',
-              ),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Home
+                _buildNavItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'Home',
+                  index: 0,
+                ),
+                // Schedule
+                _buildNavItem(
+                  icon: Icons.calendar_today_outlined,
+                  activeIcon: Icons.calendar_today,
+                  label: 'Schedule',
+                  index: 1,
+                ),
+                // Profile
+                _buildNavItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Profile',
+                  index: 3,
+                ),
             ],
+            ),
           ),
         ),
       ),
@@ -2177,6 +1352,54 @@ class _FarmWorkerManageProfileScreenState
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ====================================================
+// NOTIFICATIONS SCREEN
+class NotificationsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Notifications'),
+        backgroundColor: Color(0xFF27AE60),
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+        color: Color(0xFFF8F8F8),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.notifications_none,
+                size: 80,
+                color: Color(0xFFB0B0B0),
+              ),
+              SizedBox(height: 24),
+              Text(
+                'No notifications yet',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF505050),
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'You\'ll see notifications here when they arrive',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF808080),
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
