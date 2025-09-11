@@ -479,11 +479,26 @@ class RequestService {
   Future<void> updateRequest(
       String token, int requestId, Map<String, dynamic> updateData) async {
     final url = ApiConfig.getUrl('/requests/$requestId');
+
+    // Debug logging
+    print('=== REQUEST SERVICE DEBUG ===');
+    print('URL: $url');
+    print('Request ID: $requestId');
+    print('Update Data: $updateData');
+    print('Headers: ${ApiConfig.getHeaders(token: token)}');
+    print('============================');
+
     final response = await http.patch(
       Uri.parse(url),
       headers: ApiConfig.getHeaders(token: token),
       body: json.encode(updateData),
     );
+
+    print('=== RESPONSE DEBUG ===');
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+    print('=====================');
+
     if (response.statusCode != 200) {
       throw Exception(
           json.decode(response.body)['message'] ?? 'Failed to update request');

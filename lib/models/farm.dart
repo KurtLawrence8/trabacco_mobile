@@ -95,13 +95,38 @@ class Farm {
   factory Farm.fromJson(Map<String, dynamic> json) {
     List<FarmWorker> workers = [];
 
-    // Handle farmWorkers as array (new format)
+    // Debug: Print the JSON data
+    print('Farm.fromJson - Raw JSON: $json');
+    print('Farm.fromJson - farmWorkers field: ${json['farmWorkers']}');
+    print('Farm.fromJson - farm_workers field: ${json['farm_workers']}');
+
+    // Handle farmWorkers as array (camelCase) or farm_workers (snake_case)
     if (json['farmWorkers'] != null) {
       if (json['farmWorkers'] is List) {
+        print(
+            'Farm.fromJson - farmWorkers is a List with ${(json['farmWorkers'] as List).length} items');
         workers = (json['farmWorkers'] as List<dynamic>)
             .map((worker) => FarmWorker.fromJson(worker))
             .toList();
+        print('Farm.fromJson - Parsed workers: $workers');
+      } else {
+        print(
+            'Farm.fromJson - farmWorkers is not a List: ${json['farmWorkers'].runtimeType}');
       }
+    } else if (json['farm_workers'] != null) {
+      if (json['farm_workers'] is List) {
+        print(
+            'Farm.fromJson - farm_workers is a List with ${(json['farm_workers'] as List).length} items');
+        workers = (json['farm_workers'] as List<dynamic>)
+            .map((worker) => FarmWorker.fromJson(worker))
+            .toList();
+        print('Farm.fromJson - Parsed workers: $workers');
+      } else {
+        print(
+            'Farm.fromJson - farm_workers is not a List: ${json['farm_workers'].runtimeType}');
+      }
+    } else {
+      print('Farm.fromJson - Both farmWorkers and farm_workers are null');
     }
 
     // Remove duplicate workers based on ID
@@ -136,11 +161,13 @@ class FarmWorker {
   final int id;
   final String firstName;
   final String lastName;
+  final Technician? technician;
 
   const FarmWorker({
     required this.id,
     required this.firstName,
     required this.lastName,
+    this.technician,
   });
 
   factory FarmWorker.fromJson(Map<String, dynamic> json) {
@@ -148,6 +175,9 @@ class FarmWorker {
       id: json['id'] ?? 0,
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
+      technician: json['technician'] != null
+          ? Technician.fromJson(json['technician'])
+          : null,
     );
   }
 
@@ -161,4 +191,27 @@ class FarmWorker {
 
   @override
   String toString() => 'FarmWorker(id: $id, name: $firstName $lastName)';
+}
+
+class Technician {
+  final int id;
+  final String firstName;
+  final String lastName;
+
+  const Technician({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+  });
+
+  factory Technician.fromJson(Map<String, dynamic> json) {
+    return Technician(
+      id: json['id'] ?? 0,
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
+    );
+  }
+
+  @override
+  String toString() => 'Technician(id: $id, name: $firstName $lastName)';
 }

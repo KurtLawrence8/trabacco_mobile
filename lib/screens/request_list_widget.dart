@@ -186,7 +186,13 @@ class _RequestListWidgetState extends State<RequestListWidget> {
   }
 
   Widget _buildNotificationStyleRequest(RequestModel req) {
-    final isPending = (req.status?.toLowerCase().trim() ?? '') == 'pending';
+    // More flexible status checking - allow editing for pending requests
+    final status = req.status?.toLowerCase().trim() ?? '';
+    final isPending = status == 'pending' || status == '' || status.isEmpty;
+
+    // Debug logging to see actual status values
+    print(
+        'Request ID: ${req.id}, Status: "${req.status}", isPending: $isPending');
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -263,7 +269,10 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                         ),
                       ),
                     ),
-                    if (isPending) ...[
+                    // Show edit button for pending requests (allow editing)
+                    if (isPending ||
+                        req.status == null ||
+                        req.status!.isEmpty) ...[
                       SizedBox(width: 8),
                       Container(
                         decoration: BoxDecoration(
@@ -427,6 +436,15 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       updateData['supply_id'] = _selectedSupplyId;
       updateData['quantity'] = int.tryParse(_quantityController.text);
     }
+
+    // Debug logging
+    print('=== MOBILE UPDATE DEBUG ===');
+    print('Request ID: ${widget.request.id}');
+    print('Request Status: "${widget.request.status}"');
+    print('Update Data: $updateData');
+    print('Request Type: ${widget.request.type}');
+    print('========================');
+
     try {
       await RequestService()
           .updateRequest(widget.token, widget.request.id, updateData);
@@ -434,7 +452,15 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Request updated!')));
+
+      // Dispatch event to notify web app of request update
+      print('=== DISPATCHING REQUEST UPDATED EVENT ===');
+      // Note: This is a Flutter app, so we can't directly dispatch web events
+      // The web app will detect changes through its own refresh mechanisms
     } catch (e) {
+      print('=== MOBILE UPDATE ERROR ===');
+      print('Error: $e');
+      print('========================');
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
