@@ -15,12 +15,14 @@ class CameraReportScreen extends StatefulWidget {
   final String? token;
   final int? technicianId;
   final bool showCloseButton;
+  final String? reportType;
 
   const CameraReportScreen({
     Key? key,
     this.token,
     this.technicianId,
     this.showCloseButton = true, // Default to true for backward compatibility
+    this.reportType,
   }) : super(key: key);
 
   @override

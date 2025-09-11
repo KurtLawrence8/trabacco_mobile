@@ -8,7 +8,7 @@ class ApiConfig {
     final url = kIsWeb
         ? 'http://127.0.0.1:8000/api' // For web - use localhost instead of 127.0.0.1
         : Platform.isAndroid
-        ? 'http://localhost:8000/api' // For Android Emulator
+        ? 'http://10.0.2.2:8000/api' // For Android Emulator
         : 'http://localhost:8000/api'; // For iOS Simulator and others
 
     print(
@@ -58,6 +58,13 @@ class ApiConfig {
   static const String farmWorkerTrashed = '/farm-workers/trashed';
   static const String farmWorkerRestore = '/farm-workers/{id}/restore';
   static const String farmWorkerForceDelete = '/farm-workers/{id}/force';
+
+  // Request endpoints
+  static const String requests = '/requests';
+
+  // Distribution endpoints
+  static const String supplyDistribution = '/supply-distribution';
+  static const String cashDistribution = '/cash-distribution';
 
   // Helper method to get full URL
   static String getUrl(String endpoint) {
