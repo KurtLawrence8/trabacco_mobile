@@ -153,7 +153,7 @@ class _SchedulePageState extends State<SchedulePage> {
             centerTitle: true,
             title: Text(
               '${widget.farmWorkerName} Schedule',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16, // Reduced from 18
                 fontWeight: FontWeight.w600,
                 color: Colors.black,
@@ -668,10 +668,10 @@ class _SchedulePageState extends State<SchedulePage> {
                                     selectedSchedules.length == 1
                                         ? 'Activity'
                                         : 'Activities',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16, // Reduced from 20
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF2C3E50),
+                                      color: Color(0xFF2C3E50),
                                     ),
                                   ),
                                 ],
@@ -736,7 +736,7 @@ class _SchedulePageState extends State<SchedulePage> {
           centerTitle: true,
           title: Text(
             '${widget.farmWorkerName} Schedule',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.black,
@@ -861,9 +861,9 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                   Text(
                     s.date != null ? _dateFormatter.format(s.date!) : 'No date',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14, // Reduced from 16
-                      color: const Color(0xFF2C3E50),
+                      color: Color(0xFF2C3E50),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -886,9 +886,9 @@ class _SchedulePageState extends State<SchedulePage> {
                     Expanded(
                       child: Text(
                         s.remarks!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13, // Reduced from 15
-                          color: const Color(0xFF34495E),
+                          color: Color(0xFF34495E),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -903,17 +903,17 @@ class _SchedulePageState extends State<SchedulePage> {
                 Row(
                   children: [
                     if (s.numLaborers != null) ...[
-                      Icon(
+                      const Icon(
                         Icons.people,
                         size: 16, // Reduced from 18
-                        color: const Color(0xFFE67E22),
+                        color: Color(0xFFE67E22),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '${s.numLaborers} laborers',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12, // Reduced from 14
-                          color: const Color(0xFF2C3E50),
+                          color: Color(0xFF2C3E50),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -921,17 +921,17 @@ class _SchedulePageState extends State<SchedulePage> {
                         const SizedBox(width: 16), // Reduced spacing
                     ],
                     if (s.budget != null) ...[
-                      Icon(
+                      const Icon(
                         Icons.attach_money,
                         size: 16, // Reduced from 18
-                        color: const Color(0xFF27AE60),
+                        color: Color(0xFF27AE60),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '₱${s.budget!.toStringAsFixed(0)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12, // Reduced from 14
-                          color: const Color(0xFF2C3E50),
+                          color: Color(0xFF2C3E50),
                           fontWeight: FontWeight.w600,
                         ),
                       ),

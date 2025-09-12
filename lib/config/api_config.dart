@@ -103,8 +103,8 @@ class SidebarMenu extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
           child: Text(
             "Accounts",
             style: TextStyle(

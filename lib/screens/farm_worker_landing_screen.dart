@@ -6,8 +6,7 @@ import '../models/user_model.dart' show FarmWorkerProfile;
 import '../services/auth_service.dart' show FarmWorkerProfileService;
 import '../config/api_config.dart';
 import '../models/user_model.dart';
-import '../models/request_model.dart';
-import '../services/request_service.dart' as request_service;
+import '../services/auth_service.dart' show RequestService;
 import 'supply_cash_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -25,8 +24,8 @@ class FarmWorkerLandingScreen extends StatefulWidget {
 
 class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   int _selectedIndex = 0;
-  late Future<List<Request>> _futureRequests;
-  final request_service.RequestService _requestService = request_service.RequestService();
+  late Future<List<RequestModel>> _futureRequests;
+  final RequestService _requestService = RequestService();
   User? _user;
 
   // Notification state
@@ -48,7 +47,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         _user = user;
         if (_user != null) {
           _futureRequests =
-              _requestService.fetchRequestsForFarmWorker(_user!.id, widget.token);
+              _requestService.getRequestsForFarmWorker(widget.token, _user!.id);
         }
       });
     }
@@ -87,17 +86,17 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     return AppBar(
       title: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: Color(0xFF2C3E50),
         ),
       ),
       backgroundColor: Colors.white,
-      foregroundColor: Color(0xFF2C3E50),
+      foregroundColor: const Color(0xFF2C3E50),
       elevation: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
+        icon: const Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
         onPressed: () {
           setState(() {
             _selectedIndex = 0; // Go back to dashboard
@@ -114,7 +113,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         color: Colors.white,
         child: Padding(
-          padding: EdgeInsets.all(12),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -128,12 +127,12 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Hi Farm Worker!',
+                        const Text('Hi Farm Worker!',
                             style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF2C3E50))),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text('May you always in a good condition',
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey[600])),
@@ -176,12 +175,12 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                               right: 0,
                               top: 0,
                               child: Container(
-                                padding: EdgeInsets.all(2),
+                                padding: const EdgeInsets.all(2),
                                 decoration: BoxDecoration(
                                   color: Colors.red,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                   minWidth: 16,
                                   minHeight: 16,
                                 ),
@@ -189,7 +188,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                                   _unreadCount > 99
                                       ? '99+'
                                       : _unreadCount.toString(),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -202,17 +201,17 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       ),
                       // ====================================================
                       // POPUP MENU BUTTON
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Container(
                         width: 32,
                         height: 32,
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 255, 255, 255),
+                        decoration: const BoxDecoration(
+                          color: Color.fromARGB(255, 255, 255, 255),
                           shape: BoxShape.circle,
                         ),
                         child: PopupMenuButton<String>(
-                          icon: Icon(Icons.person,
-                              color: const Color.fromARGB(255, 180, 180, 180), size: 16),
+                          icon: const Icon(Icons.person,
+                              color: Color.fromARGB(255, 180, 180, 180), size: 16),
                           padding: EdgeInsets.zero,
           onSelected: (value) async {
             if (value == 'logout') {
@@ -259,13 +258,13 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         await _fetchNotifications();
       },
       child: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
         child: Column(
       children: [
             // ====================================================
             // QUICK ACTIONS SECTION
-            Row(
+            const Row(
               children: [
                 Icon(Icons.rocket_launch,
                     color: Color.fromARGB(255, 0, 0, 0), size: 20),
@@ -282,7 +281,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             // QUICK ACTIONS GRID
             GridView.count(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
@@ -293,7 +292,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   icon: Icons.calendar_today_rounded,
                   title: 'My Schedules',
                   subtitle: 'View my work schedules',
-                  color: Color(0xFF10B981), // Emerald
+                  color: const Color(0xFF10B981), // Emerald
                   onTap: () {
                     setState(() {
                       _selectedIndex = 1; // Switch to Schedule tab
@@ -306,7 +305,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   icon: Icons.request_quote_rounded,
                   title: 'My Requests',
                   subtitle: 'View my submitted requests',
-                  color: Color(0xFFF59E0B), // Amber
+                  color: const Color(0xFFF59E0B), // Amber
                   onTap: () {
                     setState(() {
                       _selectedIndex = 2; // Switch to Requests tab
@@ -319,7 +318,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   icon: Icons.inventory_rounded,
                   title: 'Supply Records',
                   subtitle: 'View supply distributions',
-                  color: Color(0xFF3B82F6), // Blue
+                  color: const Color(0xFF3B82F6), // Blue
                   onTap: () {
                     Navigator.push(
                       context,
@@ -338,7 +337,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   icon: Icons.attach_money_rounded,
                   title: 'Cash Records',
                   subtitle: 'View cash distributions',
-                  color: Color(0xFF8B5CF6), // Violet
+                  color: const Color(0xFF8B5CF6), // Violet
                   onTap: () {
                     Navigator.push(
                       context,
@@ -359,7 +358,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   subtitle: _unreadCount > 0
                       ? '$_unreadCount unread notifications'
                       : 'View all notifications',
-                  color: Color(0xFFEF4444), // Red
+                  color: const Color(0xFFEF4444), // Red
                   onTap: () {
                     Navigator.push(
                       context,
@@ -378,7 +377,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   icon: Icons.person_rounded,
                   title: 'My Profile',
                   subtitle: 'Manage my profile',
-                  color: Color(0xFF6366F1), // Indigo
+                  color: const Color(0xFF6366F1), // Indigo
                   onTap: () {
                     setState(() {
                       _selectedIndex = 3; // Switch to Profile tab
@@ -432,10 +431,10 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 title,
-                    style: TextStyle(
+                    style: const TextStyle(
                   fontSize: 12,
                         fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1A1A),
@@ -444,7 +443,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Flexible(
                 child: Text(
                   subtitle,
@@ -494,7 +493,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
           color: Color(0xFF2C3E50),
         ),
       ),
-      body: FutureBuilder<List<Request>>(
+      body: FutureBuilder<List<RequestModel>>(
         future: _futureRequests,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -554,11 +553,11 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Your requests will appear here',
                     style: TextStyle(
                       fontSize: 14,
-                      color: const Color(0xFF7F8C8D),
+                      color: Color(0xFF7F8C8D),
                     ),
                   ),
                 ],
@@ -588,7 +587,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 
 
   Widget _buildManageProfile() {
-    return FarmWorkerManageProfileScreen();
+    return const FarmWorkerManageProfileScreen();
   }
 
   Color _getRequestStatusColor(String status) {
@@ -621,9 +620,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     }
   }
 
-  Widget _buildRequestCard(Request request) {
-    final statusColor = _getRequestStatusColor(request.status);
-    final statusIcon = _getRequestStatusIcon(request.status);
+  Widget _buildRequestCard(RequestModel request) {
+    final statusColor = _getRequestStatusColor(request.status ?? 'unknown');
+    final statusIcon = _getRequestStatusIcon(request.status ?? 'unknown');
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -663,7 +662,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  request.requestType,
+                  request.type ?? 'Unknown',
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -678,7 +677,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  request.status.toUpperCase(),
+                  (request.status ?? 'unknown').toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -690,10 +689,10 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   ),
           const SizedBox(height: 8),
           Text(
-            request.description,
-            style: TextStyle(
+            request.reason ?? 'No description',
+            style: const TextStyle(
               fontSize: 14,
-              color: const Color(0xFF7F8C8D),
+              color: Color(0xFF7F8C8D),
             ),
           ),
           const SizedBox(height: 8),
@@ -759,18 +758,18 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.note,
                     size: 14,
-                    color: const Color(0xFF4CAF50),
+                    color: Color(0xFF4CAF50),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Admin Note: ${request.adminNote}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: const Color(0xFF4CAF50),
+                        color: Color(0xFF4CAF50),
                         fontStyle: FontStyle.italic,
               ),
             ),
@@ -1106,7 +1105,7 @@ class _FarmWorkerManageProfileScreenState
   Future<void> _pickImage(bool isProfile) async {
     // TODO: Implement image picker
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Image picker not implemented in this demo.')),
+      const SnackBar(content: Text('Image picker not implemented in this demo.')),
     );
   }
 
@@ -1361,17 +1360,19 @@ class _FarmWorkerManageProfileScreenState
 // ====================================================
 // NOTIFICATIONS SCREEN
 class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifications'),
-        backgroundColor: Color(0xFF27AE60),
+        title: const Text('Notifications'),
+        backgroundColor: const Color(0xFF27AE60),
         foregroundColor: Colors.white,
       ),
       body: Container(
-        color: Color(0xFFF8F8F8),
-        child: Center(
+        color: const Color(0xFFF8F8F8),
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

@@ -157,11 +157,11 @@ class _SupplyCashScreenState extends State<SupplyCashScreen>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Your supply distributions will appear here',
                     style: TextStyle(
                       fontSize: 14,
-                      color: const Color(0xFF7F8C8D),
+                      color: Color(0xFF7F8C8D),
                     ),
                   ),
                 ],
@@ -253,11 +253,11 @@ class _SupplyCashScreenState extends State<SupplyCashScreen>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Your cash distributions will appear here',
                     style: TextStyle(
                       fontSize: 14,
-                      color: const Color(0xFF7F8C8D),
+                      color: Color(0xFF7F8C8D),
                     ),
                   ),
                 ],
@@ -378,9 +378,9 @@ class _SupplyCashScreenState extends State<SupplyCashScreen>
           const SizedBox(height: 8),
           Text(
             'Category: ${distribution.inventory?.category ?? 'N/A'}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
-              color: const Color(0xFF7F8C8D),
+              color: Color(0xFF7F8C8D),
             ),
           ),
           const SizedBox(height: 8),
@@ -462,7 +462,7 @@ class _SupplyCashScreenState extends State<SupplyCashScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  distribution.description,
+                  'Cash Distribution',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -497,7 +497,7 @@ class _SupplyCashScreenState extends State<SupplyCashScreen>
               ),
               const SizedBox(width: 4),
               Text(
-                DateFormat('MMM dd, yyyy').format(DateTime.parse(distribution.timestamp)),
+                DateFormat('MMM dd, yyyy').format(DateTime.parse(distribution.dateDistributed)),
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade600,

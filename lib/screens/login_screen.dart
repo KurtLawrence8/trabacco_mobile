@@ -197,21 +197,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         bottomRight: Radius.circular(0),
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 24, right: 24),
+                    child: const Padding(
+                      padding: EdgeInsets.only(left: 24, right: 24),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Logo/Icon
-                          const Icon(
+                          Icon(
                             Icons.flutter_dash_rounded,
                             color: Colors.white,
                             size: 40,
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           // Main Title
-                          const Text(
+                          Text(
                             'Sign in to your\nAccount',
                             textAlign: TextAlign.left,
                             style: TextStyle(
@@ -221,9 +221,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 1.2,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           // Subtitle
-                          const Text(
+                          Text(
                             'Enter your email and password to log in',
                             textAlign: TextAlign.left,
                             style: TextStyle(
@@ -534,8 +534,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   // Legal Disclaimer Footer at the very bottom
-                  Padding(
-                    padding: const EdgeInsets.only(
+                  const Padding(
+                    padding: EdgeInsets.only(
                       left: 20,
                       right: 20,
                       bottom: 20,

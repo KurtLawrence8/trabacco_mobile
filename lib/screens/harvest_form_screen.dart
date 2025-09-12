@@ -245,15 +245,15 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Row(
                         children: [
                           Icon(
                             Icons.location_on,
                             color: Colors.orange,
                             size: 20,
                           ),
-                          const SizedBox(width: 8),
-                          const Text(
+                          SizedBox(width: 8),
+                          Text(
                             'Farm Information',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,

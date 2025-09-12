@@ -80,9 +80,9 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.person_outline,
-                          color: const Color(0xFF4CAF50),
+                          color: Color(0xFF4CAF50),
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -431,9 +431,9 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                   ),
                 ],
               ),
-              child: Column(
+              child: const Column(
                 children: [
-                  const Text(
+                  Text(
                     'Report Guidelines',
                     style: TextStyle(
                       fontSize: 16,
@@ -441,8 +441,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                       color: Color(0xFF2C3E50),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
+                  SizedBox(height: 12),
+                  Text(
                     '• Accomplishment Reports: Document daily activities with photos\n• Yield Monitoring: Track crop growth and health status\n• Harvest Reports: Record actual harvest data and quality grades\n• All reports are automatically timestamped',
                     style: TextStyle(
                       fontSize: 12,

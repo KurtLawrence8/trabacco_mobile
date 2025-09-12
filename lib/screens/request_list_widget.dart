@@ -61,7 +61,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                   size: 80,
                   color: Colors.red[300],
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 Text(
                   'Error loading requests',
                   style: TextStyle(
@@ -70,7 +70,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                     color: Colors.red[600],
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   '${snapshot.error}',
                   style: TextStyle(
@@ -79,10 +79,10 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _refresh,
-                  child: Text('Retry'),
+                  child: const Text('Retry'),
                 ),
               ],
             ),
@@ -93,7 +93,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           print('RequestListWidget: No data or empty list');
-          return Center(
+          return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -146,10 +146,10 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                 // Date header
                 Padding(
                   padding:
-                      EdgeInsets.only(left: 8, right: 20, top: 0, bottom: 0),
+                      const EdgeInsets.only(left: 8, right: 20, top: 0, bottom: 0),
                   child: Text(
                     date,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2C3E50),
@@ -159,7 +159,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                 // Requests for this date
                 ...requestsForDate
                     .map((req) => _buildNotificationStyleRequest(req)),
-                if (groupIndex < dateGroups.length - 1) SizedBox(height: 8),
+                if (groupIndex < dateGroups.length - 1) const SizedBox(height: 8),
               ],
             );
           },
@@ -173,7 +173,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(Duration(days: 1));
+    final yesterday = today.subtract(const Duration(days: 1));
     final requestDate = DateTime(date.year, date.month, date.day);
 
     if (requestDate == today) {
@@ -195,8 +195,8 @@ class _RequestListWidgetState extends State<RequestListWidget> {
         'Request ID: ${req.id}, Status: "${req.status}", isPending: $isPending');
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
@@ -225,7 +225,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
               size: 20,
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           // Content
           Expanded(
             child: Column(
@@ -239,7 +239,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                         req.type == 'cash_advance'
                             ? 'Cash Advance'
                             : 'Supply Request',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF2C3E50),
@@ -247,7 +247,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: req.status == 'approved'
                             ? Colors.green[100]
@@ -273,13 +273,13 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                     if (isPending ||
                         req.status == null ||
                         req.status!.isEmpty) ...[
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Color(0xFF27AE60).withOpacity(0.1),
+                          color: const Color(0xFF27AE60).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: Color(0xFF27AE60).withOpacity(0.3),
+                            color: const Color(0xFF27AE60).withOpacity(0.3),
                             width: 1,
                           ),
                         ),
@@ -288,7 +288,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                           child: InkWell(
                             onTap: () => _editRequest(req),
                             borderRadius: BorderRadius.circular(6),
-                            child: Padding(
+                            child: const Padding(
                               padding: EdgeInsets.all(6),
                               child: Icon(
                                 Icons.edit,
@@ -302,7 +302,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                     ],
                   ],
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 // Amount or supply
                 if (req.type == 'cash_advance' && req.amount != null)
                   Text(
@@ -320,7 +320,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                       color: Colors.grey[700],
                     ),
                   ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 // Description label
                 Text(
                   'Description:',
@@ -330,7 +330,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                     color: Colors.grey[500],
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 // Reason
                 Text(
                   req.reason ?? 'No reason provided',
@@ -344,9 +344,9 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                 // Admin note
                 if (req.adminNote != null &&
                     req.adminNote!.trim().isNotEmpty) ...[
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(8),
@@ -359,7 +359,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                           color: Colors.blue[700],
                           size: 16,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             req.adminNote!,
@@ -536,8 +536,9 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                 validator: (val) {
                   if (val == null || val.isEmpty) return 'Enter quantity';
                   if (int.tryParse(val) == null) return 'Invalid quantity';
-                  if (int.parse(val) <= 0)
+                  if (int.parse(val) <= 0) {
                     return 'Quantity must be greater than 0';
+                  }
                   return null;
                 },
               ),
