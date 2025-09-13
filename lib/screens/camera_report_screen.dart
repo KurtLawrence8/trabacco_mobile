@@ -221,9 +221,7 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
       // Use cached farms if available, otherwise fetch them
       List<Farm> farms = _cachedFarms ??
           await _farmService.getFarmsByTechnician(widget.token!);
-      if (_cachedFarms == null) {
-        _cachedFarms = farms;
-      }
+      _cachedFarms ??= farms;
 
       Farm? detectedFarm;
       double minDistance = double.infinity;
@@ -422,10 +420,10 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
     // Format location like the example: 16.7225°N, 121.6846°E
     final String latFormatted = _currentPosition!.latitude.toStringAsFixed(4);
     final String lngFormatted = _currentPosition!.longitude.toStringAsFixed(4);
-    final String location = '${latFormatted}°N, ${lngFormatted}°E';
+    final String location = '$latFormatted°N, $lngFormatted°E';
 
     // Create solid black overlay at bottom for text
-    final int overlayHeight = 180;
+    const int overlayHeight = 180;
     final img.Image overlay =
         img.Image(width: image.width, height: overlayHeight);
     img.fill(overlay,
@@ -1036,7 +1034,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: MediaQuery.of(context).size.height * 0.8,
       child: Column(
         children: [
@@ -1089,12 +1087,12 @@ class _ReportFormModalState extends State<ReportFormModal> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          const Row(
                             children: [
                               Icon(Icons.location_on,
                                   color: Colors.black, size: 16),
-                              const SizedBox(width: 4),
-                              const Text(
+                              SizedBox(width: 4),
+                              Text(
                                 'Detected Farm Information',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -1116,7 +1114,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.my_location,
+                              const Icon(Icons.my_location,
                                   color: Colors.black, size: 16),
                               const SizedBox(width: 6),
                               Text(
@@ -1132,7 +1130,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Icon(Icons.people,
+                                const Icon(Icons.people,
                                     color: Colors.black, size: 16),
                                 const SizedBox(width: 6),
                                 Text(
@@ -1147,7 +1145,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(Icons.straighten,
+                                const Icon(Icons.straighten,
                                     color: Colors.black, size: 16),
                                 const SizedBox(width: 6),
                                 Text(
@@ -1169,12 +1167,12 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        const Row(
                           children: [
                             Icon(Icons.check_circle_outline,
                                 color: Colors.black, size: 20),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               'Accomplishments',
                               style: TextStyle(
                                 fontSize: 14,
@@ -1182,7 +1180,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                                 color: Color(0xFF2C3E50),
                               ),
                             ),
-                            const Text(
+                            Text(
                               ' *',
                               style: TextStyle(color: Colors.red, fontSize: 14),
                             ),
@@ -1193,7 +1191,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                           controller: _accomplishmentsController,
                           decoration: InputDecoration(
                             hintText: 'Describe what you accomplished today...',
-                            hintStyle: TextStyle(fontSize: 14),
+                            hintStyle: const TextStyle(fontSize: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide:
@@ -1224,12 +1222,12 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        const Row(
                           children: [
                             Icon(Icons.warning_amber_outlined,
                                 color: Colors.black, size: 20),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               'Issues Observed',
                               style: TextStyle(
                                 fontSize: 14,
@@ -1237,7 +1235,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                                 color: Color(0xFF2C3E50),
                               ),
                             ),
-                            const Text(
+                            Text(
                               ' *',
                               style: TextStyle(color: Colors.red, fontSize: 14),
                             ),
@@ -1249,7 +1247,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                           decoration: InputDecoration(
                             hintText:
                                 'Describe any issues or problems you noticed...',
-                            hintStyle: TextStyle(fontSize: 14),
+                            hintStyle: const TextStyle(fontSize: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide:
@@ -1280,12 +1278,12 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        const Row(
                           children: [
                             Icon(Icons.health_and_safety_outlined,
                                 color: Colors.black, size: 20),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               'Disease Detection',
                               style: TextStyle(
                                 fontSize: 14,
@@ -1300,7 +1298,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                           value: _diseaseDetected,
                           decoration: InputDecoration(
                             hintText: 'Select if disease was detected',
-                            hintStyle: TextStyle(fontSize: 14),
+                            hintStyle: const TextStyle(fontSize: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide:
@@ -1346,12 +1344,12 @@ class _ReportFormModalState extends State<ReportFormModal> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          const Row(
                             children: [
                               Icon(Icons.info_outline_rounded,
                                   color: Colors.black, size: 20),
-                              const SizedBox(width: 8),
-                              const Text(
+                              SizedBox(width: 8),
+                              Text(
                                 'Disease Type',
                                 style: TextStyle(
                                   fontSize: 14,
@@ -1359,7 +1357,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                                   color: Color(0xFF2C3E50),
                                 ),
                               ),
-                              const Text(
+                              Text(
                                 ' *',
                                 style:
                                     TextStyle(color: Colors.red, fontSize: 14),
@@ -1372,7 +1370,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                             decoration: InputDecoration(
                               hintText:
                                   'Specify the type of disease detected...',
-                              hintStyle: TextStyle(fontSize: 14),
+                              hintStyle: const TextStyle(fontSize: 14),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide:
@@ -1403,12 +1401,12 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        const Row(
                           children: [
                             Icon(Icons.description_outlined,
                                 color: Colors.black, size: 20),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               'Additional Description',
                               style: TextStyle(
                                 fontSize: 14,
@@ -1416,7 +1414,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                                 color: Color(0xFF2C3E50),
                               ),
                             ),
-                            const Text(
+                            Text(
                               ' *',
                               style: TextStyle(color: Colors.red, fontSize: 14),
                             ),
@@ -1428,7 +1426,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                           decoration: InputDecoration(
                             hintText:
                                 'Provide additional details about your visit...',
-                            hintStyle: TextStyle(fontSize: 14),
+                            hintStyle: const TextStyle(fontSize: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide:
@@ -1456,7 +1454,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     const SizedBox(height: 24),
 
                     // Submit Button with better styling
-                    Container(
+                    SizedBox(
                       height: 48,
                       child: ElevatedButton.icon(
                         onPressed: _isLoading ? null : _submitReport,

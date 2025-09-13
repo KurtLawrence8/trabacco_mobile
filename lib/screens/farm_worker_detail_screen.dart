@@ -50,15 +50,15 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
               right: 20,
               bottom: 10,
             ),
-            color: Color(0xFF27AE60),
+            color: const Color(0xFF27AE60),
             child: Row(
               children: [
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
                   padding: EdgeInsets.zero,
                 ),
-                Expanded(
+                const Expanded(
                   child: Text(
                     'Farm Worker Details',
                     textAlign: TextAlign.center,
@@ -69,20 +69,20 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 48), // Balance the back button
+                const SizedBox(width: 48), // Balance the back button
               ],
             ),
           ),
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Farm Worker Information Card
                   Container(
-                    padding: EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(16),
@@ -98,14 +98,14 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                             Container(
                               width: 60,
                               height: 60,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: Color(0xFFE8D5FF),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
                                 child: Text(
                                   details.firstName[0].toUpperCase(),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Color(0xFF6B21A8),
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
@@ -113,7 +113,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 16),
+                            const SizedBox(width: 16),
                             // Name and Gender
                             Expanded(
                               child: Column(
@@ -121,19 +121,19 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                                 children: [
                                   Text(
                                     '${details.firstName} ${details.lastName}',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF2C3E50),
                                     ),
                                   ),
                                   if (details.sex != null) ...[
-                                    SizedBox(height: 4),
+                                    const SizedBox(height: 4),
                                     Row(
                                       children: [
                                         Icon(Icons.person_rounded,
                                             size: 20, color: Colors.grey[600]),
-                                        SizedBox(width: 6),
+                                        const SizedBox(width: 6),
                                         Text(
                                           details.sex!,
                                           style: TextStyle(
@@ -149,7 +149,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
                         // Contact and Personal Details
                         _buildDetailRow(
@@ -158,7 +158,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                           text: details.phoneNumber,
                         ),
                         if (details.address != null) ...[
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           _buildDetailRow(
                             icon: Icons.location_on_rounded,
                             iconColor: Colors.grey[600]!,
@@ -166,7 +166,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                           ),
                         ],
                         if (details.birthDate != null) ...[
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           _buildDetailRow(
                             icon: Icons.cake_rounded,
                             iconColor: Colors.grey[600]!,
@@ -177,27 +177,27 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                         // Farm Information Section
                         if (details.farms != null &&
                             details.farms!.isNotEmpty) ...[
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           _buildFarmInfo(
                               details.farms!.first), // Show only first farm
                         ],
                       ],
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Create Request Button
-                  Container(
+                  SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
                       onPressed: _openRequestScreen,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.add,
                         color: Colors.white,
                         size: 18,
                       ),
-                      label: Text(
+                      label: const Text(
                         'Create Request',
                         style: TextStyle(
                           fontSize: 14,
@@ -206,7 +206,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF27AE60),
+                        backgroundColor: const Color(0xFF27AE60),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -215,14 +215,14 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Requests Section
                   Padding(
-                    padding: EdgeInsets.all(0),
+                    padding: const EdgeInsets.all(0),
                     child: Row(
                       children: [
-                        Text(
+                        const Text(
                           'Requests',
                           style: TextStyle(
                             fontSize: 18,
@@ -230,14 +230,14 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                             color: Color(0xFF2C3E50),
                           ),
                         ),
-                        Spacer(),
+                        const Spacer(),
                         IconButton(
                           onPressed: () {
                             setState(() {
                               requestListKey = UniqueKey();
                             });
                           },
-                          icon: Icon(Icons.refresh, color: Color(0xFF27AE60)),
+                          icon: const Icon(Icons.refresh, color: Color(0xFF27AE60)),
                           tooltip: 'Refresh requests',
                         ),
                       ],
@@ -245,8 +245,8 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                   ),
                   // Request List
                   Transform.translate(
-                    offset: Offset(0, -8), // Move up by 8 pixels
-                    child: Container(
+                    offset: const Offset(0, -8), // Move up by 8 pixels
+                    child: SizedBox(
                       height: 400, // Increased height for better visibility
                       child: RequestListWidget(
                         key: requestListKey,
@@ -272,11 +272,11 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
     return Row(
       children: [
         Icon(icon, color: iconColor, size: 20),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF2C3E50),
             ),
@@ -315,17 +315,17 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
     }
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF8F9FA),
+        color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE9ECEF)),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header with Farm icon and title
-          Row(
+          const Row(
             children: [
               Icon(Icons.agriculture, color: Color(0xFF27AE60), size: 20),
               SizedBox(width: 8),
@@ -339,19 +339,19 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Farm Address
           _buildFarmDetailRow(
             icon: Icons.location_on,
             label: 'Farm Address',
             value: farm['farm_address'] ?? 'Unknown Farm',
-            iconColor: Color(0xFF27AE60),
+            iconColor: const Color(0xFF27AE60),
           ),
 
           // Farm Size
           if (farm['farm_size'] != null) ...[
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildFarmDetailRow(
               icon: Icons.straighten,
               label: 'Farm Size',
@@ -362,7 +362,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
 
           // Coordinates (simplified)
           if (coordinatesDisplay.isNotEmpty) ...[
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildFarmDetailRow(
               icon: Icons.my_location,
               label: 'Coordinates',
@@ -371,10 +371,10 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
             ),
           ],
 
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // View Farm Button
-          Container(
+          SizedBox(
             width: double.infinity,
             height: 40,
             child: ElevatedButton.icon(
@@ -390,8 +390,8 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                   ),
                 );
               },
-              icon: Icon(Icons.visibility, color: Colors.white, size: 16),
-              label: Text(
+              icon: const Icon(Icons.visibility, color: Colors.white, size: 16),
+              label: const Text(
                 'View Farm',
                 style: TextStyle(
                   fontSize: 13,
@@ -400,7 +400,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF27AE60),
+                backgroundColor: const Color(0xFF27AE60),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -424,7 +424,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: iconColor, size: 16),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,10 +437,10 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: Color(0xFF2C3E50),
                   fontWeight: FontWeight.w600,

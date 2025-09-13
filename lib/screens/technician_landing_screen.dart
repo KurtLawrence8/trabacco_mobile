@@ -79,17 +79,17 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     return AppBar(
       title: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: Color(0xFF2C3E50),
         ),
       ),
       backgroundColor: Colors.white,
-      foregroundColor: Color(0xFF2C3E50),
+      foregroundColor: const Color(0xFF2C3E50),
       elevation: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
+        icon: const Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
         onPressed: () {
           setState(() {
             _selectedIndex = 0; // Go back to dashboard
@@ -108,7 +108,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         color: Colors.white,
         child: Padding(
-          padding: EdgeInsets.all(12),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -122,12 +122,12 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Hi Technician!',
+                        const Text('Hi Technician!',
                             style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF2C3E50))),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text('May you always in a good condition',
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey[600])),
@@ -170,12 +170,12 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                               right: 0,
                               top: 0,
                               child: Container(
-                                padding: EdgeInsets.all(2),
+                                padding: const EdgeInsets.all(2),
                                 decoration: BoxDecoration(
                                   color: Colors.red,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                   minWidth: 16,
                                   minHeight: 16,
                                 ),
@@ -183,7 +183,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                                   _unreadCount > 99
                                       ? '99+'
                                       : _unreadCount.toString(),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -196,17 +196,17 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                       ),
                       // ====================================================
                       // POPUP MENU BUTTON
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Container(
                         width: 32,
                         height: 32,
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 255, 255, 255),
+                        decoration: const BoxDecoration(
+                          color: Color.fromARGB(255, 255, 255, 255),
                           shape: BoxShape.circle,
                         ),
                         child: PopupMenuButton<String>(
-                          icon: Icon(Icons.person,
-                              color: const Color.fromARGB(255, 180, 180, 180), size: 16),
+                          icon: const Icon(Icons.person,
+                              color: Color.fromARGB(255, 180, 180, 180), size: 16),
                           padding: EdgeInsets.zero,
                           onSelected: (value) async {
                             if (value == 'logout') {
@@ -255,13 +255,13 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         await _fetchNotifications();
       },
       child: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
         child: Column(
           children: [
             // ====================================================
             // QUICK ACTIONS SECTION
-            Row(
+            const Row(
               children: [
                 Icon(Icons.rocket_launch,
                     color: Color.fromARGB(255, 0, 0, 0), size: 20),
@@ -278,7 +278,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
             // QUICK ACTIONS GRID
             GridView.count(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
@@ -289,7 +289,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   icon: Icons.people_alt_rounded,
                   title: 'Assigned Farm workers',
                   subtitle: 'List of assigned farm workers',
-                  color: Color(0xFF6366F1), // Indigo
+                  color: const Color(0xFF6366F1), // Indigo
                   onTap: () {
                     Navigator.push(
                       context,
@@ -308,7 +308,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   icon: Icons.calendar_today_rounded,
                   title: 'Transplanting schedules',
                   subtitle: 'List of schedule activities',
-                  color: Color(0xFF10B981), // Emerald
+                  color: const Color(0xFF10B981), // Emerald
                   onTap: () {
                     Navigator.push(
                       context,
@@ -327,7 +327,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   icon: Icons.send_rounded,
                   title: 'Request Submission',
                   subtitle: 'Submit farm worker request',
-                  color: Color(0xFFF59E0B), // Amber
+                  color: const Color(0xFFF59E0B), // Amber
                   onTap: () {
                     Navigator.push(
                       context,
@@ -346,7 +346,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   icon: Icons.assessment_rounded,
                   title: 'Report submission',
                   subtitle: 'Submit farm progress report',
-                  color: Color(0xFFEF4444), // Red
+                  color: const Color(0xFFEF4444), // Red
                   onTap: () {
                     Navigator.push(
                       context,
@@ -365,12 +365,12 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   icon: Icons.map_rounded,
                   title: 'Farm Map',
                   subtitle: 'View assigned farm locations',
-                  color: Color(0xFF3B82F6), // Blue
+                  color: const Color(0xFF3B82F6), // Blue
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TechnicianFarmsScreen(),
+                        builder: (_) => const TechnicianFarmsScreen(),
                       ),
                     );
                   },
@@ -383,7 +383,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   subtitle: _unreadCount > 0
                       ? '$_unreadCount unread notifications'
                       : 'View all notifications',
-                  color: Color(0xFF8B5CF6), // Violet
+                  color: const Color(0xFF8B5CF6), // Violet
                   onTap: () {
                     Navigator.push(
                       context,
@@ -443,10 +443,10 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1A1A),
@@ -455,7 +455,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Flexible(
                 child: Text(
                   subtitle,
@@ -886,7 +886,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
 // PICK IMAGE
   Future<void> _pickImage(bool isProfile) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Image picker not implemented in this demo.')),
+      const SnackBar(content: Text('Image picker not implemented in this demo.')),
     );
   }
 
@@ -1343,7 +1343,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           (route) => false,
                         );
                       },
-                      icon: Icon(Icons.arrow_back,
+                      icon: const Icon(Icons.arrow_back,
                           color: Color(0xFF2C3E50), size: 24),
                       padding: EdgeInsets.zero,
                     ),
@@ -1351,20 +1351,20 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                       child: Text(
                         widget.title,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2C3E50),
                         ),
                       ),
                     ),
-                    SizedBox(width: 48),
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),
               // SEARCH AND FILTER SECTION
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 color: Colors.white,
                 child: Row(
                   children: [
@@ -1375,7 +1375,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Color(0xFF9E9E9E),
+                            color: const Color(0xFF9E9E9E),
                             width: 1.0,
                           ),
                         ),
@@ -1408,21 +1408,21 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 12),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Container(
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
                         color: (_selectedStatus != null ||
                                 _selectedLocation != null)
-                            ? Color.fromARGB(255, 33, 168, 33)
-                            : Color.fromARGB(163, 128, 255, 149),
+                            ? const Color.fromARGB(255, 33, 168, 33)
+                            : const Color.fromARGB(163, 128, 255, 149),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
@@ -1431,7 +1431,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                             color: (_selectedStatus != null ||
                                     _selectedLocation != null)
                                 ? Colors.white
-                                : Color.fromARGB(255, 49, 168, 33),
+                                : const Color.fromARGB(255, 49, 168, 33),
                             size: 22),
                         padding: EdgeInsets.zero,
                       ),
@@ -1445,7 +1445,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                 child: Consumer<FarmWorkerProvider>(
                   builder: (context, provider, _) {
                     if (provider.loading) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
                     if (provider.error != null) {
                       return Center(child: Text('Error: ${provider.error}'));
@@ -1460,25 +1460,25 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                             Icon(
                               widget.emptyStateIcon,
                               size: 80,
-                              color: Color(0xFFB0B0B0),
+                              color: const Color(0xFFB0B0B0),
                             ),
-                            SizedBox(height: 24),
+                            const SizedBox(height: 24),
                             Text(
                               farmWorkers.isEmpty
                                   ? widget.emptyStateTitle
                                   : 'No farm workers found',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF505050),
                               ),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               farmWorkers.isEmpty
                                   ? widget.emptyStateSubtitle
                                   : 'Try adjusting your search or filter criteria',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Color(0xFF808080),
                               ),
@@ -1490,13 +1490,13 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                     // ====================================================
                     // BUILD FARM WORKER LIST
                     return ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: filteredFarmWorkers.length,
                       itemBuilder: (context, index) {
                         final fw = filteredFarmWorkers[index];
                         return Container(
-                          margin: EdgeInsets.only(bottom: 16),
-                          padding: EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
@@ -1505,7 +1505,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                 color: Colors.grey.withOpacity(0.1),
                                 spreadRadius: 1,
                                 blurRadius: 4,
-                                offset: Offset(0, 2),
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
@@ -1515,15 +1515,15 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                               Container(
                                 width: 60,
                                 height: 60,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: Color.fromARGB(104, 217, 154, 254),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
                                   child: Text(
                                     fw.firstName[0].toUpperCase(),
-                                    style: TextStyle(
-                                      color: const Color.fromARGB(
+                                    style: const TextStyle(
+                                      color: Color.fromARGB(
                                           255, 118, 31, 165),
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
@@ -1531,7 +1531,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              const SizedBox(width: 16),
                               // Details
                               Expanded(
                                 child: Column(
@@ -1539,13 +1539,13 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                   children: [
                                     Text(
                                       "${fw.firstName} ${fw.lastName}",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Color(0xFF2C3E50),
                                       ),
                                     ),
-                                    SizedBox(height: 4),
+                                    const SizedBox(height: 4),
                                     Text(
                                       fw.address ?? "No address provided",
                                       style: TextStyle(
@@ -1555,10 +1555,10 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    SizedBox(height: 4),
+                                    const SizedBox(height: 4),
                                     Text(
                                       fw.phoneNumber,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                         color: Color(0xFF2C3E50),
@@ -1593,19 +1593,19 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                 elevation: 8,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Color(0xFFE0E0E0),
+                      color: const Color(0xFFE0E0E0),
                       width: 1.0,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.15),
                         blurRadius: 10,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -1615,8 +1615,8 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                       // Header
                       Row(
                         children: [
-                          SizedBox(width: 8),
-                          Text(
+                          const SizedBox(width: 8),
+                          const Text(
                             'Filter Options',
                             style: TextStyle(
                               fontSize: 16,
@@ -1624,7 +1624,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                               color: Color(0xFF2C3E50),
                             ),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           GestureDetector(
                             onTap: _toggleFilterCard,
                             child: Icon(Icons.close,
@@ -1632,7 +1632,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       // Gender Filter
                       DropdownButtonFormField<String>(
                         value: _selectedStatus,
@@ -1644,19 +1644,19 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           prefixIcon: Icon(
                             Icons.person_outline,
@@ -1665,7 +1665,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           ),
                         ),
                         dropdownColor: Colors.white,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Color(0xFF2C3E50),
                           fontSize: 14,
                         ),
@@ -1676,7 +1676,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                               children: [
                                 Icon(Icons.all_inclusive,
                                     color: Colors.grey[600], size: 16),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Text('All Gender',
                                     style: TextStyle(color: Colors.grey[600])),
                               ],
@@ -1688,8 +1688,8 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                               children: [
                                 Icon(Icons.male,
                                     color: Colors.grey[600], size: 16),
-                                SizedBox(width: 8),
-                                Text('Male'),
+                                const SizedBox(width: 8),
+                                const Text('Male'),
                               ],
                             ),
                           ),
@@ -1699,8 +1699,8 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                               children: [
                                 Icon(Icons.female,
                                     color: Colors.grey[600], size: 16),
-                                SizedBox(width: 8),
-                                Text('Female'),
+                                const SizedBox(width: 8),
+                                const Text('Female'),
                               ],
                             ),
                           ),
@@ -1711,7 +1711,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           });
                         },
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       // Location Filter
                       TextFormField(
                         initialValue: _selectedLocation ?? '',
@@ -1723,19 +1723,19 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           prefixIcon: Icon(
                             Icons.location_on_outlined,
@@ -1746,7 +1746,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           hintStyle:
                               TextStyle(color: Colors.grey[500], fontSize: 14),
                         ),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Color(0xFF2C3E50),
                           fontSize: 14,
                         ),
@@ -1756,7 +1756,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           });
                         },
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       // Action Buttons
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1782,7 +1782,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: Text('Apply'),
+                            child: const Text('Apply'),
                           ),
                         ],
                       ),
@@ -1819,7 +1819,7 @@ class AssignedFarmWorkersScreen extends StatelessWidget {
       emptyStateSubtitle: 'Farm workers will appear here when assigned',
       emptyStateIcon: Icons.people_outline,
       actionButtons: (fw) => [
-        Container(
+        SizedBox(
           width: 80,
           height: 32,
           child: ElevatedButton(
@@ -1842,7 +1842,7 @@ class AssignedFarmWorkersScreen extends StatelessWidget {
               ),
               padding: EdgeInsets.zero,
             ),
-            child: Text(
+            child: const Text(
               'Request',
               style: TextStyle(
                 fontSize: 12,
@@ -1851,8 +1851,8 @@ class AssignedFarmWorkersScreen extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 8),
-        Container(
+        const SizedBox(height: 8),
+        SizedBox(
           width: 80,
           height: 32,
           child: OutlinedButton(
@@ -1868,14 +1868,14 @@ class AssignedFarmWorkersScreen extends StatelessWidget {
               );
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: Color(0xFF2C3E50),
+              foregroundColor: const Color(0xFF2C3E50),
               side: BorderSide(color: Colors.grey[300]!),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: EdgeInsets.zero,
             ),
-            child: Text(
+            child: const Text(
               'View',
               style: TextStyle(
                 fontSize: 12,
@@ -1911,7 +1911,7 @@ class TransplantingSchedulesScreen extends StatelessWidget {
       emptyStateSubtitle: 'Farm workers will appear here when assigned',
       emptyStateIcon: Icons.calendar_today_outlined,
       actionButtons: (fw) => [
-        Container(
+        SizedBox(
           width: 100,
           height: 32,
           child: ElevatedButton(
@@ -1929,14 +1929,14 @@ class TransplantingSchedulesScreen extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF27AE60),
+              backgroundColor: const Color(0xFF27AE60),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: EdgeInsets.zero,
             ),
-            child: Text(
+            child: const Text(
               'View Schedule',
               style: TextStyle(
                 fontSize: 12,
@@ -1972,7 +1972,7 @@ class RequestSubmissionScreen extends StatelessWidget {
       emptyStateSubtitle: 'Farm workers will appear here when assigned',
       emptyStateIcon: Icons.message_outlined,
       actionButtons: (fw) => [
-        Container(
+        SizedBox(
           width: 100,
           height: 32,
           child: ElevatedButton(
@@ -1988,14 +1988,14 @@ class RequestSubmissionScreen extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF27AE60),
+              backgroundColor: const Color(0xFF27AE60),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: EdgeInsets.zero,
             ),
-            child: Text(
+            child: const Text(
               'Send Request',
               style: TextStyle(
                 fontSize: 12,
@@ -2012,17 +2012,19 @@ class RequestSubmissionScreen extends StatelessWidget {
 // ====================================================
 // NOTIFICATIONS SCREEN
 class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifications'),
-        backgroundColor: Color(0xFF27AE60),
+        title: const Text('Notifications'),
+        backgroundColor: const Color(0xFF27AE60),
         foregroundColor: Colors.white,
       ),
       body: Container(
-        color: Color(0xFFF8F8F8),
-        child: Center(
+        color: const Color(0xFFF8F8F8),
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

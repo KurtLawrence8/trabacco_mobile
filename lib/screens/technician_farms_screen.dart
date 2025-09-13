@@ -18,8 +18,8 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
   final AuthService _authService = AuthService();
   bool _showMap = true; // Show map by default
   GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
-  Set<Polygon> _polygons = {};
+  final Set<Marker> _markers = {};
+  final Set<Polygon> _polygons = {};
   MapType _currentMapType = MapType.normal; // Default map type
 
   @override
@@ -39,7 +39,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
         final coordinates = targetFarm.getCoordinates();
         if (coordinates != null) {
           // Add a small delay to ensure map is fully loaded
-          Future.delayed(Duration(milliseconds: 500), () {
+          Future.delayed(const Duration(milliseconds: 500), () {
             if (_mapController != null) {
               _mapController!.animateCamera(
                 CameraUpdate.newLatLngZoom(
@@ -120,12 +120,12 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
       itemBuilder: (context, index) {
         final farm = farms[index];
         return Card(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
-            leading: Icon(Icons.agriculture, color: Colors.green),
+            leading: const Icon(Icons.agriculture, color: Colors.green),
             title: Text(
               farm.farmAddress,
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,11 +133,11 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                 Text('Size: ${farm.farmSize} ha'),
                 Text(
                   'Workers: ${farm.farmWorkers.map((w) => '${w.firstName} ${w.lastName}').toSet().join(', ')}',
-                  style: TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ],
             ),
-            trailing: Icon(Icons.arrow_forward_ios),
+            trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
               // Navigate to farm detail or show on map
               setState(() {
@@ -173,13 +173,13 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.location_off, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
+            const Icon(Icons.location_off, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text(
               'No farms with coordinates found.',
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Only farms with GPS coordinates will be displayed on the map.',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -196,12 +196,12 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
         children: [
           // Map header
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             color: Colors.green[50],
             child: Row(
               children: [
-                Icon(Icons.map, color: Colors.green),
-                SizedBox(width: 8),
+                const Icon(Icons.map, color: Colors.green),
+                const SizedBox(width: 8),
                 Text(
                   'Farm Locations (${farmsWithPolygons.length} farms)',
                   style: TextStyle(
@@ -216,7 +216,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
           // Map area
           Expanded(
             child: Container(
-              margin: EdgeInsets.all(16),
+              margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -224,7 +224,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -260,7 +260,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                             _showFarmDetails(farm);
                           },
                           child: Container(
-                            padding: EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: Colors.green,
                               borderRadius: BorderRadius.circular(20),
@@ -268,19 +268,19 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.2),
                                   blurRadius: 4,
-                                  offset: Offset(0, 2),
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.agriculture,
+                                const Icon(Icons.agriculture,
                                     color: Colors.white, size: 20),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   'Farm ${farm.id}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -319,7 +319,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
                 blurRadius: 20,
-                offset: Offset(0, 10),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -328,17 +328,17 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
             children: [
               // Header with close button
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.green[50],
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16),
                     topRight: Radius.circular(16),
                   ),
                 ),
                 child: Row(
                   children: [
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Farm Details',
@@ -353,14 +353,14 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                       onPressed: () => Navigator.of(context).pop(),
                       icon: Icon(Icons.close, color: Colors.grey[600]),
                       padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
+                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
               ),
               // Content
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -371,7 +371,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                       value: farm.farmAddress,
                       iconColor: Colors.grey,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Size Section
                     _buildDetailRow(
@@ -380,12 +380,12 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                       value: '${farm.farmSize} hectares',
                       iconColor: Colors.grey,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Map Type Indicator
                     Container(
                       padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color:
                             _getMapTypeColor(_currentMapType).withOpacity(0.1),
@@ -403,7 +403,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                             color: _getMapTypeColor(_currentMapType),
                             size: 16,
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
                             'Viewing in ${_getMapTypeName(_currentMapType)} mode',
                             style: TextStyle(
@@ -415,15 +415,15 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Workers Section
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.people_alt_rounded,
+                        const Icon(Icons.people_alt_rounded,
                             color: Colors.grey, size: 20),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,12 +436,12 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                                   color: Colors.grey[600],
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               ...farm.farmWorkers
                                   .map((w) => '${w.firstName} ${w.lastName}')
                                   .toSet()
                                   .map((name) => Padding(
-                                        padding: EdgeInsets.only(bottom: 2),
+                                        padding: const EdgeInsets.only(bottom: 2),
                                         child: Text(
                                           '• $name',
                                           style: TextStyle(
@@ -461,10 +461,10 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
               ),
               // Footer with action buttons
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(16),
                     bottomRight: Radius.circular(16),
                   ),
@@ -485,20 +485,20 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                             }
                           }
                         },
-                        icon: Icon(Icons.my_location_rounded, size: 16),
-                        label: Text('Locate on Map'),
+                        icon: const Icon(Icons.my_location_rounded, size: 16),
+                        label: const Text('Locate on Map'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.grey[700],
                           side: BorderSide(color: Colors.grey[300]!),
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: Icon(Icons.close, size: 16),
-                        label: Text('Close'),
+                        icon: const Icon(Icons.close, size: 16),
+                        label: const Text('Close'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green[600],
                           foregroundColor: Colors.white,
@@ -526,7 +526,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: iconColor, size: 20),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,7 +539,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                   color: Colors.grey[600],
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 value,
                 style: TextStyle(
@@ -607,7 +607,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Workers\' Farms'),
+        title: const Text('My Workers\' Farms'),
         actions: [
           // Map type selector (only show when map is visible)
           if (_showMap)
@@ -619,7 +619,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                 });
               },
               itemBuilder: (BuildContext context) => [
-                PopupMenuItem<MapType>(
+                const PopupMenuItem<MapType>(
                   value: MapType.normal,
                   child: Row(
                     children: [
@@ -629,7 +629,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                     ],
                   ),
                 ),
-                PopupMenuItem<MapType>(
+                const PopupMenuItem<MapType>(
                   value: MapType.satellite,
                   child: Row(
                     children: [
@@ -639,7 +639,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                     ],
                   ),
                 ),
-                PopupMenuItem<MapType>(
+                const PopupMenuItem<MapType>(
                   value: MapType.terrain,
                   child: Row(
                     children: [
@@ -649,7 +649,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                     ],
                   ),
                 ),
-                PopupMenuItem<MapType>(
+                const PopupMenuItem<MapType>(
                   value: MapType.hybrid,
                   child: Row(
                     children: [
@@ -672,16 +672,16 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
         ],
       ),
       body: _farmsFuture == null
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : FutureBuilder<List<Farm>>(
               future: _farmsFuture!,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No farms found.'));
+                  return const Center(child: Text('No farms found.'));
                 }
                 final farms = snapshot.data!;
 
@@ -694,13 +694,13 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.location_off, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text(
+                        const Icon(Icons.location_off, size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        const Text(
                           'No farms with coordinates found.',
                           style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Only farms with GPS coordinates will be displayed on the map.',
                           style:
@@ -716,10 +716,10 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                   // Show map view
                   _createMarkers(farms);
                   return FutureBuilder(
-                    future: Future.delayed(Duration(milliseconds: 500)),
+                    future: Future.delayed(const Duration(milliseconds: 500)),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
+                        return const Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -738,15 +738,15 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.location_off,
+                                const Icon(Icons.location_off,
                                     size: 64, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text(
+                                const SizedBox(height: 16),
+                                const Text(
                                   'No farms with coordinates found.',
                                   style: TextStyle(
                                       fontSize: 18, color: Colors.grey),
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
                                   'Only farms with GPS coordinates will be displayed on the map.',
                                   style: TextStyle(
@@ -801,16 +801,16 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                         return Column(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(16),
                               color: Colors.orange,
                               child: Row(
                                 children: [
-                                  Icon(Icons.warning, color: Colors.white),
-                                  SizedBox(width: 8),
+                                  const Icon(Icons.warning, color: Colors.white),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       'Google Maps failed to load: $e',
-                                      style: TextStyle(color: Colors.white),
+                                      style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 ],

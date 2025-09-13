@@ -127,15 +127,15 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         Icon(
                           Icons.location_on,
-                          color: const Color(0xFF27AE60),
+                          color: Color(0xFF27AE60),
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
+                        SizedBox(width: 8),
+                        Text(
                           'Detected Farm',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,

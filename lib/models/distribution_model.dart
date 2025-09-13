@@ -11,6 +11,20 @@ class SupplyDistribution {
   final FarmWorkerFarm? farmWorkerFarm;
   final Inventory? inventory;
 
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
   SupplyDistribution({
     required this.id,
     required this.farmWorkerFarmId,
@@ -27,15 +41,15 @@ class SupplyDistribution {
 
   factory SupplyDistribution.fromJson(Map<String, dynamic> json) {
     return SupplyDistribution(
-      id: json['id'],
+      id: json['id'] ?? 0,
       farmWorkerFarmId: json['farm_worker_farm_id'] ?? 0,
       inventoryId: json['inventory_id'] ?? 0,
       dateDistributed: json['date_distributed'] ?? '',
       status: json['status'] ?? '',
       quantity: json['quantity'] ?? 0,
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
       farmWorkerFarm: json['farm_worker_farm'] != null ? FarmWorkerFarm.fromJson(json['farm_worker_farm']) : null,
       inventory: json['inventory'] != null ? Inventory.fromJson(json['inventory']) : null,
     );
@@ -60,56 +74,80 @@ class SupplyDistribution {
 
 class CashDistribution {
   final int id;
-  final int farmWorkerId;
-  final String timestamp;
+  final int farmWorkerFarmId;
+  final String dateDistributed;
   final String status;
   final double amount;
-  final String description;
-  final String requestType;
-  final int technicianId;
-  final FarmWorker? farmWorker;
-  final Technician? technician;
+  final int? requestId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final FarmWorkerFarm? farmWorkerFarm;
 
   CashDistribution({
     required this.id,
-    required this.farmWorkerId,
-    required this.timestamp,
+    required this.farmWorkerFarmId,
+    required this.dateDistributed,
     required this.status,
     required this.amount,
-    required this.description,
-    required this.requestType,
-    required this.technicianId,
-    this.farmWorker,
-    this.technician,
+    this.requestId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.farmWorkerFarm,
   });
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
 
   factory CashDistribution.fromJson(Map<String, dynamic> json) {
     return CashDistribution(
-      id: json['id'],
-      farmWorkerId: json['farm_worker_id'],
-      timestamp: json['timestamp'] ?? '',
+      id: json['id'] ?? 0,
+      farmWorkerFarmId: json['farm_worker_farm_id'] ?? 0,
+      dateDistributed: json['date_distributed'] ?? '',
       status: json['status'] ?? '',
-      amount: (json['amount'] ?? 0).toDouble(),
-      description: json['description'] ?? '',
-      requestType: json['request_type'] ?? '',
-      technicianId: json['technician_id'] ?? 0,
-      farmWorker: json['farm_worker'] != null ? FarmWorker.fromJson(json['farm_worker']) : null,
-      technician: json['technician'] != null ? Technician.fromJson(json['technician']) : null,
+      amount: _parseDouble(json['amount']),
+      requestId: json['request_id'],
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
+      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      farmWorkerFarm: json['farm_worker_farm'] != null ? FarmWorkerFarm.fromJson(json['farm_worker_farm']) : null,
     );
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'farm_worker_id': farmWorkerId,
-      'timestamp': timestamp,
+      'farm_worker_farm_id': farmWorkerFarmId,
+      'date_distributed': dateDistributed,
       'status': status,
       'amount': amount,
-      'description': description,
-      'request_type': requestType,
-      'technician_id': technicianId,
-      'farm_worker': farmWorker?.toJson(),
-      'technician': technician?.toJson(),
+      'request_id': requestId,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      'deleted_at': deletedAt?.toIso8601String(),
+      'farm_worker_farm': farmWorkerFarm?.toJson(),
     };
   }
 }
@@ -140,16 +178,30 @@ class FarmWorkerFarm {
     this.farmWorker,
   });
 
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
   factory FarmWorkerFarm.fromJson(Map<String, dynamic> json) {
     return FarmWorkerFarm(
-      id: json['id'],
+      id: json['id'] ?? 0,
       farmWorkerId: json['farm_worker_id'] ?? 0,
       farmId: json['farm_id'] ?? 0,
       dateAssigned: json['date_assigned'] ?? '',
       status: json['status'] ?? '',
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
       farm: json['farm'] != null ? Farm.fromJson(json['farm']) : null,
       farmWorker: json['farm_worker'] != null ? FarmWorker.fromJson(json['farm_worker']) : null,
     );
@@ -190,15 +242,29 @@ class Farm {
     required this.updatedAt,
   });
 
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
   factory Farm.fromJson(Map<String, dynamic> json) {
     return Farm(
-      id: json['id'],
+      id: json['id'] ?? 0,
       farmSize: json['farm_size'] ?? '',
       farmAddress: json['farm_address'] ?? '',
       coordinates: json['coordinates'] ?? '',
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
   }
 
@@ -244,9 +310,23 @@ class Inventory {
     required this.updatedAt,
   });
 
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
   factory Inventory.fromJson(Map<String, dynamic> json) {
     return Inventory(
-      id: json['id'],
+      id: json['id'] ?? 0,
       productName: json['product_name'] ?? '',
       category: json['category'] ?? '',
       price: json['price'] ?? '',
@@ -255,9 +335,9 @@ class Inventory {
       dateOrdered: json['date_ordered'] ?? '',
       dateDelivered: json['date_delivered'] ?? '',
       availability: json['availability'] ?? '',
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
   }
 
@@ -291,8 +371,8 @@ class Technician {
 
   factory Technician.fromJson(Map<String, dynamic> json) {
     return Technician(
-      id: json['id'],
-      name: json['name'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
     );
   }
 
@@ -338,9 +418,23 @@ class FarmWorker {
     required this.updatedAt,
   });
 
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
   factory FarmWorker.fromJson(Map<String, dynamic> json) {
     return FarmWorker(
-      id: json['id'],
+      id: json['id'] ?? 0,
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       middleName: json['middle_name'],
@@ -352,8 +446,8 @@ class FarmWorker {
       idPicture: json['id_picture'],
       technicianId: json['technician_id'] ?? 0,
       status: json['status'] ?? '',
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
   }
 
@@ -404,19 +498,33 @@ class Supply {
     required this.updatedAt,
   });
 
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing date: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
   factory Supply.fromJson(Map<String, dynamic> json) {
     return Supply(
-      id: json['id'],
-      productName: json['product_name'],
-      category: json['category'],
-      price: json['price'],
-      quantity: json['quantity'],
-      expiryDate: json['expiry_date'],
-      dateOrdered: json['date_ordered'],
-      dateDelivered: json['date_delivered'],
-      availability: json['availability'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      id: json['id'] ?? 0,
+      productName: json['product_name'] ?? '',
+      category: json['category'] ?? '',
+      price: json['price'] ?? '',
+      quantity: json['quantity'] ?? 0,
+      expiryDate: json['expiry_date'] ?? '',
+      dateOrdered: json['date_ordered'] ?? '',
+      dateDelivered: json['date_delivered'] ?? '',
+      availability: json['availability'] ?? '',
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
   }
 

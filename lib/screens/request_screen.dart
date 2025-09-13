@@ -119,11 +119,11 @@ class _RequestScreenState extends State<RequestScreen> {
               children: [
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.arrow_back,
+                  icon: const Icon(Icons.arrow_back,
                       color: Color(0xFF2C3E50), size: 24),
                   padding: EdgeInsets.zero,
                 ),
-                Expanded(
+                const Expanded(
                   child: Text(
                     'Request',
                     textAlign: TextAlign.center,
@@ -134,14 +134,14 @@ class _RequestScreenState extends State<RequestScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 48), // Balance the back button
+                const SizedBox(width: 48), // Balance the back button
               ],
             ),
           ),
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -149,7 +149,7 @@ class _RequestScreenState extends State<RequestScreen> {
                   children: [
                     // Farm Worker Information Section
                     Container(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.grey[50],
                         borderRadius: BorderRadius.circular(12),
@@ -161,14 +161,14 @@ class _RequestScreenState extends State<RequestScreen> {
                           Container(
                             width: 60,
                             height: 60,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Color(0xFFE8D5FF),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Text(
                                 widget.farmWorker.firstName[0].toUpperCase(),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Color(0xFF6B21A8),
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -176,7 +176,7 @@ class _RequestScreenState extends State<RequestScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 16),
                           // Details
                           Expanded(
                             child: Column(
@@ -184,13 +184,13 @@ class _RequestScreenState extends State<RequestScreen> {
                               children: [
                                 Text(
                                   '${widget.farmWorker.firstName} ${widget.farmWorker.lastName}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF2C3E50),
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   widget.farmWorker.address ??
                                       'Complete address',
@@ -199,10 +199,10 @@ class _RequestScreenState extends State<RequestScreen> {
                                     color: Colors.grey[600],
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   widget.farmWorker.phoneNumber,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: Color(0xFF2C3E50),
@@ -214,10 +214,10 @@ class _RequestScreenState extends State<RequestScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
                     // Request Type Field
-                    Text(
+                    const Text(
                       'Request type',
                       style: TextStyle(
                         fontSize: 16,
@@ -225,7 +225,7 @@ class _RequestScreenState extends State<RequestScreen> {
                         color: Color(0xFF2C3E50),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[50],
@@ -235,7 +235,7 @@ class _RequestScreenState extends State<RequestScreen> {
                       child: ListTile(
                         title: Text(
                           _requestType,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             color: Color(0xFF2C3E50),
                           ),
@@ -246,12 +246,12 @@ class _RequestScreenState extends State<RequestScreen> {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text('Select Request Type'),
+                              title: const Text('Select Request Type'),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ListTile(
-                                    title: Text('Farm supply'),
+                                    title: const Text('Farm supply'),
                                     onTap: () {
                                       setState(
                                           () => _requestType = 'Farm supply');
@@ -260,7 +260,7 @@ class _RequestScreenState extends State<RequestScreen> {
                                     },
                                   ),
                                   ListTile(
-                                    title: Text('Cash advance'),
+                                    title: const Text('Cash advance'),
                                     onTap: () {
                                       setState(
                                           () => _requestType = 'Cash advance');
@@ -275,12 +275,12 @@ class _RequestScreenState extends State<RequestScreen> {
                         },
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Second Field - Changes based on request type
                     if (_requestType == 'Farm supply') ...[
                       // Supply Name Field
-                      Text(
+                      const Text(
                         'Supply name',
                         style: TextStyle(
                           fontSize: 16,
@@ -288,7 +288,7 @@ class _RequestScreenState extends State<RequestScreen> {
                           color: Color(0xFF2C3E50),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       _loadingSupplies
                           ? Container(
                               height: 56,
@@ -297,7 +297,7 @@ class _RequestScreenState extends State<RequestScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.grey[300]!),
                               ),
-                              child: Center(child: CircularProgressIndicator()),
+                              child: const Center(child: CircularProgressIndicator()),
                             )
                           : DropdownButtonFormField<int>(
                               value: _selectedSupplyId,
@@ -318,7 +318,7 @@ class _RequestScreenState extends State<RequestScreen> {
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide:
-                                      BorderSide(color: Color(0xFF27AE60)),
+                                      const BorderSide(color: Color(0xFF27AE60)),
                                 ),
                                 filled: true,
                                 fillColor: Colors.grey[50],
@@ -342,9 +342,9 @@ class _RequestScreenState extends State<RequestScreen> {
                                 return null;
                               },
                             ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       // Quantity Field for Supply
-                      Text(
+                      const Text(
                         'Quantity',
                         style: TextStyle(
                           fontSize: 16,
@@ -352,7 +352,7 @@ class _RequestScreenState extends State<RequestScreen> {
                           color: Color(0xFF2C3E50),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       TextFormField(
                         controller: _quantityController,
                         keyboardType: TextInputType.number,
@@ -369,15 +369,16 @@ class _RequestScreenState extends State<RequestScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF27AE60)),
+                            borderSide: const BorderSide(color: Color(0xFF27AE60)),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
                         ),
                         onChanged: (value) => _checkSubmitEnabled(),
                         validator: (val) {
-                          if (val == null || val.isEmpty)
+                          if (val == null || val.isEmpty) {
                             return 'Enter quantity';
+                          }
                           if (int.tryParse(val) == null) {
                             return 'Invalid quantity';
                           }
@@ -389,7 +390,7 @@ class _RequestScreenState extends State<RequestScreen> {
                       ),
                     ] else if (_requestType == 'Cash advance') ...[
                       // Cash Amount Field
-                      Text(
+                      const Text(
                         'Cash amount',
                         style: TextStyle(
                           fontSize: 16,
@@ -397,7 +398,7 @@ class _RequestScreenState extends State<RequestScreen> {
                           color: Color(0xFF2C3E50),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       TextFormField(
                         controller: _amountController,
                         keyboardType: TextInputType.number,
@@ -428,10 +429,10 @@ class _RequestScreenState extends State<RequestScreen> {
                         },
                       ),
                     ],
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Reason/Description Field
-                    Text(
+                    const Text(
                       'Reason/Description',
                       style: TextStyle(
                         fontSize: 16,
@@ -439,7 +440,7 @@ class _RequestScreenState extends State<RequestScreen> {
                         color: Color(0xFF2C3E50),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _reasonController,
                       decoration: InputDecoration(
@@ -455,7 +456,7 @@ class _RequestScreenState extends State<RequestScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Color(0xFF27AE60)),
+                          borderSide: const BorderSide(color: Color(0xFF27AE60)),
                         ),
                         filled: true,
                         fillColor: Colors.grey[50],
@@ -465,10 +466,10 @@ class _RequestScreenState extends State<RequestScreen> {
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Enter reason' : null,
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
                     // Request Summary Section
-                    Text(
+                    const Text(
                       'Request Summary',
                       style: TextStyle(
                         fontSize: 18,
@@ -476,9 +477,9 @@ class _RequestScreenState extends State<RequestScreen> {
                         color: Color(0xFF2C3E50),
                       ),
                     ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Container(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.grey[50],
                         borderRadius: BorderRadius.circular(12),
@@ -487,14 +488,14 @@ class _RequestScreenState extends State<RequestScreen> {
                       child: Column(
                         children: [
                           _buildSummaryRow('Request type', _requestType),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           if (_requestType == 'Farm supply') ...[
                             _buildSummaryRow(
                                 'Supply name',
                                 _supplyNameController.text.isEmpty
                                     ? 'Not selected'
                                     : _supplyNameController.text),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             _buildSummaryRow(
                                 'Quantity',
                                 _quantityController.text.isEmpty
@@ -506,7 +507,7 @@ class _RequestScreenState extends State<RequestScreen> {
                                 _amountController.text.isEmpty
                                     ? 'Not entered'
                                     : '₱${_amountController.text}'),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           _buildSummaryRow(
                               'Reason',
                               _reasonController.text.isEmpty
@@ -523,7 +524,7 @@ class _RequestScreenState extends State<RequestScreen> {
 
           // Bottom Action Bar
           Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: Colors.grey[200]!)),
@@ -536,10 +537,10 @@ class _RequestScreenState extends State<RequestScreen> {
                     setState(() => _isDescriptionEnabled = value ?? false);
                     _checkSubmitEnabled();
                   },
-                  activeColor: Color(0xFF27AE60),
+                  activeColor: const Color(0xFF27AE60),
                 ),
-                SizedBox(width: 8),
-                Expanded(
+                const SizedBox(width: 8),
+                const Expanded(
                   child: Text(
                     'I confirm the request details are correct',
                     style: TextStyle(
@@ -548,15 +549,15 @@ class _RequestScreenState extends State<RequestScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
-                Container(
+                const SizedBox(width: 12),
+                SizedBox(
                   width: 100,
                   height: 48,
                   child: ElevatedButton(
                     onPressed: _isSubmitEnabled ? _submit : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _isSubmitEnabled
-                          ? Color(0xFF27AE60)
+                          ? const Color(0xFF27AE60)
                           : Colors.grey[300],
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -564,7 +565,7 @@ class _RequestScreenState extends State<RequestScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: Text(
+                    child: const Text(
                       'Submit',
                       style: TextStyle(
                         fontSize: 14,
@@ -598,7 +599,7 @@ class _RequestScreenState extends State<RequestScreen> {
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Color(0xFF2C3E50),
