@@ -23,6 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   // NEW ETO FORGOT PASSWORD SENDING RESET EMAIL
   bool _isSendingResetEmail = false;
+  // NEW ETO EMAIL VERIFICATION
+  bool _isSendingVerificationEmail = false;
   bool _rememberMe = false;
   bool _obscurePassword = true;
   final AuthService _authService = AuthService();
@@ -109,9 +111,17 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: ${e.toString()}')),
-      );
+
+      // Check if this is an email verification required error
+      final errorMessage = e.toString();
+      if (errorMessage.contains('email_verification_required') ||
+          errorMessage.contains('Please verify your email address')) {
+        _showEmailVerificationDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: ${e.toString()}')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -157,6 +167,45 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() {
           _isSendingResetEmail = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // NEW ETO EMAIL VERIFICATION RESEND
+  Future<void> _resendVerificationEmail() async {
+    setState(() {
+      _isSendingVerificationEmail = true;
+    });
+
+    try {
+      await _authService.resendVerificationEmail(_loginController.text.trim());
+
+      if (mounted) {
+        setState(() {
+          _isSendingVerificationEmail = false;
+        });
+
+        Navigator.of(context).pop(); // Close the dialog
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verification email sent. Please check your email.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSendingVerificationEmail = false;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -632,6 +681,133 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     )
                   : const Text('Send Reset Link'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // NEW ETO EMAIL VERIFICATION DIALOG
+  void _showEmailVerificationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.email_outlined,
+                color: Color(0xFF27AE60),
+                size: 24,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Email Verification Required',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your email address needs to be verified before you can access your account.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF666666),
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Color(0xFFE9ECEF)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Color(0xFF27AE60),
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Check your email inbox and click the verification link to activate your account.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF495057),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Email: ${_loginController.text.trim()}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: _isSendingVerificationEmail
+                  ? null
+                  : () {
+                      Navigator.of(context).pop();
+                    },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFF666666),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed:
+                  _isSendingVerificationEmail ? null : _resendVerificationEmail,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF27AE60),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: _isSendingVerificationEmail
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      'Resend Email',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ],
         );

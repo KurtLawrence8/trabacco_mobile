@@ -68,33 +68,37 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFF4CAF50).withOpacity(0.3),
-                        width: 1,
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF4CAF50).withOpacity(0.3),
+                          width: 1,
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          color: const Color(0xFF4CAF50),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Technician ID: ${widget.technicianId ?? 'Not Available'}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF4CAF50),
-                            fontWeight: FontWeight.w500,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            color: const Color(0xFF4CAF50),
+                            size: 20,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Text(
+                            'Technician ID: ${widget.technicianId ?? 'Not Available'}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF4CAF50),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -145,7 +149,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                                 color: const Color(0xFF4CAF50).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(50),
                                 border: Border.all(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                  color:
+                                      const Color(0xFF4CAF50).withOpacity(0.3),
                                   width: 2,
                                 ),
                               ),
@@ -184,7 +189,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                                 borderRadius: BorderRadius.circular(25),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                    color: const Color(0xFF4CAF50)
+                                        .withOpacity(0.3),
                                     spreadRadius: 1,
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
@@ -248,7 +254,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                                 color: const Color(0xFF4CAF50).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(50),
                                 border: Border.all(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                  color:
+                                      const Color(0xFF4CAF50).withOpacity(0.3),
                                   width: 2,
                                 ),
                               ),
@@ -287,7 +294,8 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                                 borderRadius: BorderRadius.circular(25),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                    color: const Color(0xFF4CAF50)
+                                        .withOpacity(0.3),
                                     spreadRadius: 1,
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),

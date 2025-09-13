@@ -32,6 +32,15 @@ class AuthService {
         await _saveUserData(user);
         client.close();
         return user;
+      } else if (response.statusCode == 403) {
+        final data = json.decode(response.body);
+        client.close();
+        // Check if this is an email verification required error
+        if (data['email_verification_required'] == true) {
+          throw Exception('email_verification_required: ${data['message']}');
+        } else {
+          throw Exception(data['message'] ?? 'Access denied');
+        }
       } else {
         client.close();
         throw Exception(
@@ -106,6 +115,30 @@ class AuthService {
       }
     } catch (e) {
       throw Exception('Failed to send password reset email: ${e.toString()}');
+    }
+  }
+
+  // NEW ETO RESEND VERIFICATION EMAIL FOR TECHNICIAN
+  Future<void> resendVerificationEmail(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/email/resend'),
+        headers: ApiConfig.getHeaders(),
+        body: json.encode({
+          'email': email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Success - verification email sent
+        return;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            errorData['message'] ?? 'Failed to send verification email');
+      }
+    } catch (e) {
+      throw Exception('Failed to send verification email: ${e.toString()}');
     }
   }
 

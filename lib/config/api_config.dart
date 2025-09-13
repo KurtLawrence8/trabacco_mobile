@@ -8,15 +8,11 @@ class ApiConfig {
     final url = kIsWeb
         ? 'http://127.0.0.1:8000/api' // For web - use localhost instead of 127.0.0.1
         : Platform.isAndroid
-        ? 'http://10.0.2.2:8000/api' // For Android Emulator
-        : 'http://localhost:8000/api'; // For iOS Simulator and others
+            ? 'http://localhost:8000/api' // For Android Emulator
+            : 'http://localhost:8000/api'; // For iOS Simulator and others
 
     print(
-      '[ApiConfig] [baseUrl] Platform: ${kIsWeb
-          ? 'Web'
-          : Platform.isAndroid
-          ? 'Android'
-          : 'iOS/Other'}',
+      '[ApiConfig] [baseUrl] Platform: ${kIsWeb ? 'Web' : Platform.isAndroid ? 'Android' : 'iOS/Other'}',
     );
     print('[ApiConfig] [baseUrl] Generated URL: $url');
 
