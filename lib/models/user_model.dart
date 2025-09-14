@@ -240,8 +240,8 @@ class Technician {
       phoneNumber: json['phone_number'],
       address: json['address'],
       status: json['status'] ?? 'Active',
-      profilePicture: json['profile_picture'],
-      idPicture: json['id_picture'],
+      profilePicture: json['profile_picture_url'] ?? json['profile_picture'],
+      idPicture: json['id_picture_url'] ?? json['id_picture'],
       deletedAt: json['deleted_at'] != null // NEW
           ? DateTime.tryParse(json['deleted_at'])
           : null,
@@ -323,8 +323,8 @@ class FarmWorkerProfile {
       phoneNumber: json['phone_number'] ?? '',
       address: json['address'],
       status: json['status'] ?? 'Active',
-      profilePicture: json['profile_picture'],
-      idPicture: json['id_picture'],
+      profilePicture: json['profile_picture_url'] ?? json['profile_picture'],
+      idPicture: json['id_picture_url'] ?? json['id_picture'],
       technicianId: json['technician_id'] ?? 0,
       deletedAt: json['deleted_at'] != null // NEW
           ? DateTime.tryParse(json['deleted_at'])
