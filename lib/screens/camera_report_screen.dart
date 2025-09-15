@@ -1044,6 +1044,10 @@ class _ReportFormModalState extends State<ReportFormModal> {
       TextEditingController();
   final TextEditingController _issuesController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _diseaseTypeController = TextEditingController();
+
+  // Disease detection
+  String _diseaseDetected = 'None';
 
   // Planting-specific controllers
   final TextEditingController _areaPlantedController = TextEditingController();
@@ -1315,6 +1319,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
     _accomplishmentsController.dispose();
     _issuesController.dispose();
     _descriptionController.dispose();
+    _diseaseTypeController.dispose();
 
     // Planting controllers
     _areaPlantedController.dispose();
@@ -1573,6 +1578,115 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     ),
                     const SizedBox(height: 20),
 
+                    // Disease Detection field
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.health_and_safety_outlined,
+                                color: Colors.black, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Disease Detected',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: _diseaseDetected,
+                          decoration: InputDecoration(
+                            hintText: 'Select if disease was detected',
+                            hintStyle: const TextStyle(fontSize: 14),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFDEE2E6)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFF27AE60), width: 2),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.all(16),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'None', child: Text('None')),
+                            DropdownMenuItem(value: 'Yes', child: Text('Yes')),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _diseaseDetected = value!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Disease Type field (only shown if disease is detected)
+                    if (_diseaseDetected == 'Yes')
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.bug_report_outlined,
+                                  color: Colors.black, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Disease Type',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              Text(
+                                ' *',
+                                style: TextStyle(color: Colors.red, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _diseaseTypeController,
+                            decoration: InputDecoration(
+                              hintText: 'Specify the type of disease detected...',
+                              hintStyle: const TextStyle(fontSize: 14),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFDEE2E6)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF27AE60), width: 2),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.all(16),
+                            ),
+                            validator: (value) {
+                              if (_diseaseDetected == 'Yes' &&
+                                  (value == null || value.isEmpty)) {
+                                return 'Please specify the disease type';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    if (_diseaseDetected == 'Yes') const SizedBox(height: 20),
+
                     // Description field
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1729,6 +1843,9 @@ class _ReportFormModalState extends State<ReportFormModal> {
           'farm_id': widget.detectedFarm?.id ?? 1,
           'accomplishments': _accomplishmentsController.text,
           'issues_observed': _issuesController.text,
+          'disease_detected': _diseaseDetected,
+          'disease_type':
+              _diseaseDetected == 'Yes' ? _diseaseTypeController.text : null,
           'description': _descriptionController.text,
           'timestamp': DateTime.now().toIso8601String(),
         };
