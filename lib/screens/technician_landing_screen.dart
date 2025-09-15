@@ -205,7 +205,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         ),
                         child: PopupMenuButton<String>(
                           icon: const Icon(Icons.person,
-                              color: Color.fromARGB(255, 180, 180, 180), size: 16),
+                              color: Color.fromARGB(255, 180, 180, 180),
+                              size: 16),
                           padding: EdgeInsets.zero,
                           onSelected: (value) async {
                             if (value == 'logout') {
@@ -564,7 +565,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
               color: isSelected ? const Color(0xFF27AE60) : Colors.white,
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: isSelected ? const Color(0xFF27AE60) : const Color(0xFF8F9BB3),
+                color: isSelected
+                    ? const Color(0xFF27AE60)
+                    : const Color(0xFF8F9BB3),
                 width: 2,
               ),
             ),
@@ -579,7 +582,9 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
           Text(
             'Report',
             style: TextStyle(
-              color: isSelected ? const Color(0xFF27AE60) : const Color(0xFF8F9BB3),
+              color: isSelected
+                  ? const Color(0xFF27AE60)
+                  : const Color(0xFF8F9BB3),
               fontSize: 10,
               fontWeight: FontWeight.normal,
             ),
@@ -605,11 +610,11 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     ];
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _selectedIndex == 0 
-          ? _buildAppBar() 
-          : _selectedIndex == 2 
+      appBar: _selectedIndex == 0
+          ? _buildAppBar()
+          : _selectedIndex == 2
               ? _buildNavAppBar('Reports')
-              : _selectedIndex == 3 
+              : _selectedIndex == 3
                   ? _buildNavAppBar('Profile')
                   : null,
       body: SafeArea(child: pages[_selectedIndex]),
@@ -672,7 +677,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     );
   }
 }
-
 
 class FarmWorkerProvider with ChangeNotifier {
   List<FarmWorker> _farmWorkers = [];
@@ -890,7 +894,8 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
               ),
               // SEARCH AND FILTER SECTION
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 color: Colors.white,
                 child: Row(
                   children: [
@@ -1049,8 +1054,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                   child: Text(
                                     fw.firstName[0].toUpperCase(),
                                     style: const TextStyle(
-                                      color: Color.fromARGB(
-                                          255, 118, 31, 165),
+                                      color: Color.fromARGB(255, 118, 31, 165),
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1170,15 +1174,18 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
@@ -1249,15 +1256,18 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE0E0E0)),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],

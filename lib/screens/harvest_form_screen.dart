@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:io';
 import '../services/harvest_service.dart';
+import '../services/planting_service.dart';
+import '../services/tobacco_variety_service.dart';
+import '../models/tobacco_variety.dart';
 import '../models/farm.dart';
 
 class HarvestFormScreen extends StatefulWidget {
@@ -27,6 +30,8 @@ class HarvestFormScreen extends StatefulWidget {
 class _HarvestFormScreenState extends State<HarvestFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _harvestService = HarvestService();
+  final _plantingService = PlantingService();
+  final _tobaccoVarietyService = TobaccoVarietyService();
   bool _isLoading = false;
   bool _canSubmit = false;
   String _harvestStatusMessage = '';
@@ -34,80 +39,109 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
   // Form controllers
   final TextEditingController _harvestDateController = TextEditingController();
   final TextEditingController _actualYieldController = TextEditingController();
-  final TextEditingController _gradeAPercentageController =
+  final TextEditingController _yieldPerPlantController =
       TextEditingController();
-  final TextEditingController _gradeBPercentageController =
-      TextEditingController();
-  final TextEditingController _gradeCPercentageController =
-      TextEditingController();
-  final TextEditingController _gradeDPercentageController =
-      TextEditingController();
+  final TextEditingController _seedsCountController = TextEditingController();
   final TextEditingController _harvestNotesController = TextEditingController();
 
-  String _selectedYieldEstimateId = '';
-  List<Map<String, dynamic>> _yieldEstimates = [];
+  String _selectedQualityGrade = 'Standard';
+
+  String _selectedVarietyId = '';
+  String _selectedVarietyName = '';
+  Map<String, dynamic>? _selectedPlantingData;
+
+  // Tobacco variety selection
+  List<TobaccoVariety> _tobaccoVarieties = [];
+  TobaccoVariety? _selectedVariety;
 
   @override
   void initState() {
     super.initState();
     _harvestDateController.text =
         DateTime.now().toIso8601String().split('T')[0];
-    _loadYieldEstimates();
+    _enableHarvestSubmission(); // Enable harvest reporting immediately
+    _loadTobaccoVarieties(); // Load tobacco varieties
+    if (widget.detectedFarm != null) {
+      _loadPlantingData();
+    }
   }
 
-  Future<void> _loadYieldEstimates() async {
+  Future<void> _loadTobaccoVarieties() async {
     try {
-      final estimates = await _harvestService.getYieldEstimates(widget.token!);
+      final varieties =
+          await _tobaccoVarietyService.getTobaccoVarieties(widget.token);
       setState(() {
-        _yieldEstimates = estimates;
-
-        // Auto-select yield estimate that matches the detected farm
-        if (widget.detectedFarm != null && estimates.isNotEmpty) {
-          final matchingEstimate = estimates.firstWhere(
-            (estimate) => estimate['farm']?['id'] == widget.detectedFarm!.id,
-            orElse: () => estimates.first,
+        _tobaccoVarieties = varieties;
+        // If we have planting data, try to match the variety
+        if (_selectedVarietyId.isNotEmpty && varieties.isNotEmpty) {
+          _selectedVariety = varieties.firstWhere(
+            (v) => v.id.toString() == _selectedVarietyId,
+            orElse: () => varieties.first,
           );
-
-          if (matchingEstimate['id'] != null) {
-            _selectedYieldEstimateId = matchingEstimate['id'].toString();
-            print(
-                'Auto-selected yield estimate for detected farm: ${matchingEstimate['tobacco_variety_name']} (ID: ${matchingEstimate['id']})');
-            // Auto-check harvest status
-            _checkHarvestStatus(_selectedYieldEstimateId);
-          } else {
-            _selectedYieldEstimateId = '';
-            print('No valid yield estimates found for detected farm');
-          }
-        } else if (estimates.isNotEmpty && estimates[0]['id'] != null) {
-          _selectedYieldEstimateId = estimates[0]['id'].toString();
-          print(
-              'Selected first yield estimate: ${estimates[0]['tobacco_variety_name']} (ID: ${estimates[0]['id']})');
-        } else {
-          _selectedYieldEstimateId = '';
-          print('No valid yield estimates found');
+        } else if (varieties.isNotEmpty) {
+          _selectedVariety = varieties.first;
         }
       });
     } catch (e) {
+      print('Error loading tobacco varieties: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load yield estimates: $e')),
+        SnackBar(content: Text('Failed to load tobacco varieties: $e')),
       );
     }
   }
 
-  Future<void> _checkHarvestStatus(String yieldEstimateId) async {
+  Future<void> _loadPlantingData() async {
+    if (widget.detectedFarm == null) return;
+
     try {
-      final status = await _harvestService.checkHarvestStatus(
-          yieldEstimateId, widget.token!);
+      final reports = await _plantingService.getFarmPlantingReports(
+        token: widget.token!,
+        farmId: widget.detectedFarm!.id,
+        year: DateTime.now().year,
+        technicianId: widget.technicianId,
+      );
+
       setState(() {
-        _canSubmit = status['enabled'] ?? false;
-        _harvestStatusMessage = status['message'] ?? '';
+        // Auto-select the most recent planting report for this farm
+        if (reports.isNotEmpty) {
+          _selectedPlantingData = reports.first;
+          _selectedVarietyId =
+              _selectedPlantingData!['tobacco_variety_id']?.toString() ?? '';
+          _selectedVarietyName =
+              _selectedPlantingData!['tobacco_variety_name']?.toString() ?? '';
+
+          // Pre-fill seeds count from planting report
+          if (_selectedPlantingData!['seeds_per_hectare'] != null) {
+            _seedsCountController.text =
+                _selectedPlantingData!['seeds_per_hectare'].toString();
+          }
+
+          // Update selected variety if we have varieties loaded
+          if (_tobaccoVarieties.isNotEmpty && _selectedVarietyId.isNotEmpty) {
+            _selectedVariety = _tobaccoVarieties.firstWhere(
+              (v) => v.id.toString() == _selectedVarietyId,
+              orElse: () => _tobaccoVarieties.first,
+            );
+          }
+
+          print(
+              'Auto-selected planting data: $_selectedVarietyName (ID: $_selectedVarietyId)');
+        }
       });
     } catch (e) {
-      setState(() {
-        _canSubmit = false;
-        _harvestStatusMessage = 'Error checking harvest status: $e';
-      });
+      print('Error loading planting data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load planting data: $e')),
+      );
     }
+  }
+
+  // Harvest reporting is now always enabled since we removed yield estimate dependency
+  void _enableHarvestSubmission() {
+    setState(() {
+      _canSubmit = true;
+      _harvestStatusMessage = 'Harvest reporting is enabled';
+    });
   }
 
   Future<void> _submitHarvest() async {
@@ -119,17 +153,17 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
 
     try {
       final harvestData = {
-        'farm_yield_estimate_id': _selectedYieldEstimateId,
+        'farm_id': widget.detectedFarm?.id.toString(),
+        'variety_id': _selectedVariety?.id.toString() ?? _selectedVarietyId,
         'harvest_date': _harvestDateController.text,
         'actual_yield_kg': double.parse(_actualYieldController.text),
-        'quality_grade_a_percentage':
-            double.parse(_gradeAPercentageController.text),
-        'quality_grade_b_percentage':
-            double.parse(_gradeBPercentageController.text),
-        'quality_grade_c_percentage':
-            double.parse(_gradeCPercentageController.text),
-        'quality_grade_d_percentage':
-            double.parse(_gradeDPercentageController.text),
+        'actual_seeds_per_hectare': _seedsCountController.text.isNotEmpty
+            ? int.parse(_seedsCountController.text)
+            : null,
+        'actual_yield_per_plant': _yieldPerPlantController.text.isNotEmpty
+            ? double.parse(_yieldPerPlantController.text)
+            : null,
+        'quality_grade': _selectedQualityGrade,
         'harvest_notes': _harvestNotesController.text,
       };
 
@@ -158,24 +192,13 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
   }
 
   String _getDetectedFarmVariety() {
-    if (widget.detectedFarm == null) return 'No variety';
-
-    // Find the yield estimate that matches the detected farm
-    final matchingEstimate = _yieldEstimates.firstWhere(
-      (estimate) => estimate['farm']?['id'] == widget.detectedFarm!.id,
-      orElse: () => <String, dynamic>{},
-    );
-
-    return matchingEstimate['tobacco_variety_name']?.toString() ??
-        'No Yield Estimate';
+    return _selectedVarietyName.isNotEmpty
+        ? _selectedVarietyName
+        : 'No variety selected';
   }
 
-  bool _hasYieldEstimateForDetectedFarm() {
-    if (widget.detectedFarm == null) return false;
-
-    return _yieldEstimates.any(
-      (estimate) => estimate['farm']?['id'] == widget.detectedFarm!.id,
-    );
+  bool _hasPlantingDataForDetectedFarm() {
+    return _selectedPlantingData != null && _selectedVarietyName.isNotEmpty;
   }
 
   String _getDetectedFarmWorkerName() {
@@ -192,10 +215,8 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
   void dispose() {
     _harvestDateController.dispose();
     _actualYieldController.dispose();
-    _gradeAPercentageController.dispose();
-    _gradeBPercentageController.dispose();
-    _gradeCPercentageController.dispose();
-    _gradeDPercentageController.dispose();
+    _yieldPerPlantController.dispose();
+    _seedsCountController.dispose();
     _harvestNotesController.dispose();
     super.dispose();
   }
@@ -317,9 +338,9 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                         '${_getDetectedFarmVariety()} (${widget.detectedFarm!.farmSize} ha)',
                         style: TextStyle(
                           fontSize: 14,
-                          color: _hasYieldEstimateForDetectedFarm()
+                          color: _hasPlantingDataForDetectedFarm()
                               ? Colors.orange
-                              : Colors.red,
+                              : Colors.blue,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -332,26 +353,26 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      if (!_hasYieldEstimateForDetectedFarm()) ...[
+                      if (!_hasPlantingDataForDetectedFarm()) ...[
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.blue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                             border:
-                                Border.all(color: Colors.red.withOpacity(0.3)),
+                                Border.all(color: Colors.blue.withOpacity(0.3)),
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.warning, color: Colors.red, size: 16),
+                              Icon(Icons.info, color: Colors.blue, size: 16),
                               SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'No yield estimate found for this farm. Please contact admin to create a yield estimate first.',
+                                  'No planting data found for this farm. Variety and seeds count will need to be entered manually.',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.red,
+                                    color: Colors.blue,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -441,14 +462,97 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
               ),
               const SizedBox(height: 16),
 
+              // Tobacco Variety Selection
+              DropdownButtonFormField<TobaccoVariety>(
+                value: _selectedVariety,
+                decoration: const InputDecoration(
+                  labelText: 'Tobacco Variety',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Color(0xFFF8F9FA),
+                  helperText: 'Select the tobacco variety for this harvest',
+                ),
+                items: _tobaccoVarieties.map((TobaccoVariety variety) {
+                  return DropdownMenuItem<TobaccoVariety>(
+                    value: variety,
+                    child: Text(variety.varietyName),
+                  );
+                }).toList(),
+                onChanged: (TobaccoVariety? newValue) {
+                  setState(() {
+                    _selectedVariety = newValue;
+                    // Update seeds count if variety has default value
+                    if (newValue != null &&
+                        _seedsCountController.text.isEmpty) {
+                      _seedsCountController.text =
+                          newValue.defaultSeedsPerHectare.toString();
+                    }
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a tobacco variety';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Seeds Count
+              TextFormField(
+                controller: _seedsCountController,
+                decoration: const InputDecoration(
+                  labelText: 'Seeds Count per Hectare',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Color(0xFFF8F9FA),
+                  helperText: 'Based on planting report or variety default',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter seeds count';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Yield per Plant
+              TextFormField(
+                controller: _yieldPerPlantController,
+                decoration: const InputDecoration(
+                  labelText: 'Yield per Plant (kg)',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Color(0xFFF8F9FA),
+                  helperText: 'Average yield per individual plant',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter yield per plant';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
               // Actual Yield
               TextFormField(
                 controller: _actualYieldController,
                 decoration: const InputDecoration(
-                  labelText: 'Actual Yield (kg)',
+                  labelText: 'Total Actual Yield (kg)',
                   border: OutlineInputBorder(),
                   filled: true,
                   fillColor: Color(0xFFF8F9FA),
+                  helperText: 'Total harvest weight',
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -463,113 +567,26 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Quality Grades
-              const Text(
-                'Quality Grade Percentages',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              // Quality Grade
+              DropdownButtonFormField<String>(
+                value: _selectedQualityGrade,
+                decoration: const InputDecoration(
+                  labelText: 'Quality Grade',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Color(0xFFF8F9FA),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _gradeAPercentageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Grade A %',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Color(0xFFF8F9FA),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Required';
-                        }
-                        final val = double.tryParse(value);
-                        if (val == null || val < 0 || val > 100) {
-                          return '0-100';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _gradeBPercentageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Grade B %',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Color(0xFFF8F9FA),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Required';
-                        }
-                        final val = double.tryParse(value);
-                        if (val == null || val < 0 || val > 100) {
-                          return '0-100';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _gradeCPercentageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Grade C %',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Color(0xFFF8F9FA),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Required';
-                        }
-                        final val = double.tryParse(value);
-                        if (val == null || val < 0 || val > 100) {
-                          return '0-100';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _gradeDPercentageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Grade D %',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Color(0xFFF8F9FA),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Required';
-                        }
-                        final val = double.tryParse(value);
-                        if (val == null || val < 0 || val > 100) {
-                          return '0-100';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
+                items: ['Premium', 'Standard', 'Low'].map((String grade) {
+                  return DropdownMenuItem<String>(
+                    value: grade,
+                    child: Text(grade),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedQualityGrade = newValue!;
+                  });
+                },
               ),
               const SizedBox(height: 16),
 
@@ -588,11 +605,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
 
               // Submit Button
               ElevatedButton(
-                onPressed: (_isLoading ||
-                        !_canSubmit ||
-                        !_hasYieldEstimateForDetectedFarm())
-                    ? null
-                    : _submitHarvest,
+                onPressed: (_isLoading || !_canSubmit) ? null : _submitHarvest,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
@@ -612,11 +625,9 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                         ),
                       )
                     : Text(
-                        !_hasYieldEstimateForDetectedFarm()
-                            ? 'No Yield Estimate Available'
-                            : _canSubmit
-                                ? 'Submit Harvest Report'
-                                : 'Harvest Not Yet Available',
+                        _canSubmit
+                            ? 'Submit Harvest Report'
+                            : 'Harvest Not Available',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

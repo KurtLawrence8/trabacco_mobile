@@ -14,39 +14,71 @@ class AuthService {
 
   // Login user
   Future<User> login(String roleType, String login, String password) async {
+    print('🔐 [AUTH] Starting login process...');
+    print('🔐 [AUTH] Role Type: $roleType');
+    print('🔐 [AUTH] Login: $login');
+    print('🔐 [AUTH] Password length: ${password.length}');
+
     try {
       final client = http.Client();
+      final url = '${ApiConfig.baseUrl}${ApiConfig.login}';
+      final headers = ApiConfig.getHeaders();
+      final body = json.encode({
+        'role_type': roleType,
+        'login': login,
+        'password': password,
+      });
+
+      print('🔐 [AUTH] Request URL: $url');
+      print('🔐 [AUTH] Request Headers: $headers');
+      print('🔐 [AUTH] Request Body: $body');
+
+      print('🔐 [AUTH] Sending HTTP POST request...');
       final response = await client.post(
-        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
-        headers: ApiConfig.getHeaders(),
-        body: json.encode({
-          'role_type': roleType,
-          'login': login,
-          'password': password,
-        }),
+        Uri.parse(url),
+        headers: headers,
+        body: body,
       );
 
+      print('🔐 [AUTH] Response received!');
+      print('🔐 [AUTH] Status Code: ${response.statusCode}');
+      print('🔐 [AUTH] Response Headers: ${response.headers}');
+      print('🔐 [AUTH] Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
+        print('🔐 [AUTH] ✅ Login successful! Parsing response...');
         final data = json.decode(response.body);
+        print('🔐 [AUTH] Parsed data: $data');
         final user = User.fromJson(data['user']);
+        print('🔐 [AUTH] User object created: ${user.toString()}');
         await _saveUserData(user);
+        print('🔐 [AUTH] User data saved to local storage');
         client.close();
+        print('🔐 [AUTH] HTTP client closed');
         return user;
       } else if (response.statusCode == 403) {
+        print('🔐 [AUTH] ❌ 403 Forbidden response');
         final data = json.decode(response.body);
+        print('🔐 [AUTH] Error data: $data');
         client.close();
         // Check if this is an email verification required error
         if (data['email_verification_required'] == true) {
+          print('🔐 [AUTH] Email verification required');
           throw Exception('email_verification_required: ${data['message']}');
         } else {
+          print('🔐 [AUTH] Access denied: ${data['message']}');
           throw Exception(data['message'] ?? 'Access denied');
         }
       } else {
+        print('🔐 [AUTH] ❌ Unexpected status code: ${response.statusCode}');
+        final errorData = json.decode(response.body);
+        print('🔐 [AUTH] Error response: $errorData');
         client.close();
-        throw Exception(
-            json.decode(response.body)['message'] ?? 'Login failed');
+        throw Exception(errorData['message'] ?? 'Login failed');
       }
     } catch (e) {
+      print('🔐 [AUTH] ❌ Exception caught: ${e.toString()}');
+      print('🔐 [AUTH] Exception type: ${e.runtimeType}');
       throw Exception('Failed to connect to the server: ${e.toString()}');
     }
   }

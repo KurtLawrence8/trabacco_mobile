@@ -5,11 +5,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
 import 'package:gal/gal.dart';
 import '../services/farm_service.dart';
 import '../services/report_service.dart';
+import '../services/tobacco_variety_service.dart';
+import '../services/planting_service.dart';
 import '../models/farm.dart';
+import '../models/tobacco_variety.dart';
+import 'harvest_form_screen.dart';
 
 class CameraReportScreen extends StatefulWidget {
   final String? token;
@@ -376,6 +379,7 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
               photo: processedPhoto,
               position: _currentPosition!,
               detectedFarm: _detectedFarm,
+              reportType: widget.reportType,
             ),
           ),
         );
@@ -735,6 +739,7 @@ class PhotoPreviewScreen extends StatefulWidget {
   final File photo;
   final Position position;
   final Farm? detectedFarm;
+  final String? reportType;
 
   const PhotoPreviewScreen({
     Key? key,
@@ -743,6 +748,7 @@ class PhotoPreviewScreen extends StatefulWidget {
     required this.photo,
     required this.position,
     this.detectedFarm,
+    this.reportType,
   }) : super(key: key);
 
   @override
@@ -928,9 +934,25 @@ class _PhotoPreviewScreenState extends State<PhotoPreviewScreen> {
                     ElevatedButton.icon(
                       onPressed: () {
                         if (mounted) {
-                          setState(() {
-                            _showForm = true;
-                          });
+                          if (widget.reportType == 'harvest') {
+                            // Navigate directly to HarvestFormScreen for harvest reports
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HarvestFormScreen(
+                                  token: widget.token,
+                                  technicianId: widget.technicianId,
+                                  photo: widget.photo,
+                                  position: widget.position,
+                                  detectedFarm: widget.detectedFarm,
+                                ),
+                              ),
+                            );
+                          } else {
+                            setState(() {
+                              _showForm = true;
+                            });
+                          }
                         }
                       },
                       icon: const Icon(Icons.check),
@@ -965,6 +987,7 @@ class _PhotoPreviewScreenState extends State<PhotoPreviewScreen> {
                     photo: widget.photo,
                     position: widget.position,
                     detectedFarm: widget.detectedFarm,
+                    reportType: widget.reportType,
                     onClose: () {
                       if (mounted) {
                         setState(() {
@@ -992,6 +1015,7 @@ class ReportFormModal extends StatefulWidget {
   final File photo;
   final Position position;
   final Farm? detectedFarm;
+  final String? reportType;
   final VoidCallback onClose;
   final VoidCallback onSubmit;
 
@@ -1002,6 +1026,7 @@ class ReportFormModal extends StatefulWidget {
     required this.photo,
     required this.position,
     this.detectedFarm,
+    this.reportType,
     required this.onClose,
     required this.onSubmit,
   }) : super(key: key);
@@ -1019,16 +1044,283 @@ class _ReportFormModalState extends State<ReportFormModal> {
       TextEditingController();
   final TextEditingController _issuesController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _diseaseTypeController = TextEditingController();
 
-  String _diseaseDetected = 'None';
+  // Planting-specific controllers
+  final TextEditingController _areaPlantedController = TextEditingController();
+  final TextEditingController _seedsPlantedController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+
+  // Planting-specific variables
+  TobaccoVariety? _selectedVariety;
+  List<TobaccoVariety> _tobaccoVarieties = [];
+  final TobaccoVarietyService _tobaccoVarietyService = TobaccoVarietyService();
+  final PlantingService _plantingService = PlantingService();
+
+  Widget _buildPlantingForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Tobacco Variety Selection
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.eco, color: Colors.black, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Tobacco Variety',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                Text(
+                  ' *',
+                  style: TextStyle(color: Colors.red, fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<TobaccoVariety>(
+              value: _selectedVariety,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF27AE60), width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.all(16),
+              ),
+              items: _tobaccoVarieties.map((variety) {
+                return DropdownMenuItem<TobaccoVariety>(
+                  value: variety,
+                  child: Text(variety.varietyName),
+                );
+              }).toList(),
+              onChanged: (TobaccoVariety? newValue) {
+                setState(() {
+                  _selectedVariety = newValue;
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select a tobacco variety';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // Area Planted and Plants per Hectare
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.square_foot, color: Colors.black, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Area Planted (ha)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      Text(
+                        ' *',
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _areaPlantedController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      hintText: 'e.g., 1.5',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF27AE60), width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.grass, color: Colors.black, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Plants per Hectare',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      Text(
+                        ' *',
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _seedsPlantedController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      hintText: 'e.g., 28000',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF27AE60), width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // Notes
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.note, color: Colors.black, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Notes',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _notesController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Optional planting notes...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF27AE60), width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.reportType == 'planting') {
+      _loadTobaccoVarieties();
+    }
+  }
+
+  Future<void> _loadTobaccoVarieties() async {
+    try {
+      print(
+          '🌱 Loading tobacco varieties with token: ${widget.token != null ? "Present" : "Missing"}');
+      final varieties =
+          await _tobaccoVarietyService.getTobaccoVarieties(widget.token);
+      setState(() {
+        _tobaccoVarieties = varieties;
+        if (varieties.isNotEmpty) {
+          _selectedVariety = varieties.first;
+        }
+      });
+      print('🌱 Loaded ${varieties.length} tobacco varieties');
+    } catch (e) {
+      print('❌ Error loading tobacco varieties: $e');
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load tobacco varieties: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
     _accomplishmentsController.dispose();
     _issuesController.dispose();
     _descriptionController.dispose();
-    _diseaseTypeController.dispose();
+
+    // Planting controllers
+    _areaPlantedController.dispose();
+    _seedsPlantedController.dispose();
+    _notesController.dispose();
+
     super.dispose();
   }
 
@@ -1163,59 +1455,66 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Accomplishments field
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.check_circle_outline,
-                                color: Colors.black, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Accomplishments',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF2C3E50),
+                    // Conditional form fields based on report type
+                    if (widget.reportType == 'planting') ...[
+                      _buildPlantingForm(),
+                    ] else ...[
+                      // Accomplishments field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.check_circle_outline,
+                                  color: Colors.black, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Accomplishments',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2C3E50),
+                                ),
                               ),
-                            ),
-                            Text(
-                              ' *',
-                              style: TextStyle(color: Colors.red, fontSize: 14),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _accomplishmentsController,
-                          decoration: InputDecoration(
-                            hintText: 'Describe what you accomplished today...',
-                            hintStyle: const TextStyle(fontSize: 14),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFDEE2E6)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFF27AE60), width: 2),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.all(16),
+                              Text(
+                                ' *',
+                                style:
+                                    TextStyle(color: Colors.red, fontSize: 14),
+                              ),
+                            ],
                           ),
-                          maxLines: 3,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your accomplishments';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _accomplishmentsController,
+                            decoration: InputDecoration(
+                              hintText:
+                                  'Describe what you accomplished today...',
+                              hintStyle: const TextStyle(fontSize: 14),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFDEE2E6)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF27AE60), width: 2),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.all(16),
+                            ),
+                            maxLines: 3,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your accomplishments';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 20),
 
                     // Issues Observed field
@@ -1273,129 +1572,6 @@ class _ReportFormModalState extends State<ReportFormModal> {
                       ],
                     ),
                     const SizedBox(height: 20),
-
-                    // Disease Detection section
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.health_and_safety_outlined,
-                                color: Colors.black, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Disease Detection',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: _diseaseDetected,
-                          decoration: InputDecoration(
-                            hintText: 'Select if disease was detected',
-                            hintStyle: const TextStyle(fontSize: 14),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFDEE2E6)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFF27AE60), width: 2),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.all(16),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'None',
-                                child: Text(
-                                  'No Disease Detected',
-                                  style: TextStyle(fontSize: 14),
-                                )),
-                            DropdownMenuItem(
-                                value: 'Yes',
-                                child: Text(
-                                  'Disease Detected',
-                                  style: TextStyle(fontSize: 14),
-                                )),
-                          ],
-                          onChanged: (value) {
-                            if (mounted) {
-                              setState(() {
-                                _diseaseDetected = value!;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Disease Type field (conditional)
-                    if (_diseaseDetected == 'Yes')
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.info_outline_rounded,
-                                  color: Colors.black, size: 20),
-                              SizedBox(width: 8),
-                              Text(
-                                'Disease Type',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2C3E50),
-                                ),
-                              ),
-                              Text(
-                                ' *',
-                                style:
-                                    TextStyle(color: Colors.red, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _diseaseTypeController,
-                            decoration: InputDecoration(
-                              hintText:
-                                  'Specify the type of disease detected...',
-                              hintStyle: const TextStyle(fontSize: 14),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFFDEE2E6)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF27AE60), width: 2),
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.all(16),
-                            ),
-                            validator: (value) {
-                              if (_diseaseDetected == 'Yes' &&
-                                  (value == null || value.isEmpty)) {
-                                return 'Please specify the disease type';
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                    if (_diseaseDetected == 'Yes') const SizedBox(height: 20),
 
                     // Description field
                     Column(
@@ -1504,29 +1680,71 @@ class _ReportFormModalState extends State<ReportFormModal> {
     }
 
     try {
-      final report = {
-        'technician_id': widget.technicianId ?? 1,
-        'farm_id': widget.detectedFarm?.id ?? 1,
-        'accomplishments': _accomplishmentsController.text,
-        'issues_observed': _issuesController.text,
-        'disease_detected': _diseaseDetected,
-        'disease_type':
-            _diseaseDetected == 'Yes' ? _diseaseTypeController.text : null,
-        'description': _descriptionController.text,
-        'timestamp': DateTime.now().toIso8601String(),
-      };
+      if (widget.reportType == 'planting') {
+        // Submit planting report
+        final plantingData = {
+          'farm_id': widget.detectedFarm?.id ?? 1,
+          'tobacco_variety_id': _selectedVariety?.id ?? 1,
+          'technician_id': widget.technicianId ?? 1,
+          'farm_worker_id': widget.detectedFarm?.farmWorkers.isNotEmpty == true
+              ? widget.detectedFarm!.farmWorkers.first.id
+              : null,
+          'planting_date': DateTime.now().toIso8601String().split('T')[0],
+          'area_planted': double.parse(_areaPlantedController.text),
+          'plants_per_hectare': int.parse(_seedsPlantedController.text),
+          'seeds_used': (int.parse(_seedsPlantedController.text) *
+                  double.parse(_areaPlantedController.text))
+              .round(),
+          'seeds_weight_kg': 0.0, // Add required field
+          'plants_planted': (int.parse(_seedsPlantedController.text) *
+                  double.parse(_areaPlantedController.text))
+              .round(),
+          'planting_density_per_hectare':
+              int.parse(_seedsPlantedController.text).toDouble(),
+          'germination_rate': 95.0, // Add required field
+          'laborers_count': 1, // Add required field
+          'notes': _notesController.text,
+          'gps_latitude': widget.position.latitude,
+          'gps_longitude': widget.position.longitude,
+          'location_address': widget.detectedFarm?.farmAddress ?? '',
+          'additional_data': <String, dynamic>{},
+        };
 
-      await _reportService.createReport(
-        report,
-        widget.token!,
-        images: [widget.photo],
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report submitted successfully')),
+        await _plantingService.submitPlantingReport(
+          token: widget.token,
+          plantingData: plantingData,
         );
-        widget.onSubmit();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Planting report submitted successfully')),
+          );
+          widget.onSubmit();
+        }
+      } else {
+        // Submit regular report
+        final report = {
+          'technician_id': widget.technicianId ?? 1,
+          'farm_id': widget.detectedFarm?.id ?? 1,
+          'accomplishments': _accomplishmentsController.text,
+          'issues_observed': _issuesController.text,
+          'description': _descriptionController.text,
+          'timestamp': DateTime.now().toIso8601String(),
+        };
+
+        await _reportService.createReport(
+          report,
+          widget.token!,
+          images: [widget.photo],
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Report submitted successfully')),
+          );
+          widget.onSubmit();
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -80,27 +80,60 @@ class _LoginScreenState extends State<LoginScreen> {
 
 //CHANGES ENDS HERE
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    print('📱 [LOGIN SCREEN] Starting login process...');
+    print(
+        '📱 [LOGIN SCREEN] Form validation: ${_formKey.currentState?.validate()}');
+
+    if (!_formKey.currentState!.validate()) {
+      print('📱 [LOGIN SCREEN] ❌ Form validation failed');
+      return;
+    }
+
+    print('📱 [LOGIN SCREEN] ✅ Form validation passed');
+    print('📱 [LOGIN SCREEN] Setting loading state to true');
 
     setState(() {
       _isLoading = true;
     });
 
     try {
+      print('📱 [LOGIN SCREEN] Calling AuthService.login...');
+      print('📱 [LOGIN SCREEN] Role: $_roleType');
+      print('📱 [LOGIN SCREEN] Login: ${_loginController.text.trim()}');
+      print(
+          '📱 [LOGIN SCREEN] Password length: ${_passwordController.text.trim().length}');
+
       final user = await _authService.login(
         _roleType,
         _loginController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      if (!mounted) return;
+      print('📱 [LOGIN SCREEN] ✅ AuthService.login completed successfully');
+      print('📱 [LOGIN SCREEN] User received: ${user.toString()}');
+      print('📱 [LOGIN SCREEN] Checking if widget is mounted...');
+
+      if (!mounted) {
+        print('📱 [LOGIN SCREEN] ❌ Widget not mounted, returning');
+        return;
+      }
+
+      print('📱 [LOGIN SCREEN] ✅ Widget is mounted, proceeding...');
 
       // SAVE CREDENTAINS IF REMEMBER ME IS CHECKED
+      print('📱 [LOGIN SCREEN] Saving remembered credentials...');
       await _saveRememberedCredentials();
+      print('📱 [LOGIN SCREEN] ✅ Credentials saved');
 
       // Navigate to appropriate landing page based on role
+      print('📱 [LOGIN SCREEN] Waiting 400ms before navigation...');
       await Future.delayed(const Duration(
           milliseconds: 400)); // Ensure storage and provider are ready
+
+      print('📱 [LOGIN SCREEN] Starting navigation...');
+      print(
+          '📱 [LOGIN SCREEN] Target screen: ${_roleType == 'technician' ? 'TechnicianLandingScreen' : 'FarmWorkerLandingScreen'}');
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => _roleType == 'technician'
@@ -109,24 +142,43 @@ class _LoginScreenState extends State<LoginScreen> {
               : FarmWorkerLandingScreen(token: user.token ?? ''),
         ),
       );
+
+      print('📱 [LOGIN SCREEN] ✅ Navigation completed');
     } catch (e) {
-      if (!mounted) return;
+      print('📱 [LOGIN SCREEN] ❌ Exception caught: ${e.toString()}');
+      print('📱 [LOGIN SCREEN] Exception type: ${e.runtimeType}');
+
+      if (!mounted) {
+        print('📱 [LOGIN SCREEN] ❌ Widget not mounted, cannot show error');
+        return;
+      }
+
+      print('📱 [LOGIN SCREEN] ✅ Widget is mounted, showing error...');
 
       // Check if this is an email verification required error
       final errorMessage = e.toString();
+      print('📱 [LOGIN SCREEN] Error message: $errorMessage');
+
       if (errorMessage.contains('email_verification_required') ||
           errorMessage.contains('Please verify your email address')) {
+        print('📱 [LOGIN SCREEN] Showing email verification dialog...');
         _showEmailVerificationDialog();
       } else {
+        print('📱 [LOGIN SCREEN] Showing error snackbar...');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: ${e.toString()}')),
         );
       }
     } finally {
+      print('📱 [LOGIN SCREEN] Finally block - setting loading to false');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        print('📱 [LOGIN SCREEN] ✅ Loading state set to false');
+      } else {
+        print(
+            '📱 [LOGIN SCREEN] ❌ Widget not mounted, cannot update loading state');
       }
     }
   }
