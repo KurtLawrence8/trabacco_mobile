@@ -268,12 +268,18 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                             EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       hint: const Text('Choose a farm'),
+                      isExpanded: true,
                       items: _farms.map((farm) {
                         return DropdownMenuItem<Farm>(
                           value: farm,
-                          child: Text(
-                            'Farm #${farm.id} - ${farm.farmAddress}',
-                            overflow: TextOverflow.ellipsis,
+                          child: Container(
+                            width: double.infinity,
+                            child: Text(
+                              'Farm #${farm.id} - ${farm.farmAddress}',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: const TextStyle(fontSize: 14),
+                            ),
                           ),
                         );
                       }).toList(),

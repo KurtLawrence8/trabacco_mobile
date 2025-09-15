@@ -48,26 +48,34 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     try {
       final varieties =
           await _tobaccoVarietyService.getTobaccoVarieties(widget.token);
-      setState(() {
-        _tobaccoVarieties = varieties;
-      });
+      if (mounted) {
+        setState(() {
+          _tobaccoVarieties = varieties;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to load tobacco varieties: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load tobacco varieties: $e';
+        });
+      }
     }
   }
 
   Future<void> _loadFarms() async {
     try {
       final farms = await _farmService.getFarmsByTechnician(widget.token!);
-      setState(() {
-        _farms = farms;
-      });
+      if (mounted) {
+        setState(() {
+          _farms = farms;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to load farms: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load farms: $e';
+        });
+      }
     }
   }
 
@@ -86,9 +94,11 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       final plantingData = {
@@ -114,26 +124,34 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
       );
 
       if (response['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Planting report submitted successfully!')),
-        );
-        Navigator.pop(context, true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Planting report submitted successfully!')),
+          );
+          Navigator.pop(context, true);
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  response['message'] ?? 'Failed to submit planting report')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    response['message'] ?? 'Failed to submit planting report')),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting planting report: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error submitting planting report: $e')),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -190,24 +208,32 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                                   horizontal: 12, vertical: 8),
                             ),
                             hint: const Text('Choose a farm'),
+                            isExpanded: true,
                             items: _farms.map((farm) {
                               return DropdownMenuItem<Farm>(
                                 value: farm,
-                                child: Text(
-                                  'Farm #${farm.id} - ${farm.farmAddress}',
-                                  overflow: TextOverflow.ellipsis,
+                                child: Container(
+                                  width: double.infinity,
+                                  child: Text(
+                                    'Farm #${farm.id} - ${farm.farmAddress}',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
                                 ),
                               );
                             }).toList(),
                             onChanged: (Farm? farm) {
-                              setState(() {
-                                _selectedFarm = farm;
-                                // Auto-fill area planted with farm size
-                                if (farm != null) {
-                                  _areaPlantedController.text =
-                                      farm.farmSize.toString();
-                                }
-                              });
+                              if (mounted) {
+                                setState(() {
+                                  _selectedFarm = farm;
+                                  // Auto-fill area planted with farm size
+                                  if (farm != null) {
+                                    _areaPlantedController.text =
+                                        farm.farmSize.toString();
+                                  }
+                                });
+                              }
                             },
                             validator: (value) {
                               if (value == null) {
@@ -257,15 +283,19 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                               );
                             }).toList(),
                             onChanged: (TobaccoVariety? variety) {
-                              setState(() {
-                                _selectedVariety = variety;
-                                if (variety != null) {
-                                  _plantsPerHectareController.text =
-                                      variety.defaultSeedsPerHectare.toString();
-                                  _seedsUsedController.text =
-                                      variety.defaultSeedsPerHectare.toString();
-                                }
-                              });
+                              if (mounted) {
+                                setState(() {
+                                  _selectedVariety = variety;
+                                  if (variety != null) {
+                                    _plantsPerHectareController.text = variety
+                                        .defaultSeedsPerHectare
+                                        .toString();
+                                    _seedsUsedController.text = variety
+                                        .defaultSeedsPerHectare
+                                        .toString();
+                                  }
+                                });
+                              }
                             },
                             validator: (value) {
                               if (value == null) {
