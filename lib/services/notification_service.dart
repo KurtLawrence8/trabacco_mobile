@@ -69,6 +69,7 @@ class NotificationService {
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       );
 
@@ -90,6 +91,15 @@ class NotificationService {
         }
 
         return jsonList.map((json) => Notification.fromJson(json)).toList();
+      } else if (response.statusCode == 401) {
+        print(
+            '🔔 [MOBILE] ERROR: Unauthorized - Token may be invalid or expired');
+        print('🔔 [MOBILE] ERROR: Response body: ${response.body}');
+        return [];
+      } else if (response.statusCode == 403) {
+        print('🔔 [MOBILE] ERROR: Forbidden - Access denied');
+        print('🔔 [MOBILE] ERROR: Response body: ${response.body}');
+        return [];
       } else {
         print(
             '🔔 [MOBILE] ERROR: Failed to fetch notifications with status ${response.statusCode}');
@@ -170,6 +180,41 @@ class NotificationService {
     } catch (e) {
       print('Error marking all notifications as read: $e');
       return false;
+    }
+  }
+
+  // Test API connection
+  static Future<Map<String, dynamic>> testConnection(String token) async {
+    try {
+      print('🔔 [MOBILE] Testing API connection...');
+      print('🔔 [MOBILE] Base URL: $_baseUrl');
+      print('🔔 [MOBILE] Token length: ${token.length}');
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/notifications'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      print('🔔 [MOBILE] Test response status: ${response.statusCode}');
+      print('🔔 [MOBILE] Test response body: ${response.body}');
+
+      return {
+        'success': response.statusCode == 200,
+        'statusCode': response.statusCode,
+        'body': response.body,
+        'url': '$_baseUrl/notifications',
+      };
+    } catch (e) {
+      print('🔔 [MOBILE] Test connection error: $e');
+      return {
+        'success': false,
+        'error': e.toString(),
+        'url': '$_baseUrl/notifications',
+      };
     }
   }
 }
