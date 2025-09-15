@@ -58,7 +58,8 @@ class HarvestService {
   }
 
   Future<Map<String, dynamic>> submitHarvest(
-      Map<String, dynamic> harvestData, String token, File photo) async {
+      Map<String, dynamic> harvestData, String token,
+      [File? photo]) async {
     try {
       print('Submitting harvest to: ${ApiConfig.baseUrl}/farm-yield-records');
       print('Headers: ${ApiConfig.getHeaders(token: token)}');
@@ -78,10 +79,12 @@ class HarvestService {
         }
       });
 
-      // Add photo
-      request.files.add(
-        await http.MultipartFile.fromPath('photos[]', photo.path),
-      );
+      // Add photo if provided
+      if (photo != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('photos[]', photo.path),
+        );
+      }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);

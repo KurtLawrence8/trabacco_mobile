@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'camera_report_screen.dart';
+import 'planting_form_screen.dart';
+import 'harvest_form_screen.dart';
 
 class TechnicianReportScreen extends StatefulWidget {
   final String? token;
@@ -342,10 +344,9 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CameraReportScreen(
+                        builder: (context) => PlantingFormScreen(
                           token: widget.token,
                           technicianId: widget.technicianId,
-                          reportType: 'planting',
                         ),
                       ),
                     );
@@ -445,10 +446,9 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CameraReportScreen(
+                        builder: (context) => HarvestFormScreen(
                           token: widget.token,
                           technicianId: widget.technicianId,
-                          reportType: 'harvest',
                         ),
                       ),
                     );

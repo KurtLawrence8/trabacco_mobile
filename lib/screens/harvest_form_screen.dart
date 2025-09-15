@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'dart:io';
 import '../services/harvest_service.dart';
 import '../services/planting_service.dart';
 import '../services/tobacco_variety_service.dart';
+import '../services/farm_service.dart';
 import '../models/tobacco_variety.dart';
 import '../models/farm.dart';
 
 class HarvestFormScreen extends StatefulWidget {
   final String? token;
   final int? technicianId;
-  final File photo;
-  final Position position;
-  final Farm? detectedFarm;
 
   const HarvestFormScreen({
     Key? key,
     this.token,
     this.technicianId,
-    required this.photo,
-    required this.position,
-    this.detectedFarm,
   }) : super(key: key);
 
   @override
@@ -32,6 +25,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
   final _harvestService = HarvestService();
   final _plantingService = PlantingService();
   final _tobaccoVarietyService = TobaccoVarietyService();
+  final _farmService = FarmService();
   bool _isLoading = false;
   bool _canSubmit = false;
   String _harvestStatusMessage = '';
@@ -46,13 +40,14 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
 
   String _selectedQualityGrade = 'Standard';
 
+  // Farm and variety selection
+  List<Farm> _farms = [];
+  List<TobaccoVariety> _tobaccoVarieties = [];
+  Farm? _selectedFarm;
+  TobaccoVariety? _selectedVariety;
   String _selectedVarietyId = '';
   String _selectedVarietyName = '';
   Map<String, dynamic>? _selectedPlantingData;
-
-  // Tobacco variety selection
-  List<TobaccoVariety> _tobaccoVarieties = [];
-  TobaccoVariety? _selectedVariety;
 
   @override
   void initState() {
@@ -61,8 +56,17 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
         DateTime.now().toIso8601String().split('T')[0];
     _enableHarvestSubmission(); // Enable harvest reporting immediately
     _loadTobaccoVarieties(); // Load tobacco varieties
-    if (widget.detectedFarm != null) {
-      _loadPlantingData();
+    _loadFarms(); // Load farms
+  }
+
+  Future<void> _loadFarms() async {
+    try {
+      final farms = await _farmService.getFarmsByTechnician(widget.token!);
+      setState(() {
+        _farms = farms;
+      });
+    } catch (e) {
+      print('Error loading farms: $e');
     }
   }
 
@@ -91,12 +95,12 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
   }
 
   Future<void> _loadPlantingData() async {
-    if (widget.detectedFarm == null) return;
+    if (_selectedFarm == null) return;
 
     try {
       final reports = await _plantingService.getFarmPlantingReports(
         token: widget.token!,
-        farmId: widget.detectedFarm!.id,
+        farmId: _selectedFarm!.id,
         year: DateTime.now().year,
         technicianId: widget.technicianId,
       );
@@ -146,6 +150,18 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
 
   Future<void> _submitHarvest() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedFarm == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a farm')),
+      );
+      return;
+    }
+    if (_selectedVariety == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a tobacco variety')),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -153,8 +169,8 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
 
     try {
       final harvestData = {
-        'farm_id': widget.detectedFarm?.id.toString(),
-        'variety_id': _selectedVariety?.id.toString() ?? _selectedVarietyId,
+        'farm_id': _selectedFarm!.id.toString(),
+        'variety_id': _selectedVariety!.id.toString(),
         'harvest_date': _harvestDateController.text,
         'actual_yield_kg': double.parse(_actualYieldController.text),
         'actual_seeds_per_hectare': _seedsCountController.text.isNotEmpty
@@ -167,8 +183,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
         'harvest_notes': _harvestNotesController.text,
       };
 
-      await _harvestService.submitHarvest(
-          harvestData, widget.token!, widget.photo);
+      await _harvestService.submitHarvest(harvestData, widget.token!);
 
       if (!mounted) return;
 
@@ -189,26 +204,6 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
         });
       }
     }
-  }
-
-  String _getDetectedFarmVariety() {
-    return _selectedVarietyName.isNotEmpty
-        ? _selectedVarietyName
-        : 'No variety selected';
-  }
-
-  bool _hasPlantingDataForDetectedFarm() {
-    return _selectedPlantingData != null && _selectedVarietyName.isNotEmpty;
-  }
-
-  String _getDetectedFarmWorkerName() {
-    if (widget.detectedFarm == null ||
-        widget.detectedFarm!.farmWorkers.isEmpty) {
-      return 'No farm worker assigned';
-    }
-
-    final firstWorker = widget.detectedFarm!.farmWorkers.first;
-    return '${firstWorker.firstName} ${firstWorker.lastName}'.trim();
   }
 
   @override
@@ -236,164 +231,71 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Photo preview
-              Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE9ECEF)),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    widget.photo,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Farm info
-              if (widget.detectedFarm != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE9ECEF)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            color: Colors.orange,
-                            size: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Farm Information',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.detectedFarm!.farmAddress,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Farm Size: ${widget.detectedFarm!.farmSize} hectares',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // Detected Farm Information Display
+              // Farm Selection
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FA),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFE9ECEF)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Detected Farm Information',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (widget.detectedFarm != null) ...[
-                      Text(
-                        widget.detectedFarm!.farmAddress,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: Colors.orange,
+                          size: 20,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_getDetectedFarmVariety()} (${widget.detectedFarm!.farmSize} ha)',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _hasPlantingDataForDetectedFarm()
-                              ? Colors.orange
-                              : Colors.blue,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Farm Worker: ${_getDetectedFarmWorkerName()}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (!_hasPlantingDataForDetectedFarm()) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border:
-                                Border.all(color: Colors.blue.withOpacity(0.3)),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.info, color: Colors.blue, size: 16),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'No planting data found for this farm. Variety and seeds count will need to be entered manually.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
+                        SizedBox(width: 8),
+                        Text(
+                          'Select Farm',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
                       ],
-                    ] else ...[
-                      const Text(
-                        'No farm detected',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.red,
-                        ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<Farm>(
+                      value: _selectedFarm,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
-                    ],
+                      hint: const Text('Choose a farm'),
+                      items: _farms.map((farm) {
+                        return DropdownMenuItem<Farm>(
+                          value: farm,
+                          child: Text(
+                            'Farm #${farm.id} - ${farm.farmAddress}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (Farm? farm) {
+                        setState(() {
+                          _selectedFarm = farm;
+                        });
+                        if (farm != null) {
+                          _loadPlantingData();
+                        }
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please select a farm';
+                        }
+                        return null;
+                      },
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // Harvest Status Message
               if (_harvestStatusMessage.isNotEmpty)

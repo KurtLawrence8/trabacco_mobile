@@ -942,9 +942,6 @@ class _PhotoPreviewScreenState extends State<PhotoPreviewScreen> {
                                 builder: (context) => HarvestFormScreen(
                                   token: widget.token,
                                   technicianId: widget.technicianId,
-                                  photo: widget.photo,
-                                  position: widget.position,
-                                  detectedFarm: widget.detectedFarm,
                                 ),
                               ),
                             );
