@@ -30,7 +30,6 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
   FarmWorkerProfile? _farmWorker;
   File? _selectedProfileImage;
   File? _selectedIdImage;
-  Uint8List? _selectedProfileImageBytes;
 
   // Form controllers
   late TextEditingController _firstNameController;
@@ -46,56 +45,60 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
     super.initState();
     _initializeControllers();
     _loadFarmWorkerData();
+    _testUrlConstruction();
+  }
+
+  // Test method to verify URL construction
+  void _testUrlConstruction() {
+    print('🧪 [URL TEST] Testing URL construction...');
+    print('🧪 [URL TEST] Image Base URL: ${ApiConfig.imageBaseUrl}');
+    
+    // Test with your provided URL
+    String testUrl = 'https://navajowhite-chinchilla-897972.hostingersite.com/storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
+    print('🧪 [URL TEST] Full URL test: ${_getImageUrl(testUrl)}');
+    
+    // Test with relative path
+    String testPath = 'profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
+    print('🧪 [URL TEST] Relative path test: ${_getImageUrl(testPath)}');
+    
+    // Test with storage path
+    String testStoragePath = 'storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
+    print('🧪 [URL TEST] Storage path test: ${_getImageUrl(testStoragePath)}');
   }
 
   // Helper method to construct full image URL
   String _getImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return '';
     
+    // Sanitize the URL - replace any localhost references
+    String sanitizedPath = imagePath.replaceAll('localhost', 'navajowhite-chinchilla-897972.hostingersite.com');
+    sanitizedPath = sanitizedPath.replaceAll('127.0.0.1', 'navajowhite-chinchilla-897972.hostingersite.com');
+    sanitizedPath = sanitizedPath.replaceAll('http://', 'https://');
+    
     // If it's already a full URL, return as is
-    if (imagePath.startsWith('http')) {
-      return imagePath;
+    if (sanitizedPath.startsWith('http')) {
+      print('🌐 [IMAGE URL] Already full URL (sanitized): $sanitizedPath');
+      return sanitizedPath;
     }
     
-    // Construct full URL for Laravel storage
-    // Try different approaches for web compatibility
-    String baseUrl;
-    if (kIsWeb) {
-      // For web, try both localhost and 127.0.0.1
-      baseUrl = 'https://navajowhite-chinchilla-897972.hostingersite.com'; // Try localhost first
-    } else {
-      baseUrl = Platform.isAndroid
-          ? 'https://navajowhite-chinchilla-897972.hostingersite.com'
-          : 'https://navajowhite-chinchilla-897972.hostingersite.com';
-    }
+    // Always use the hosting URL, never localhost
+    String baseUrl = ApiConfig.imageBaseUrl;
     
     // Remove leading slash if present and clean up the path
-    String cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    String cleanPath = sanitizedPath.startsWith('/') ? sanitizedPath.substring(1) : sanitizedPath;
     
     // Ensure the path starts with storage/
     if (!cleanPath.startsWith('storage/')) {
       cleanPath = 'storage/$cleanPath';
     }
     
-    return '$baseUrl/$cleanPath';
+    final fullUrl = '$baseUrl/$cleanPath';
+    print('🌐 [IMAGE URL] Constructed URL: $fullUrl');
+    print('🌐 [IMAGE URL] Original path: $imagePath');
+    print('🌐 [IMAGE URL] Sanitized path: $sanitizedPath');
+    return fullUrl;
   }
 
-  // Helper method to get image provider that works on web and mobile
-  ImageProvider? _getImageProvider(File? selectedImage, Uint8List? selectedImageBytes, String? networkImageUrl) {
-    if (selectedImage != null) {
-      // For web, we need to use bytes instead of File
-      if (kIsWeb) {
-        // On web, we'll need to load the image bytes first
-        // For now, return null to show fallback icon
-        return null;
-      } else {
-        return FileImage(selectedImage);
-      }
-    } else if (networkImageUrl != null && networkImageUrl.isNotEmpty) {
-      return NetworkImage(_getImageUrl(networkImageUrl));
-    }
-    return null;
-  }
 
   void _initializeControllers() {
     _firstNameController = TextEditingController();
@@ -144,6 +147,17 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
           _sex = farmWorker.sex;
           _loading = false;
         });
+        
+        // Debug: Print image URLs
+        print('🖼️ [PROFILE] Profile Picture URL: ${farmWorker.profilePicture}');
+        print('🖼️ [PROFILE] ID Picture URL: ${farmWorker.idPicture}');
+        print('🖼️ [PROFILE] Image Base URL: ${ApiConfig.imageBaseUrl}');
+        if (farmWorker.profilePicture != null) {
+          print('🖼️ [PROFILE] Full Profile Picture URL: ${_getImageUrl(farmWorker.profilePicture)}');
+        }
+        if (farmWorker.idPicture != null) {
+          print('🖼️ [PROFILE] Full ID Picture URL: ${_getImageUrl(farmWorker.idPicture)}');
+        }
       } else {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -430,7 +444,6 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
           setState(() {
             if (isProfile) {
               _selectedProfileImage = File(image.path);
-              _selectedProfileImageBytes = null; // Reset bytes for new selection
             } else {
               _selectedIdImage = File(image.path);
             }
@@ -575,12 +588,15 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.grey[100],
-                          backgroundImage: _getImageProvider(
-                            _selectedProfileImage, 
-                            _selectedProfileImageBytes, 
-                            _farmWorker!.profilePicture
-                          ),
-                          child: _getImageProvider(_selectedProfileImage, _selectedProfileImageBytes, _farmWorker!.profilePicture) == null
+                          backgroundImage: _selectedProfileImage != null
+                              ? (kIsWeb 
+                                  ? null // For web, we'll show fallback for now
+                                  : FileImage(_selectedProfileImage!) as ImageProvider?)
+                              : (_farmWorker!.profilePicture != null && _farmWorker!.profilePicture!.isNotEmpty
+                                  ? NetworkImage(_getImageUrl(_farmWorker!.profilePicture!)) as ImageProvider?
+                                  : null),
+                          child: (_selectedProfileImage == null && 
+                                  (_farmWorker!.profilePicture == null || _farmWorker!.profilePicture!.isEmpty))
                               ? const Icon(Icons.person, size: 50, color: Color(0xFF27AE60))
                               : null,
                         ),

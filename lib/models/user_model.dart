@@ -50,6 +50,8 @@ class FarmWorker {
   final int technicianId;
   final Map<String, dynamic>? technician;
   final List<dynamic>? farms;
+  final String? profilePicture;
+  final String? idPicture;
 
   FarmWorker({
     required this.id,
@@ -63,6 +65,8 @@ class FarmWorker {
     required this.technicianId,
     this.technician,
     this.farms,
+    this.profilePicture,
+    this.idPicture,
   });
 
   factory FarmWorker.fromJson(Map<String, dynamic> json) {
@@ -78,6 +82,8 @@ class FarmWorker {
       technicianId: json['technician_id'],
       technician: json['technician'],
       farms: json['farms'],
+      profilePicture: json['profile_picture_url'] ?? json['profile_picture'],
+      idPicture: json['id_picture_url'] ?? json['id_picture'],
     );
   }
 }

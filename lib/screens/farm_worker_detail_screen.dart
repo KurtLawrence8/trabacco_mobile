@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
+import '../config/api_config.dart';
 import 'request_list_widget.dart';
 import 'request_screen.dart';
 import 'technician_farms_screen.dart';
@@ -17,6 +18,39 @@ class FarmWorkerDetailScreen extends StatefulWidget {
 
 class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
   Key requestListKey = UniqueKey();
+
+  // Helper method to construct full image URL
+  String _getImageUrl(String imagePath) {
+    if (imagePath.isEmpty) return '';
+    
+    // Sanitize the URL - replace any localhost references
+    String sanitizedPath = imagePath.replaceAll('localhost', 'navajowhite-chinchilla-897972.hostingersite.com');
+    sanitizedPath = sanitizedPath.replaceAll('127.0.0.1', 'navajowhite-chinchilla-897972.hostingersite.com');
+    sanitizedPath = sanitizedPath.replaceAll('http://', 'https://');
+    
+    // If it's already a full URL, return as is
+    if (sanitizedPath.startsWith('http')) {
+      print('🌐 [DETAIL SCREEN] Already full URL (sanitized): $sanitizedPath');
+      return sanitizedPath;
+    }
+    
+    // Always use the hosting URL, never localhost
+    String baseUrl = ApiConfig.imageBaseUrl;
+    
+    // Remove leading slash if present and clean up the path
+    String cleanPath = sanitizedPath.startsWith('/') ? sanitizedPath.substring(1) : sanitizedPath;
+    
+    // Ensure the path starts with storage/
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/$cleanPath';
+    }
+    
+    final fullUrl = '$baseUrl/$cleanPath';
+    print('🌐 [DETAIL SCREEN] Constructed URL: $fullUrl');
+    print('🌐 [DETAIL SCREEN] Original path: $imagePath');
+    print('🌐 [DETAIL SCREEN] Sanitized path: $sanitizedPath');
+    return fullUrl;
+  }
 
   void _openRequestScreen() async {
     final result = await Navigator.push(
@@ -102,16 +136,37 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                                 color: Color(0xFFE8D5FF),
                                 shape: BoxShape.circle,
                               ),
-                              child: Center(
-                                child: Text(
-                                  details.firstName[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Color(0xFF6B21A8),
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
+                              child: details.profilePicture != null && details.profilePicture!.isNotEmpty
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        _getImageUrl(details.profilePicture!),
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Center(
+                                            child: Text(
+                                              details.firstName[0].toUpperCase(),
+                                              style: const TextStyle(
+                                                color: Color(0xFF6B21A8),
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        details.firstName[0].toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Color(0xFF6B21A8),
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
                             ),
                             const SizedBox(width: 16),
                             // Name and Gender
@@ -180,6 +235,12 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                           const SizedBox(height: 20),
                           _buildFarmInfo(
                               details.farms!.first), // Show only first farm
+                        ],
+
+                        // ID Picture Section
+                        if (details.idPicture != null && details.idPicture!.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _buildIdPictureSection(details.idPicture!),
                         ],
                       ],
                     ),
@@ -450,6 +511,80 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildIdPictureSection(String idPictureUrl) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with ID icon and title
+          const Row(
+            children: [
+              Icon(Icons.credit_card, color: Color(0xFF27AE60), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'ID Picture',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ID Picture Display
+          Container(
+            width: double.infinity,
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                _getImageUrl(idPictureUrl),
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[100],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.credit_card,
+                          size: 60,
+                          color: Color(0xFF27AE60),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Error loading ID picture',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

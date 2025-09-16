@@ -69,6 +69,11 @@ class ApiConfig {
     return '$baseUrl$endpoint';
   }
 
+  // Helper method to get base URL for images (without /api)
+  static String get imageBaseUrl {
+    return 'https://navajowhite-chinchilla-897972.hostingersite.com';
+  }
+
   // Helper method to replace path parameters
   static String replacePathParams(
     String endpoint,
