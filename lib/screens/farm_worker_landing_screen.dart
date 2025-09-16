@@ -23,7 +23,7 @@ class FarmWorkerLandingScreen extends StatefulWidget {
 
 class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   int _selectedIndex = 0;
-  late Future<List<RequestModel>> _futureRequests;
+  Future<List<RequestModel>>? _futureRequests;
   final RequestService _requestService = RequestService();
   User? _user;
 
@@ -116,7 +116,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-        children: [
+            children: [
               // ====================================================
               // GREETING ROW
               Row(
@@ -210,33 +210,35 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                         ),
                         child: PopupMenuButton<String>(
                           icon: const Icon(Icons.person,
-                              color: Color.fromARGB(255, 180, 180, 180), size: 16),
+                              color: Color.fromARGB(255, 180, 180, 180),
+                              size: 16),
                           padding: EdgeInsets.zero,
-          onSelected: (value) async {
-            if (value == 'logout') {
-              await AuthService().logout();
-              if (!mounted) return;
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
-            }
-          },
+                          onSelected: (value) async {
+                            if (value == 'logout') {
+                              await AuthService().logout();
+                              if (!mounted) return;
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginScreen()),
+                                (route) => false,
+                              );
+                            }
+                          },
                           // ====================================================
                           // POPUP MENU ITEM BUILDER
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'logout',
-              child: Row(
-                children: [
-                  Icon(Icons.logout, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Logout')
-                ],
-              ),
-            ),
-          ],
-        ),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'logout',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.logout, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Logout')
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -260,7 +262,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
         child: Column(
-      children: [
+          children: [
             // ====================================================
             // QUICK ACTIONS SECTION
             const Row(
@@ -269,13 +271,13 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                     color: Color.fromARGB(255, 0, 0, 0), size: 20),
                 SizedBox(width: 8),
                 Text('Quick Actions',
-            style: TextStyle(
+                    style: TextStyle(
                         fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF222B45))),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF222B45))),
               ],
             ),
-        const SizedBox(height: 16),
+            const SizedBox(height: 16),
 // ====================================================
             // QUICK ACTIONS GRID
             GridView.count(
@@ -411,11 +413,11 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             width: 1,
           ),
         ),
-          child: Padding(
+        child: Padding(
           padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               // Simple icon container
               Container(
                 width: 40,
@@ -433,9 +435,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
               const SizedBox(height: 8),
               Text(
                 title,
-                    style: const TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1A1A),
                   height: 1.2,
                 ),
@@ -462,20 +464,18 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     );
   }
 
-
   Widget _buildSchedule() {
     if (_user != null && _user!.id != 0) {
       return SchedulePage(
-                              userType: 'Farmer',
-                              token: widget.token,
-                              farmWorkerId: _user!.id,
-                              farmWorkerName: _user!.name,
+        userType: 'Farmer',
+        token: widget.token,
+        farmWorkerId: _user!.id,
+        farmWorkerName: _user!.name,
       );
     } else {
       return const Center(child: Text('Please log in as a valid farm worker.'));
     }
   }
-
 
   Widget _buildRequests() {
     return Scaffold(
@@ -492,98 +492,100 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
           color: Color(0xFF2C3E50),
         ),
       ),
-      body: FutureBuilder<List<RequestModel>>(
-        future: _futureRequests,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-    return const Center(
+      body: _futureRequests == null
+          ? const Center(
               child: CircularProgressIndicator(
                 color: Color(0xFF4CAF50),
               ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.red.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading requests',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red.shade700,
+            )
+          : FutureBuilder<List<RequestModel>>(
+              future: _futureRequests,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF4CAF50),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${snapshot.error}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.red.shade600,
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading requests',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${snapshot.error}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.red.shade600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.request_page_outlined,
-                    size: 64,
-                    color: const Color(0xFF4CAF50).withOpacity(0.6),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No Requests Yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2C3E50),
+                  );
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.request_page_outlined,
+                          size: 64,
+                          color: const Color(0xFF4CAF50).withOpacity(0.6),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No Requests Yet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Your requests will appear here',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF7F8C8D),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Your requests will appear here',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF7F8C8D),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          } else {
-            final requests = snapshot.data!;
-            return ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: requests.length,
-              itemBuilder: (context, index) {
-                final request = requests[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildRequestCard(request),
-                );
+                  );
+                } else {
+                  final requests = snapshot.data!;
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: requests.length,
+                    itemBuilder: (context, index) {
+                      final request = requests[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildRequestCard(request),
+                      );
+                    },
+                  );
+                }
               },
-            );
-          }
-        },
-      ),
+            ),
     );
   }
-
-
-
-
 
   Widget _buildManageProfile() {
     if (_user == null) {
@@ -591,7 +593,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         child: Text('Loading user data...'),
       );
     }
-    
+
     return FarmWorkerProfileScreen(
       farmWorkerId: _user!.id,
     );
@@ -630,7 +632,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   Widget _buildRequestCard(RequestModel request) {
     final statusColor = _getRequestStatusColor(request.status ?? 'unknown');
     final statusIcon = _getRequestStatusIcon(request.status ?? 'unknown');
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -649,11 +651,11 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
           ),
         ],
       ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
@@ -666,12 +668,12 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   size: 16,
                 ),
               ),
-                      const SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   request.type ?? 'Unknown',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Color(0xFF2C3E50),
                   ),
@@ -691,9 +693,9 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                      ),
-                    ],
-                  ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           Text(
             request.reason ?? 'No description',
@@ -703,8 +705,8 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
             ),
           ),
           const SizedBox(height: 8),
-                    Row(
-                      children: [
+          Row(
+            children: [
               Icon(
                 Icons.access_time,
                 size: 14,
@@ -778,10 +780,10 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                         fontSize: 12,
                         color: Color(0xFF4CAF50),
                         fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-      ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -789,8 +791,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
       ),
     );
   }
-
-
 
   Widget _buildNavItem({
     required IconData icon,
@@ -840,7 +840,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
@@ -851,13 +850,13 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     ];
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _selectedIndex == 0 
-          ? _buildAppBar() 
-          : _selectedIndex == 1 
+      appBar: _selectedIndex == 0
+          ? _buildAppBar()
+          : _selectedIndex == 1
               ? _buildNavAppBar('Schedule')
-              : _selectedIndex == 2 
+              : _selectedIndex == 2
                   ? _buildNavAppBar('Requests')
-                  : _selectedIndex == 3 
+                  : _selectedIndex == 3
                       ? _buildNavAppBar('Profile')
                       : null,
       body: SafeArea(child: pages[_selectedIndex]),
@@ -875,7 +874,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         // ====================================================
         // BOTTOM NAVIGATION BAR
         child: SafeArea(
-        child: Padding(
+          child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
             child: Row(
@@ -903,7 +902,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                   label: 'Profile',
                   index: 3,
                 ),
-            ],
+              ],
             ),
           ),
         ),
@@ -911,7 +910,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     );
   }
 }
-
 
 // ====================================================
 // NOTIFICATIONS SCREEN

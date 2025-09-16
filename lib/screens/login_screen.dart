@@ -304,14 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Logo/Icon
-                          Icon(
-                            Icons.flutter_dash_rounded,
-                            color: Colors.white,
-                            size: 40,
-                          ),
-                          SizedBox(height: 16),
-                          // Main Title
+                          // Logo/Icon                          // Main Title
                           Text(
                             'Sign in to your\nAccount',
                             textAlign: TextAlign.left,
