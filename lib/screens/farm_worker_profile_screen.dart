@@ -62,11 +62,11 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
     String baseUrl;
     if (kIsWeb) {
       // For web, try both localhost and 127.0.0.1
-      baseUrl = 'http://localhost:8000'; // Try localhost first
+      baseUrl = 'https://navajowhite-chinchilla-897972.hostingersite.com'; // Try localhost first
     } else {
       baseUrl = Platform.isAndroid
-          ? 'http://localhost:8000'
-          : 'http://localhost:8000';
+          ? 'https://navajowhite-chinchilla-897972.hostingersite.com'
+          : 'https://navajowhite-chinchilla-897972.hostingersite.com';
     }
     
     // Remove leading slash if present and clean up the path

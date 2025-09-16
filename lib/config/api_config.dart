@@ -5,10 +5,10 @@ class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
     final url = kIsWeb
-        ? 'http://127.0.0.1:8000/api' // For web - use localhost
+        ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For web - use localhost
         : Platform.isAndroid
-            ? 'http://localhost:8000/api' // For Android - use your computer's IP
-            : 'http://localhost:8000/api'; // For iOS and others - use your computer's IP
+            ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For Android - use your computer's IP
+            : 'https://navajowhite-chinchilla-897972.hostingersite.com/api'; // For iOS and others - use your computer's IP
 
     print(
       '🌐 [API CONFIG] Platform: ${kIsWeb ? 'Web' : Platform.isAndroid ? 'Android' : 'iOS/Other'}',
