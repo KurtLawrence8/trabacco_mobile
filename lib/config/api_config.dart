@@ -7,8 +7,8 @@ class ApiConfig {
     final url = kIsWeb
         ? 'http://127.0.0.1:8000/api' // For web - use localhost
         : Platform.isAndroid
-            ? 'http://localhost:8000/api' // For Android - use your computer's IP
-            : 'http://localhost:8000/api'; // For iOS and others - use your computer's IP
+            ? 'http://192.168.100.210:8000/api' // For Android - use your computer's IP
+            : 'http://192.168.100.210:8000/api'; // For iOS and others - use your computer's IP
 
     print(
       '🌐 [API CONFIG] Platform: ${kIsWeb ? 'Web' : Platform.isAndroid ? 'Android' : 'iOS/Other'}',
