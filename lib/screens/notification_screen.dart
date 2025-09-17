@@ -20,6 +20,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   List<notification_service.Notification> _notifications = [];
   bool _isLoading = true;
   int _unreadCount = 0;
+  bool _showAllNotifications = false; // Debug toggle
 
   @override
   void initState() {
@@ -40,14 +41,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
       print('🔔 [MOBILE SCREEN] Token length: ${widget.token.length}');
 
       print('🔔 [MOBILE SCREEN] Calling getNotifications...');
-      final notifications =
-          await notification_service.NotificationService.getNotifications(
-              widget.token);
+      // Temporarily get all notifications for debugging
+      final allNotifications = await notification_service.NotificationService.getAllNotifications(widget.token);
+      print('🔔 [MOBILE SCREEN] Total notifications available: ${allNotifications.length}');
+      
+      // Get notifications based on debug toggle
+      // Note: We use technicianId for both technicians and farm workers since the NotificationScreen
+      // was originally designed for technicians. The service will handle the filtering properly.
+      final notifications = _showAllNotifications 
+          ? allNotifications
+          : await notification_service.NotificationService.getNotifications(
+              widget.token, 
+              technicianId: widget.technician.id); // This works for both technicians and farm workers
 
       print('🔔 [MOBILE SCREEN] Calling getUnreadCount...');
       final unreadCount =
           await notification_service.NotificationService.getUnreadCount(
-              widget.token);
+              widget.token, 
+              technicianId: widget.technician.id); // This works for both technicians and farm workers
 
       print(
           '🔔 [MOBILE SCREEN] SUCCESS: Fetched ${notifications.length} notifications');
@@ -106,31 +117,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _markAllAsRead() async {
-    final success =
-        await notification_service.NotificationService.markAllAsRead(
-            widget.token);
-    if (success) {
-      setState(() {
-        _unreadCount = 0;
-        _notifications = _notifications.map((notification) {
-          return notification_service.Notification(
-            id: notification.id,
-            recipientType: notification.recipientType,
-            recipientId: notification.recipientId,
-            userId: notification.userId,
-            message: notification.message,
-            title: notification.title,
-            body: notification.body,
-            type: notification.type,
-            data: notification.data,
-            timestamp: notification.timestamp,
-            readAt: notification.readAt ?? DateTime.now().toIso8601String(),
-            createdAt: notification.createdAt,
-            updatedAt: notification.updatedAt,
-          );
-        }).toList();
-      });
+    // Mark all current filtered notifications as read individually
+    final unreadNotifications = _notifications.where((n) => n.readAt == null).toList();
+    
+    for (final notification in unreadNotifications) {
+      await notification_service.NotificationService.markAsRead(notification.id, widget.token);
     }
+    
+    // Refresh the notifications list
+    await _loadNotifications();
   }
 
   String _getNotificationIcon(String? type) {
@@ -149,7 +144,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Color _getNotificationColor(String? type) {
     switch (type) {
       case 'request_approved':
-        return Colors.green;
+        return const Color(0xFF27AE60);
       case 'request_rejected':
         return Colors.red;
       case 'request_submitted':
@@ -163,10 +158,30 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
+        title: _showAllNotifications 
+            ? const Text('Notifications (DEBUG)')
+            : const Text('Notifications'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
         actions: [
+          // Debug toggle button
+          IconButton(
+            icon: Icon(_showAllNotifications ? Icons.filter_list_off : Icons.filter_list),
+            onPressed: () {
+              setState(() {
+                _showAllNotifications = !_showAllNotifications;
+              });
+              _loadNotifications();
+            },
+            tooltip: _showAllNotifications ? 'Show filtered notifications' : 'Show all notifications (debug)',
+          ),
           if (_unreadCount > 0)
             IconButton(
               icon: const Icon(Icons.mark_email_read),
@@ -175,6 +190,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ),
         ],
       ),
+      backgroundColor: Colors.white,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _notifications.isEmpty
@@ -203,7 +219,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
-                        color: isRead ? Colors.grey[50] : Colors.blue[50],
+                        color: isRead ? Colors.grey[50] : const Color(0xFF27AE60).withOpacity(0.1),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
@@ -220,32 +236,30 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                   isRead ? FontWeight.normal : FontWeight.bold,
                             ),
                           ),
-                          subtitle: Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (notification.body != null)
-                                  Text(
-                                    notification.body!,
-                                    style: TextStyle(
-                                      color: isRead
-                                          ? Colors.grey[600]
-                                          : Colors.grey[800],
-                                    ),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                const SizedBox(height: 4),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (notification.body != null)
                                 Text(
-                                  _formatTimestamp(notification.timestamp),
+                                  notification.body!,
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[500],
+                                    color: isRead
+                                        ? Colors.grey[600]
+                                        : Colors.grey[800],
                                   ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ],
-                            ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatTimestamp(notification.timestamp),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
                           ),
                           trailing: isRead
                               ? null
@@ -263,7 +277,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _loadNotifications,
-        backgroundColor: Colors.green[700],
+        backgroundColor: const Color(0xFF27AE60),
         child: const Icon(Icons.refresh, color: Colors.white),
       ),
     );

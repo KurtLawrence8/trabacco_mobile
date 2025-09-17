@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart' as notification_service;
 import 'login_screen.dart';
 import 'technician_report_screen.dart';
 import 'schedule_page.dart';
 import 'technician_profile_screen.dart';
+import 'notification_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'farm_worker_detail_screen.dart';
 import 'technician_farms_screen.dart';
-import '../config/api_config.dart';
 import 'request_screen.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../models/user_model.dart';
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
@@ -29,7 +29,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   int _selectedIndex = 0;
 
   // Notification state
-  List<Map<String, dynamic>> _notifications = [];
   int _unreadCount = 0;
 
   @override
@@ -49,24 +48,14 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   // FETCH NOTIFICATIONS
   Future<void> _fetchNotifications() async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/notifications'),
-        headers: {
-          'Authorization': 'Bearer ${widget.token}',
-          'Content-Type': 'application/json',
-        },
+      final unreadCount = await notification_service.NotificationService.getUnreadCount(
+        widget.token, 
+        technicianId: widget.technicianId
       );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _notifications = List<Map<String, dynamic>>.from(data['data'] ?? []);
-          _unreadCount =
-              _notifications.where((n) => n['read_at'] == null).length;
-        });
-      } else {
-        print('Failed to fetch notifications: ${response.statusCode}');
-      }
+      
+      setState(() {
+        _unreadCount = unreadCount;
+      });
     } catch (e) {
       print('Error fetching notifications: $e');
     }
@@ -154,7 +143,16 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => NotificationsScreen(),
+                                    builder: (_) => NotificationScreen(
+                                      token: widget.token,
+                                      technician: Technician(
+                                        id: widget.technicianId,
+                                        firstName: 'Technician',
+                                        lastName: '',
+                                        emailAddress: '',
+                                        status: 'Active',
+                                      ),
+                                    ),
                                   ),
                                 );
                               },
@@ -388,7 +386,16 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => NotificationsScreen(),
+                        builder: (_) => NotificationScreen(
+                          token: widget.token,
+                          technician: Technician(
+                            id: widget.technicianId,
+                            firstName: 'Technician',
+                            lastName: '',
+                            emailAddress: '',
+                            status: 'Active',
+                          ),
+                        ),
                       ),
                     ).then((_) {
                       // Refresh notifications when returning from notification screen
@@ -1545,126 +1552,3 @@ class RequestSubmissionScreen extends StatelessWidget {
   }
 }
 
-// ====================================================
-// NOTIFICATIONS SCREEN
-class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: const Color(0xFF27AE60),
-        foregroundColor: Colors.white,
-      ),
-      body: Container(
-        color: const Color(0xFFF8F8F8),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.notifications_none,
-                size: 80,
-                color: Color(0xFFB0B0B0),
-              ),
-              SizedBox(height: 24),
-              Text(
-                'No notifications yet',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF505050),
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'You\'ll see notifications here when they arrive',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF808080),
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ====================================================
-// NOTIFICATION SERVICE
-class NotificationService {
-  static String get _baseUrl => ApiConfig.baseUrl;
-
-  // Fetch notifications
-  static Future<List<Map<String, dynamic>>> fetchNotifications(
-      String token) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/notifications'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return List<Map<String, dynamic>>.from(data['data'] ?? []);
-      } else {
-        throw Exception(
-            'Failed to fetch notifications: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching notifications: $e');
-    }
-  }
-
-  // Mark notification as read
-  static Future<bool> markAsRead(String token, int notificationId) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/notifications/$notificationId/mark-read'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Mark all notifications as read
-  static Future<bool> markAllAsRead(String token) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/notifications/mark-all-read'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Get unread count
-  static Future<int> getUnreadCount(String token) async {
-    try {
-      final notifications = await fetchNotifications(token);
-      return notifications.where((n) => n['read_at'] == null).length;
-    } catch (e) {
-      return 0;
-    }
-  }
-}

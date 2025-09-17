@@ -221,9 +221,22 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Harvest Report'),
+<<<<<<< HEAD
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
+=======
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
+>>>>>>> 054e128ad16d89dddff8f8e15df83dc9be38358b
       ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -232,12 +245,20 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Farm Selection
-              Container(
+                Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFE9ECEF)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,7 +267,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                       children: [
                         Icon(
                           Icons.location_on,
-                          color: Colors.orange,
+                          color: const Color(0xFF27AE60),
                           size: 20,
                         ),
                         SizedBox(width: 8),
@@ -308,19 +329,19 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _canSubmit
-                        ? Colors.green.withOpacity(0.1)
+                  color: _canSubmit
+                        ? const Color(0xFF27AE60).withOpacity(0.1)
                         : Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _canSubmit ? Colors.green : Colors.orange,
-                    ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _canSubmit ? const Color(0xFF27AE60) : Colors.orange,
+                  ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         _canSubmit ? Icons.check_circle : Icons.info,
-                        color: _canSubmit ? Colors.green : Colors.orange,
+                        color: _canSubmit ? const Color(0xFF27AE60) : Colors.orange,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -328,7 +349,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                         child: Text(
                           _harvestStatusMessage,
                           style: TextStyle(
-                            color: _canSubmit ? Colors.green : Colors.orange,
+                            color: _canSubmit ? const Color(0xFF27AE60) : Colors.orange,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -345,7 +366,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   labelText: 'Harvest Date',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color(0xFFF8F9FA),
+                  fillColor: Colors.white,
                 ),
                 readOnly: true,
                 onTap: () async {
@@ -377,7 +398,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   labelText: 'Tobacco Variety',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color(0xFFF8F9FA),
+                  fillColor: Colors.white,
                   helperText: 'Select the tobacco variety for this harvest',
                 ),
                 items: _tobaccoVarieties.map((TobaccoVariety variety) {
@@ -413,7 +434,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   labelText: 'Seeds Count per Hectare',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color(0xFFF8F9FA),
+                  fillColor: Colors.white,
                   helperText: 'Based on planting report or variety default',
                 ),
                 keyboardType: TextInputType.number,
@@ -436,7 +457,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   labelText: 'Yield per Plant (kg)',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color(0xFFF8F9FA),
+                  fillColor: Colors.white,
                   helperText: 'Average yield per individual plant',
                 ),
                 keyboardType: TextInputType.number,
@@ -459,7 +480,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   labelText: 'Total Actual Yield (kg)',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color(0xFFF8F9FA),
+                  fillColor: Colors.white,
                   helperText: 'Total harvest weight',
                 ),
                 keyboardType: TextInputType.number,
@@ -482,7 +503,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   labelText: 'Quality Grade',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color(0xFFF8F9FA),
+                  fillColor: Colors.white,
                 ),
                 items: ['Premium', 'Standard', 'Low'].map((String grade) {
                   return DropdownMenuItem<String>(
@@ -505,7 +526,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                   labelText: 'Harvest Notes (Optional)',
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Color(0xFFF8F9FA),
+                  fillColor: Colors.white,
                 ),
                 maxLines: 3,
               ),
@@ -515,7 +536,11 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
               ElevatedButton(
                 onPressed: (_isLoading || !_canSubmit) ? null : _submitHarvest,
                 style: ElevatedButton.styleFrom(
+<<<<<<< HEAD
                   backgroundColor: Colors.green,
+=======
+                  backgroundColor: const Color(0xFF27AE60),
+>>>>>>> 054e128ad16d89dddff8f8e15df83dc9be38358b
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
