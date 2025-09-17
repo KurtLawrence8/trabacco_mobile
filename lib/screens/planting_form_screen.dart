@@ -184,9 +184,17 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[300]!),
+                        border: Border.all(color: const Color(0xFFE9ECEF)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,9 +260,17 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[300]!),
+                        border: Border.all(color: const Color(0xFFE9ECEF)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,9 +330,17 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[300]!),
+                        border: Border.all(color: const Color(0xFFE9ECEF)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,10 +358,12 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                           // Area Planted
                           TextFormField(
                             controller: _areaPlantedController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Area Planted (hectares)',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.landscape),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.landscape, color: Color(0xFF27AE60)),
+                              filled: true,
+                              fillColor: Colors.white,
                             ),
                             keyboardType: TextInputType.number,
                             validator: (value) {
@@ -356,10 +382,12 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                           // Plants per Hectare
                           TextFormField(
                             controller: _plantsPerHectareController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Plants per Hectare',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.grass),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.grass, color: Color(0xFF27AE60)),
+                              filled: true,
+                              fillColor: Colors.white,
                             ),
                             keyboardType: TextInputType.number,
                             validator: (value) {
@@ -378,10 +406,12 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                           // Seeds Used
                           TextFormField(
                             controller: _seedsUsedController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Seeds Used',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.eco),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.eco, color: Color(0xFF27AE60)),
+                              filled: true,
+                              fillColor: Colors.white,
                             ),
                             keyboardType: TextInputType.number,
                             validator: (value) {
@@ -400,10 +430,12 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                           // Notes
                           TextFormField(
                             controller: _notesController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Notes (Optional)',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.note),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.note, color: Color(0xFF27AE60)),
+                              filled: true,
+                              fillColor: Colors.white,
                             ),
                             maxLines: 3,
                           ),

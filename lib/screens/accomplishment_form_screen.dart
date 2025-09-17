@@ -106,9 +106,17 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Accomplishment Report'),
-        backgroundColor: const Color(0xFF27AE60),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+        ),
       ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -120,7 +128,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFE9ECEF)),
                 ),

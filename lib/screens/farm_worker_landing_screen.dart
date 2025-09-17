@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'schedule_page.dart';
 import 'login_screen.dart';
 import '../services/auth_service.dart';
-import '../config/api_config.dart';
+import '../services/notification_service.dart' as notification_service;
 import '../models/user_model.dart';
 import '../services/auth_service.dart' show RequestService;
 import 'supply_cash_screen.dart';
 import 'farm_worker_profile_screen.dart';
+import 'notification_screen.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class FarmWorkerLandingScreen extends StatefulWidget {
   final String token;
@@ -28,7 +27,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   User? _user;
 
   // Notification state
-  List<Map<String, dynamic>> _notifications = [];
   int _unreadCount = 0;
 
   @override
@@ -56,23 +54,15 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   // FETCH NOTIFICATIONS
   Future<void> _fetchNotifications() async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/notifications'),
-        headers: {
-          'Authorization': 'Bearer ${widget.token}',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (_user != null) {
+        final unreadCount = await notification_service.NotificationService.getUnreadCount(
+          widget.token, 
+          farmWorkerId: _user!.id // Use farm worker ID for filtering
+        );
+        
         setState(() {
-          _notifications = List<Map<String, dynamic>>.from(data['data'] ?? []);
-          _unreadCount =
-              _notifications.where((n) => n['read_at'] == null).length;
+          _unreadCount = unreadCount;
         });
-      } else {
-        print('Failed to fetch notifications: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching notifications: $e');
@@ -156,12 +146,25 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                             // NOTIFICATIONS BUTTON
                             child: IconButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => NotificationsScreen(),
-                                  ),
-                                );
+                                if (_user != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => NotificationScreen(
+                                        token: widget.token,
+                                        technician: Technician(
+                                          id: _user!.id,
+                                          firstName: _user!.name.split(' ').first,
+                                          lastName: _user!.name.split(' ').length > 1 
+                                              ? _user!.name.split(' ').skip(1).join(' ')
+                                              : '',
+                                          emailAddress: _user!.email ?? '',
+                                          status: 'Active',
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
                               },
                               icon: Icon(Icons.notifications_outlined,
                                   color: Colors.grey[700], size: 16),
@@ -361,15 +364,28 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       : 'View all notifications',
                   color: const Color(0xFFEF4444), // Red
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => NotificationsScreen(),
-                      ),
-                    ).then((_) {
-                      // Refresh notifications when returning from notification screen
-                      _fetchNotifications();
-                    });
+                    if (_user != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => NotificationScreen(
+                            token: widget.token,
+                            technician: Technician(
+                              id: _user!.id,
+                              firstName: _user!.name.split(' ').first,
+                              lastName: _user!.name.split(' ').length > 1 
+                                  ? _user!.name.split(' ').skip(1).join(' ')
+                                  : '',
+                              emailAddress: _user!.email ?? '',
+                              status: 'Active',
+                            ),
+                          ),
+                        ),
+                      ).then((_) {
+                        // Refresh notifications when returning from notification screen
+                        _fetchNotifications();
+                      });
+                    }
                   },
                 ),
 // ====================================================
@@ -911,52 +927,3 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   }
 }
 
-// ====================================================
-// NOTIFICATIONS SCREEN
-class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: const Color(0xFF27AE60),
-        foregroundColor: Colors.white,
-      ),
-      body: Container(
-        color: const Color(0xFFF8F8F8),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.notifications_none,
-                size: 80,
-                color: Color(0xFFB0B0B0),
-              ),
-              SizedBox(height: 24),
-              Text(
-                'No notifications yet',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF505050),
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'You\'ll see notifications here when they arrive',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF808080),
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
