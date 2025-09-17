@@ -221,10 +221,6 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Harvest Report'),
-<<<<<<< HEAD
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-=======
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF2C3E50),
         elevation: 0,
@@ -234,7 +230,6 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
           fontWeight: FontWeight.w600,
           color: Color(0xFF2C3E50),
         ),
->>>>>>> 054e128ad16d89dddff8f8e15df83dc9be38358b
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -245,7 +240,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Farm Selection
-                Container(
+              Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -329,19 +324,22 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                  color: _canSubmit
+                    color: _canSubmit
                         ? const Color(0xFF27AE60).withOpacity(0.1)
                         : Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _canSubmit ? const Color(0xFF27AE60) : Colors.orange,
-                  ),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          _canSubmit ? const Color(0xFF27AE60) : Colors.orange,
+                    ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         _canSubmit ? Icons.check_circle : Icons.info,
-                        color: _canSubmit ? const Color(0xFF27AE60) : Colors.orange,
+                        color: _canSubmit
+                            ? const Color(0xFF27AE60)
+                            : Colors.orange,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -349,7 +347,9 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                         child: Text(
                           _harvestStatusMessage,
                           style: TextStyle(
-                            color: _canSubmit ? const Color(0xFF27AE60) : Colors.orange,
+                            color: _canSubmit
+                                ? const Color(0xFF27AE60)
+                                : Colors.orange,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -536,11 +536,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
               ElevatedButton(
                 onPressed: (_isLoading || !_canSubmit) ? null : _submitHarvest,
                 style: ElevatedButton.styleFrom(
-<<<<<<< HEAD
                   backgroundColor: Colors.green,
-=======
-                  backgroundColor: const Color(0xFF27AE60),
->>>>>>> 054e128ad16d89dddff8f8e15df83dc9be38358b
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
