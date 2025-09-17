@@ -51,6 +51,14 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
       if (mounted) {
         setState(() {
           _tobaccoVarieties = varieties;
+          // Set default variety and populate fields if varieties are available
+          if (varieties.isNotEmpty && _selectedVariety == null) {
+            _selectedVariety = varieties.first;
+            _plantsPerHectareController.text =
+                _selectedVariety!.defaultSeedsPerHectare.toString();
+            _seedsUsedController.text =
+                _selectedVariety!.defaultSeedsPerHectare.toString();
+          }
         });
       }
     } catch (e) {

@@ -9,21 +9,22 @@ import '../config/api_config.dart';
 
 class TechnicianProfileScreen extends StatefulWidget {
   final int technicianId;
-  
+
   const TechnicianProfileScreen({
     super.key,
     required this.technicianId,
   });
 
   @override
-  State<TechnicianProfileScreen> createState() => _TechnicianProfileScreenState();
+  State<TechnicianProfileScreen> createState() =>
+      _TechnicianProfileScreenState();
 }
 
 class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _technicianService = TechnicianService();
   final _imagePicker = ImagePicker();
-  
+
   bool _loading = false;
   bool _editing = false;
   Technician? _technician;
@@ -51,37 +52,40 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
   // Helper method to construct full image URL
   String _getImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return '';
-    
+
     // If it's already a full URL, return as is
     if (imagePath.startsWith('http')) {
       return imagePath;
     }
-    
+
     // Construct full URL for Laravel storage
     // Try different approaches for web compatibility
     String baseUrl;
     if (kIsWeb) {
       // For web, try both localhost and 127.0.0.1
-      baseUrl = 'https://navajowhite-chinchilla-897972.hostingersite.com'; // Try localhost first
+      baseUrl =
+          'https://navajowhite-chinchilla-897972.hostingersite.com'; // Try localhost first
     } else {
       baseUrl = Platform.isAndroid
           ? 'https://navajowhite-chinchilla-897972.hostingersite.com'
           : 'https://navajowhite-chinchilla-897972.hostingersite.com';
     }
-    
+
     // Remove leading slash if present and clean up the path
-    String cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
-    
+    String cleanPath =
+        imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+
     // Ensure the path starts with storage/
     if (!cleanPath.startsWith('storage/')) {
       cleanPath = 'storage/$cleanPath';
     }
-    
+
     return '$baseUrl/$cleanPath';
   }
 
   // Helper method to get image provider that works on web and mobile
-  ImageProvider? _getImageProvider(File? selectedImage, Uint8List? selectedImageBytes, String? networkImageUrl) {
+  ImageProvider? _getImageProvider(File? selectedImage,
+      Uint8List? selectedImageBytes, String? networkImageUrl) {
     if (selectedImage != null) {
       // For web, we need to use bytes instead of File
       if (kIsWeb) {
@@ -129,7 +133,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
 
       if (token != null) {
         // Test API connection first
-        final isApiReachable = await _technicianService.testApiConnection(token);
+        final isApiReachable =
+            await _technicianService.testApiConnection(token);
         print('API reachable: $isApiReachable');
 
         final technician = await _technicianService.getTechnicianProfile(
@@ -151,14 +156,15 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Failed to load technician data - No token available')),
+              content:
+                  Text('Failed to load technician data - No token available')),
         );
       }
     } catch (e) {
       print('Error loading technician data: $e');
       print('Error type: ${e.runtimeType}');
       print('Error details: ${e.toString()}');
-      
+
       // Fallback: Show sample data for development/testing
       setState(() {
         _technician = Technician(
@@ -203,19 +209,20 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
       final token = await AuthService().getToken();
       if (token != null) {
         // Try to upload images using multipart form data with profile update
-        bool hasImages = _selectedProfileImage != null || _selectedIdImage != null;
-        
+        bool hasImages =
+            _selectedProfileImage != null || _selectedIdImage != null;
+
         if (hasImages) {
           setState(() => _loading = true);
           try {
             // Create multipart request for profile update with images
             final url = ApiConfig.getUrl('/technicians/${widget.technicianId}');
             final request = http.MultipartRequest('PATCH', Uri.parse(url));
-            
+
             // Add headers
             request.headers.addAll(ApiConfig.getHeaders(token: token));
             request.headers.remove('Content-Type'); // Let multipart set this
-            
+
             // Add form fields
             final updateData = <String, dynamic>{};
             if (_firstNameController.text.isNotEmpty) {
@@ -242,23 +249,24 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
             if (_sex != null && _sex!.isNotEmpty) {
               updateData['sex'] = _sex;
             }
-            
+
             updateData.forEach((key, value) {
               if (value != null && value.toString().isNotEmpty) {
                 request.fields[key] = value.toString();
               }
             });
-            
+
             // Add profile picture if selected
             if (_selectedProfileImage != null) {
               final imageBytes = await _selectedProfileImage!.readAsBytes();
               request.files.add(http.MultipartFile.fromBytes(
                 'profile_picture',
                 imageBytes,
-                filename: 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                filename:
+                    'profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
               ));
             }
-            
+
             // Add ID picture if selected
             if (_selectedIdImage != null) {
               final imageBytes = await _selectedIdImage!.readAsBytes();
@@ -268,50 +276,51 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                 filename: 'id_${DateTime.now().millisecondsSinceEpoch}.jpg',
               ));
             }
-            
+
             print('Uploading profile with images to: $url');
             print('Fields: ${request.fields}');
             print('Files: ${request.files.length}');
-            
+
             final streamedResponse = await request.send();
             final response = await http.Response.fromStream(streamedResponse);
-            
+
             print('Response status: ${response.statusCode}');
             print('Response body: ${response.body}');
-            
+
             if (response.statusCode == 200 || response.statusCode == 201) {
               json.decode(response.body);
               print('Profile updated with images successfully');
-              
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Profile and images updated successfully!'),
                   backgroundColor: Color(0xFF27AE60),
                 ),
               );
-              
+
               // Clear selected images and reload profile data
               setState(() {
                 _selectedProfileImage = null;
                 _selectedIdImage = null;
                 _selectedProfileImageBytes = null;
               });
-              
+
               // Reload profile data from server
               await _loadTechnicianData();
-              
+
               // Exit edit mode and force UI refresh
               setState(() {
                 _editing = false;
               });
-              
+
               print('Profile images cleared and data reloaded');
               print('Profile picture URL: ${_technician?.profilePicture}');
               print('ID picture URL: ${_technician?.idPicture}');
               return; // Exit early since we handled the update
             } else {
               final errorBody = json.decode(response.body);
-              final errorMessage = errorBody['message'] ?? 'Failed to update profile with images (${response.statusCode})';
+              final errorMessage = errorBody['message'] ??
+                  'Failed to update profile with images (${response.statusCode})';
               print('Error response: $errorMessage');
               throw Exception(errorMessage);
             }
@@ -441,15 +450,18 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
           setState(() {
             if (isProfile) {
               _selectedProfileImage = File(image.path);
-              _selectedProfileImageBytes = null; // Reset bytes for new selection
+              _selectedProfileImageBytes =
+                  null; // Reset bytes for new selection
             } else {
               _selectedIdImage = File(image.path);
             }
           });
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(isProfile ? 'Profile picture selected' : 'ID picture selected'),
+              content: Text(isProfile
+                  ? 'Profile picture selected'
+                  : 'ID picture selected'),
               backgroundColor: const Color(0xFF27AE60),
               duration: const Duration(seconds: 2),
             ),
@@ -576,7 +588,9 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF27AE60).withOpacity(0.2), width: 1),
+                  border: Border.all(
+                      color: const Color(0xFF27AE60).withOpacity(0.2),
+                      width: 1),
                 ),
                 child: Column(
                   children: [
@@ -587,12 +601,16 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                           radius: 50,
                           backgroundColor: Colors.grey[100],
                           backgroundImage: _getImageProvider(
-                            _selectedProfileImage, 
-                            _selectedProfileImageBytes, 
-                            _technician!.profilePicture
-                          ),
-                          child: _getImageProvider(_selectedProfileImage, _selectedProfileImageBytes, _technician!.profilePicture) == null
-                              ? const Icon(Icons.person, size: 50, color: Color(0xFF27AE60))
+                              _selectedProfileImage,
+                              _selectedProfileImageBytes,
+                              _technician!.profilePicture),
+                          child: _getImageProvider(
+                                      _selectedProfileImage,
+                                      _selectedProfileImageBytes,
+                                      _technician!.profilePicture) ==
+                                  null
+                              ? const Icon(Icons.person,
+                                  size: 50, color: Color(0xFF27AE60))
                               : null,
                         ),
                         if (_editing)
@@ -679,11 +697,12 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: _selectedIdImage != null
-                            ? (kIsWeb 
+                            ? (kIsWeb
                                 ? Container(
                                     color: Colors.grey[100],
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         const Icon(
                                           Icons.credit_card,
@@ -717,7 +736,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                                       return Container(
                                         color: Colors.grey[100],
                                         child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             const Icon(
                                               Icons.credit_card,
@@ -740,7 +760,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                                 : Container(
                                     color: Colors.grey[100],
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         const Icon(
                                           Icons.credit_card,
@@ -787,7 +808,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                           backgroundColor: const Color(0xFF27AE60),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -810,7 +832,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                       controller: _firstNameController,
                       labelText: 'First Name *',
                       fieldId: 'first_name',
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -819,7 +842,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                       controller: _lastNameController,
                       labelText: 'Last Name *',
                       fieldId: 'last_name',
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
                 ],
@@ -853,9 +877,11 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                       labelText: 'Sex',
                       items: const [
                         DropdownMenuItem(value: 'Male', child: Text('Male')),
-                        DropdownMenuItem(value: 'Female', child: Text('Female')),
+                        DropdownMenuItem(
+                            value: 'Female', child: Text('Female')),
                       ],
-                      onChanged: _editing ? (v) => setState(() => _sex = v) : null,
+                      onChanged:
+                          _editing ? (v) => setState(() => _sex = v) : null,
                     ),
                   ),
                 ],
@@ -907,13 +933,14 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _loading ? null : _saveProfile,
-                          icon: _loading 
+                          icon: _loading
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
                                   ),
                                 )
                               : const Icon(Icons.save, size: 18),
@@ -932,19 +959,22 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: _loading ? null : () {
-                            setState(() {
-                              _editing = false;
-                              _selectedProfileImage = null;
-                              _selectedIdImage = null;
-                            });
-                            _loadTechnicianData(); // Reload original data
-                          },
+                          onPressed: _loading
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _editing = false;
+                                    _selectedProfileImage = null;
+                                    _selectedIdImage = null;
+                                  });
+                                  _loadTechnicianData(); // Reload original data
+                                },
                           icon: const Icon(Icons.cancel, size: 18),
                           label: const Text('Cancel'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF27AE60),
-                            side: const BorderSide(color: Color(0xFF27AE60), width: 1),
+                            side: const BorderSide(
+                                color: Color(0xFF27AE60), width: 1),
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
@@ -1043,7 +1073,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
           color: Colors.grey[600],
           fontWeight: FontWeight.w400,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       validator: validator,
       enabled: _editing,
@@ -1081,7 +1112,8 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
           color: Colors.grey[600],
           fontWeight: FontWeight.w400,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       dropdownColor: Colors.white,
       style: const TextStyle(

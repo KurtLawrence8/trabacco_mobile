@@ -1,24 +1,37 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 
 class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
     final url = kIsWeb
-        ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For web - use localhost
-        : Platform.isAndroid
-            ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For Android - use your computer's IP
-            : 'https://navajowhite-chinchilla-897972.hostingersite.com/api'; // For iOS and others - use your computer's IP
+        ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For web
+        : (!kIsWeb && Platform.isAndroid)
+            ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For Android
+            : 'https://navajowhite-chinchilla-897972.hostingersite.com/api'; // For iOS and others
 
     print(
-      '🌐 [API CONFIG] Platform: ${kIsWeb ? 'Web' : Platform.isAndroid ? 'Android' : 'iOS/Other'}',
+      '🌐 [API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}',
     );
     print('[API CONFIG] Generated URL: $url');
     print('[API CONFIG] kIsWeb: $kIsWeb');
-    print('[API CONFIG] Platform.isAndroid: ${Platform.isAndroid}');
-    print('[API CONFIG] Platform.isIOS: ${Platform.isIOS}');
+    if (!kIsWeb) {
+      print('[API CONFIG] Platform.isAndroid: ${Platform.isAndroid}');
+      print('[API CONFIG] Platform.isIOS: ${Platform.isIOS}');
+    }
 
     return url;
+  }
+
+  // Image Base URL for serving images
+  static String get imageBaseUrl {
+    return kIsWeb
+        ? 'https://navajowhite-chinchilla-897972.hostingersite.com' // For web
+        : (!kIsWeb && Platform.isAndroid)
+            ? 'https://navajowhite-chinchilla-897972.hostingersite.com' // For Android
+            : 'https://navajowhite-chinchilla-897972.hostingersite.com'; // For iOS and others
   }
 
   // API Endpoints
@@ -67,11 +80,6 @@ class ApiConfig {
   // Helper method to get full URL
   static String getUrl(String endpoint) {
     return '$baseUrl$endpoint';
-  }
-
-  // Helper method to get base URL for images (without /api)
-  static String get imageBaseUrl {
-    return 'https://navajowhite-chinchilla-897972.hostingersite.com';
   }
 
   // Helper method to replace path parameters

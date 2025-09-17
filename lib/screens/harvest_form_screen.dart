@@ -221,7 +221,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Harvest Report'),
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -515,7 +515,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
               ElevatedButton(
                 onPressed: (_isLoading || !_canSubmit) ? null : _submitHarvest,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
