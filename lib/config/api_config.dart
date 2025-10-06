@@ -13,7 +13,7 @@ class ApiConfig {
             : 'https://navajowhite-chinchilla-897972.hostingersite.com/api'; // For iOS and others
 
     print(
-      '🌐 [API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}',
+      '[API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}',
     );
     print('[API CONFIG] Generated URL: $url');
     print('[API CONFIG] kIsWeb: $kIsWeb');

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/schedule.dart';
+import '../models/laborer.dart';
 import '../config/api_config.dart';
 
 class ScheduleService {
@@ -164,6 +165,213 @@ class ScheduleService {
         throw Exception(
             'Connection error. Please check if the server is running.');
       }
+      rethrow;
+    }
+  }
+
+  // Assign existing laborer to schedule and mark as completed
+  Future<Schedule> assignLaborerAndComplete({
+    required int scheduleId,
+    int? laborerId,
+    String? unit,
+    double? budget,
+    required String token,
+  }) async {
+    print(
+        '[ScheduleService] [assignLaborerAndComplete] Starting assignment for schedule ID: $scheduleId');
+
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/schedules/$scheduleId/assign-laborer'),
+        headers: ApiConfig.getHeaders(token: token),
+        body: json.encode({
+          'laborer_id': laborerId,
+          'unit': unit,
+          'budget': budget,
+        }),
+      );
+
+      print(
+          '[ScheduleService] [assignLaborerAndComplete] Response status: ${response.statusCode}');
+      print(
+          '[ScheduleService] [assignLaborerAndComplete] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return Schedule.fromJson(data['data']);
+        } else {
+          throw Exception('Failed to assign laborer: ${data['message']}');
+        }
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            'Failed to assign laborer: ${errorData['message'] ?? response.statusCode}');
+      }
+    } catch (e) {
+      print('[ScheduleService] [assignLaborerAndComplete] ERROR: $e');
+      rethrow;
+    }
+  }
+
+  // Assign multiple laborers to schedule (existing + new)
+  Future<Map<String, dynamic>> assignMultipleLaborersAndComplete({
+    required int scheduleId,
+    List<int>? existingLaborerIds,
+    List<Map<String, String?>>? newLaborers,
+    String? unit,
+    double? budget,
+    required String token,
+  }) async {
+    print(
+        '[ScheduleService] [assignMultipleLaborersAndComplete] Starting assignment for schedule ID: $scheduleId');
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            '${ApiConfig.baseUrl}/schedules/$scheduleId/assign-multiple-laborers'),
+        headers: ApiConfig.getHeaders(token: token),
+        body: json.encode({
+          'existing_laborers': existingLaborerIds,
+          'new_laborers': newLaborers,
+          'unit': unit,
+          'budget': budget,
+        }),
+      );
+
+      print(
+          '[ScheduleService] [assignMultipleLaborersAndComplete] Response status: ${response.statusCode}');
+      print(
+          '[ScheduleService] [assignMultipleLaborersAndComplete] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return {
+            'schedule': Schedule.fromJson(data['data']['schedule']),
+            'created_laborers': data['data']['created_laborers'],
+            'total_assigned': data['data']['total_assigned'],
+          };
+        } else {
+          throw Exception('Failed to assign laborers: ${data['message']}');
+        }
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            'Failed to assign laborers: ${errorData['message'] ?? response.statusCode}');
+      }
+    } catch (e) {
+      print('[ScheduleService] [assignMultipleLaborersAndComplete] ERROR: $e');
+      rethrow;
+    }
+  }
+
+  // Create new laborer and assign to schedule
+  Future<Map<String, dynamic>> createLaborerAndAssign({
+    required int scheduleId,
+    required String firstName,
+    required String middleName,
+    required String lastName,
+    String? phoneNumber,
+    required int farmWorkerId,
+    String? unit,
+    double? budget,
+    required String token,
+  }) async {
+    print(
+        '[ScheduleService] [createLaborerAndAssign] Starting creation for schedule ID: $scheduleId');
+
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/schedules/$scheduleId/create-laborer'),
+        headers: ApiConfig.getHeaders(token: token),
+        body: json.encode({
+          'first_name': firstName,
+          'middle_name': middleName,
+          'last_name': lastName,
+          'phone_number': phoneNumber,
+          'farm_worker_id': farmWorkerId,
+          'unit': unit,
+          'budget': budget,
+        }),
+      );
+
+      print(
+          '[ScheduleService] [createLaborerAndAssign] Response status: ${response.statusCode}');
+      print(
+          '[ScheduleService] [createLaborerAndAssign] Response body: ${response.body}');
+
+      if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return {
+            'laborer': Laborer.fromJson(data['data']['laborer']),
+            'schedule': Schedule.fromJson(data['data']['schedule']),
+          };
+        } else {
+          throw Exception('Failed to create laborer: ${data['message']}');
+        }
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            'Failed to create laborer: ${errorData['message'] ?? response.statusCode}');
+      }
+    } catch (e) {
+      print('[ScheduleService] [createLaborerAndAssign] ERROR: $e');
+      rethrow;
+    }
+  }
+
+  // Update completed schedule laborers, unit, budget, and extra
+  Future<Map<String, dynamic>> updateCompletedSchedule({
+    required int scheduleId,
+    List<int>? existingLaborerIds,
+    List<Map<String, String?>>? newLaborers,
+    String? unit,
+    double? budget,
+    Map<String, dynamic>? extra,
+    required String token,
+  }) async {
+    print(
+        '[ScheduleService] [updateCompletedSchedule] Starting update for schedule ID: $scheduleId');
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            '${ApiConfig.baseUrl}/schedules/$scheduleId/assign-multiple-laborers'),
+        headers: ApiConfig.getHeaders(token: token),
+        body: json.encode({
+          'existing_laborers': existingLaborerIds,
+          'new_laborers': newLaborers,
+          'unit': unit,
+          'budget': budget,
+          'extra': extra,
+        }),
+      );
+
+      print(
+          '[ScheduleService] [updateCompletedSchedule] Response status: ${response.statusCode}');
+      print(
+          '[ScheduleService] [updateCompletedSchedule] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return {
+            'schedule': Schedule.fromJson(data['data']['schedule']),
+            'created_laborers': data['data']['created_laborers'],
+            'total_assigned': data['data']['total_assigned'],
+          };
+        } else {
+          throw Exception('Failed to update schedule: ${data['message']}');
+        }
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            'Failed to update schedule: ${errorData['message'] ?? response.statusCode}');
+      }
+    } catch (e) {
+      print('[ScheduleService] [updateCompletedSchedule] ERROR: $e');
       rethrow;
     }
   }
