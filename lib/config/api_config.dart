@@ -9,11 +9,11 @@ class ApiConfig {
     final url = kIsWeb
         ? 'http://localhost:8000/api' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'http://localhost:8000/api' // For Android
+            ? 'http://10.0.2.2:8000/api' // For Android (10.0.2.2 is localhost)
             : 'http://localhost:8000/api'; // For iOS and others
 
     print(
-      '🌐 [API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}',
+      '[API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}',
     );
     print('[API CONFIG] Generated URL: $url');
     print('[API CONFIG] kIsWeb: $kIsWeb');
@@ -30,7 +30,7 @@ class ApiConfig {
     return kIsWeb
         ? 'http://localhost:8000' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'http://localhost:8000' // For Android
+            ? 'http://10.0.2.2:8000' // For Android (10.0.2.2 is localhost)
             : 'http://localhost:8000'; // For iOS and others
   }
 

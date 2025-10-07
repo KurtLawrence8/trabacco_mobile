@@ -3,6 +3,8 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../models/schedule.dart';
 import '../services/schedule_service.dart';
+import '../widgets/laborer_assignment_dialog.dart';
+import '../widgets/schedule_edit_dialog.dart';
 
 // ADD CONSTANTS FOR COLORS AT THE TOP
 const Color K_TODAY_HIGHLIGHT = Color(0xFFFFF9C4); // LIGHT YELLOW
@@ -109,17 +111,17 @@ class _SchedulePageState extends State<SchedulePage> {
         '[SchedulePage] [_updateStatus] Updating schedule ID: ${schedule.id} to status: $status');
 
     try {
-    await _service.updateScheduleStatus(schedule.id, status, widget.token);
+      await _service.updateScheduleStatus(schedule.id, status, widget.token);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Status updated to $status')),
       );
-    setState(() {
+      setState(() {
         print(
             '[SchedulePage] [_updateStatus] Refreshing schedules after status update');
-      _futureSchedules = _service.fetchSchedulesForFarmWorker(
-          widget.farmWorkerId, widget.token);
-    });
+        _futureSchedules = _service.fetchSchedulesForFarmWorker(
+            widget.farmWorkerId, widget.token);
+      });
     } catch (e) {
       print('[SchedulePage] [_updateStatus] ERROR updating status: $e');
       if (!mounted) return;
@@ -129,11 +131,112 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  void _showLaborerAssignmentDialog(Schedule schedule) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => LaborerAssignmentDialog(
+        schedule: schedule,
+        farmWorkerId: widget.farmWorkerId,
+        token: widget.token,
+        onScheduleUpdated: (updatedSchedule) {
+          // Refresh schedules after assignment
+          setState(() {
+            _futureSchedules = _service.fetchSchedulesForFarmWorker(
+                widget.farmWorkerId, widget.token);
+          });
+        },
+      ),
+    );
+  }
+
+  void _showScheduleEditDialog(Schedule schedule) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ScheduleEditDialog(
+        schedule: schedule,
+        farmWorkerId: widget.farmWorkerId,
+        token: widget.token,
+        onScheduleUpdated: (updatedSchedule) {
+          // Refresh schedules after edit
+          setState(() {
+            _futureSchedules = _service.fetchSchedulesForFarmWorker(
+                widget.farmWorkerId, widget.token);
+          });
+        },
+      ),
+    );
+  }
+
+  // Helper functions to get unit and budget from laborers array
+  String? _getScheduleUnit(Schedule schedule) {
+    if (schedule.laborers != null && schedule.laborers!.isNotEmpty) {
+      final laborer = schedule.laborers![0];
+      if (laborer is Map<String, dynamic>) {
+        return laborer['unit'] as String?;
+      }
+    }
+    return null;
+  }
+
+  double? _getScheduleBudget(Schedule schedule) {
+    if (schedule.laborers != null && schedule.laborers!.isNotEmpty) {
+      final laborer = schedule.laborers![0];
+      if (laborer is Map<String, dynamic>) {
+        return (laborer['budget'] as num?)?.toDouble();
+      }
+    }
+    return null;
+  }
+
+  // Helper function to get laborer names from laborers array
+  String _getLaborerNames(Schedule schedule) {
+    if (schedule.laborers != null && schedule.laborers!.isNotEmpty) {
+      List<String> names = [];
+      for (var laborer in schedule.laborers!) {
+        if (laborer is Map<String, dynamic>) {
+          final laborerData = laborer['laborer'];
+          if (laborerData is Map<String, dynamic>) {
+            final firstName = laborerData['first_name']?.toString() ?? '';
+            final lastName = laborerData['last_name']?.toString() ?? '';
+            if (firstName.isNotEmpty || lastName.isNotEmpty) {
+              names.add('${firstName.trim()} ${lastName.trim()}'.trim());
+            }
+          }
+        }
+      }
+      return names.join(', ');
+    }
+    return '';
+  }
+
+  // Helper function to get laborer names as a list
+  List<String> _getLaborerNamesList(Schedule schedule) {
+    if (schedule.laborers != null && schedule.laborers!.isNotEmpty) {
+      List<String> names = [];
+      for (var laborer in schedule.laborers!) {
+        if (laborer is Map<String, dynamic>) {
+          final laborerData = laborer['laborer'];
+          if (laborerData is Map<String, dynamic>) {
+            final firstName = laborerData['first_name']?.toString() ?? '';
+            final lastName = laborerData['last_name']?.toString() ?? '';
+            if (firstName.isNotEmpty || lastName.isNotEmpty) {
+              names.add('${firstName.trim()} ${lastName.trim()}'.trim());
+            }
+          }
+        }
+      }
+      return names;
+    }
+    return [];
+  }
+
   @override
   Widget build(BuildContext context) {
     try {
-    // GET TODAY'S DATE
-    final todayDate = DateTime.now();
+      // GET TODAY'S DATE
+      final todayDate = DateTime.now();
       print('[SchedulePage] [build] Building SchedulePage UI');
       print('[SchedulePage] [build] Farm worker ID: ${widget.farmWorkerId}');
       print('[SchedulePage] [build] Today\'s date: $todayDate');
@@ -146,7 +249,7 @@ class _SchedulePageState extends State<SchedulePage> {
         child: Scaffold(
           backgroundColor: Colors.white,
           resizeToAvoidBottomInset: true,
-      appBar: AppBar(
+          appBar: AppBar(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
             elevation: 0,
@@ -164,9 +267,9 @@ class _SchedulePageState extends State<SchedulePage> {
             child: widget.farmWorkerId == 0
                 ? _buildEmptyState(
                     'Please select a farm worker to view schedules')
-          : FutureBuilder<List<Schedule>>(
-              future: _futureSchedules,
-              builder: (context, snapshot) {
+                : FutureBuilder<List<Schedule>>(
+                    future: _futureSchedules,
+                    builder: (context, snapshot) {
                       print(
                           '[SchedulePage] [build] FutureBuilder state: ${snapshot.connectionState}');
                       print(
@@ -180,7 +283,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       print(
                           '[SchedulePage] [build] FutureBuilder has data: ${snapshot.hasData}');
 
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         print(
                             '[SchedulePage] [build] Showing loading indicator');
                         return SizedBox(
@@ -206,8 +309,8 @@ class _SchedulePageState extends State<SchedulePage> {
                             ),
                           ),
                         );
-                }
-                if (snapshot.hasError) {
+                      }
+                      if (snapshot.hasError) {
                         print(
                             '[SchedulePage] [build] Showing error: ${snapshot.error}');
                         print(
@@ -267,7 +370,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         );
                       }
 
-                final schedules = snapshot.data ?? [];
+                      final schedules = snapshot.data ?? [];
                       print(
                           '[SchedulePage] [build] Received ${schedules.length} schedules');
 
@@ -370,7 +473,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       return Container(
                         color: Colors.white,
                         child: Column(
-                  children: [
+                          children: [
                             // Search Bar
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -606,7 +709,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                   children: [
                                     // Date header
                                     Row(
-                              children: [
+                                      children: [
                                         Icon(Icons.calendar_month_rounded,
                                             size: 16, // Reduced from 18
                                             color: Colors.grey.shade600),
@@ -621,7 +724,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                           ),
                                         ),
                                         const Spacer(),
-                                  Text(
+                                        Text(
                                           _selectedDay != null
                                               ? _dateFormatter.format(
                                                   _selectedDay!.toLocal())
@@ -650,8 +753,8 @@ class _SchedulePageState extends State<SchedulePage> {
                                             const Color(0xFF4CAF50)),
                                         _buildLegendItem('Cancelled',
                                             const Color(0xFFF44336)),
-                                        _buildLegendItem('Future',
-                                            const Color(0xFF9C27B0)),
+                                        _buildLegendItem(
+                                            'Future', const Color(0xFF9C27B0)),
                                       ],
                                     ),
                                   ],
@@ -663,7 +766,7 @@ class _SchedulePageState extends State<SchedulePage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                               child: Row(
-                              children: [
+                                children: [
                                   Text(
                                     selectedSchedules.length == 1
                                         ? 'Activity'
@@ -796,9 +899,10 @@ class _SchedulePageState extends State<SchedulePage> {
     // SET COLORS BASED ON STATUS
     final isCompleted = s.status.toLowerCase() == 'completed';
     final isCancelled = s.status.toLowerCase() == 'cancelled';
-    
+
     // CANNOT COMPLETE FUTURE SCHEDULES - only allow completion for today or past dates
-    final canComplete = actionsEnabled && !isCompleted && !isCancelled && !isFuture;
+    final canComplete =
+        actionsEnabled && !isCompleted && !isCancelled && !isFuture;
 
     // START CARD DESIGN
     return Container(
@@ -833,7 +937,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 children: [
                   Expanded(
                     child: Text(
-          s.activity,
+                      s.activity,
                       style: TextStyle(
                         fontSize: 14, // Further reduced from 16
                         fontWeight: FontWeight.bold,
@@ -873,8 +977,8 @@ class _SchedulePageState extends State<SchedulePage> {
               if (s.remarks != null && s.remarks!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
                       'REMARKS: ',
                       style: TextStyle(
@@ -898,39 +1002,91 @@ class _SchedulePageState extends State<SchedulePage> {
               ],
 
               // Additional details row
-              if (s.numLaborers != null || s.budget != null) ...[
+              if (s.laborerId != null ||
+                  _getScheduleUnit(s) != null ||
+                  _getScheduleBudget(s) != null ||
+                  _getLaborerNames(s).isNotEmpty) ...[
                 const SizedBox(height: 12),
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (s.numLaborers != null) ...[
-                      const Icon(
-                        Icons.people,
-                        size: 16, // Reduced from 18
-                        color: Color(0xFFE67E22),
-                      ),
-                      const SizedBox(width: 6),
+                    // Laborers display
+                    if (_getLaborerNames(s).isNotEmpty) ...[
                       Text(
-                        '${s.numLaborers} laborers',
+                        'Laborers:',
                         style: const TextStyle(
-                          fontSize: 12, // Reduced from 14
+                          fontSize: 12,
                           color: Color(0xFF2C3E50),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-            if (s.budget != null)
-                        const SizedBox(width: 16), // Reduced spacing
+                      const SizedBox(height: 4),
+                      ..._getLaborerNamesList(s).map((name) => Padding(
+                            padding: const EdgeInsets.only(left: 8, bottom: 2),
+                            child: Text(
+                              '• $name',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF2C3E50),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          )),
+                      const SizedBox(height: 8),
                     ],
-                    if (s.budget != null) ...[
-                      const Icon(
-                        Icons.attach_money,
-                        size: 16, // Reduced from 18
-                        color: Color(0xFF27AE60),
+                    // Unit row
+                    if (_getScheduleUnit(s) != null) ...[
+                      Row(
+                        children: [
+                          Text(
+                            'Unit: ',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF2C3E50),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            _getScheduleUnit(s)!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF2C3E50),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(height: 4),
+                    ],
+                    // Budget row
+                    if (_getScheduleBudget(s) != null) ...[
+                      Row(
+                        children: [
+                          Text(
+                            'Budget: ',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF2C3E50),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '₱${_getScheduleBudget(s)!.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF2C3E50),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    // Legacy laborer assigned display (fallback)
+                    if (s.laborerId != null && _getLaborerNames(s).isEmpty) ...[
                       Text(
-                        '₱${s.budget!.toStringAsFixed(0)}',
+                        'Laborer assigned',
                         style: const TextStyle(
-                          fontSize: 12, // Reduced from 14
+                          fontSize: 12,
                           color: Color(0xFF2C3E50),
                           fontWeight: FontWeight.w600,
                         ),
@@ -945,7 +1101,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 const SizedBox(height: 16),
                 const Divider(height: 1, color: Colors.grey),
                 const SizedBox(height: 16),
-                
+
                 // Show different UI based on whether it's a future schedule
                 if (isFuture) ...[
                   // Future schedule - show info message instead of buttons
@@ -983,19 +1139,18 @@ class _SchedulePageState extends State<SchedulePage> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: canComplete ? () => _showConfirmationDialog(
-                            context,
-                            'Complete Task',
-                            'Are you sure you want to mark "${s.activity}" as completed?',
-                            'Complete',
-                            const Color(0xFF4CAF50),
-                            () => onStatusChange?.call('Completed'),
-                          ) : null,
+                          onPressed: canComplete
+                              ? () => _showLaborerAssignmentDialog(s)
+                              : null,
                           icon: const Icon(Icons.check_circle, size: 20),
                           label: const Text('Complete'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: canComplete ? const Color(0xFF4CAF50) : Colors.grey.shade300,
-                            foregroundColor: canComplete ? Colors.white : Colors.grey.shade600,
+                            backgroundColor: canComplete
+                                ? const Color(0xFF4CAF50)
+                                : Colors.grey.shade300,
+                            foregroundColor: canComplete
+                                ? Colors.white
+                                : Colors.grey.shade600,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -1032,6 +1187,33 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                 ],
               ],
+
+              // Edit button for completed schedules
+              if (actionsEnabled && isCompleted) ...[
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Colors.grey),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showScheduleEditDialog(s),
+                        icon: const Icon(Icons.edit, size: 20),
+                        label: const Text('Edit Schedule'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2196F3),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -1040,13 +1222,16 @@ class _SchedulePageState extends State<SchedulePage> {
     // END CARD DESIGN
   }
 
-  Widget _buildStatusChip(String status, bool isToday, bool isPast, bool isFuture) {
+  Widget _buildStatusChip(
+      String status, bool isToday, bool isPast, bool isFuture) {
     Color backgroundColor;
     Color textColor;
     IconData icon;
 
     // For future schedules, show a different color to indicate they can't be completed yet
-    if (isFuture && (status.toLowerCase() == 'pending' || status.toLowerCase() == 'scheduled')) {
+    if (isFuture &&
+        (status.toLowerCase() == 'pending' ||
+            status.toLowerCase() == 'scheduled')) {
       backgroundColor = const Color(0xFF9C27B0); // Purple for future schedules
       textColor = Colors.white;
       icon = Icons.schedule;
@@ -1100,8 +1285,8 @@ class _SchedulePageState extends State<SchedulePage> {
         ],
       ),
       child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Icon(icon, size: 14, color: textColor), // Reduced icon size
           const SizedBox(width: 3), // Reduced spacing
           Text(
@@ -1240,9 +1425,9 @@ class _SchedulePageState extends State<SchedulePage> {
                 color: color.withOpacity(0.3),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(width: 4), // Reduced spacing
         Text(
