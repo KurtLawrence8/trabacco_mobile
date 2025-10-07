@@ -54,7 +54,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
     print('🧪 [URL TEST] Image Base URL: ${ApiConfig.imageBaseUrl}');
     
     // Test with your provided URL
-    String testUrl = 'https://navajowhite-chinchilla-897972.hostingersite.com/storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
+    String testUrl = 'http://localhost:8000/storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
     print('🧪 [URL TEST] Full URL test: ${_getImageUrl(testUrl)}');
     
     // Test with relative path

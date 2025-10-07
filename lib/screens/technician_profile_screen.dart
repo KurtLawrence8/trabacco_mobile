@@ -64,11 +64,11 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
     if (kIsWeb) {
       // For web, try both localhost and 127.0.0.1
       baseUrl =
-          'https://navajowhite-chinchilla-897972.hostingersite.com'; // Try localhost first
+          'http://localhost:8000'; // Try localhost first
     } else {
       baseUrl = Platform.isAndroid
-          ? 'https://navajowhite-chinchilla-897972.hostingersite.com'
-          : 'https://navajowhite-chinchilla-897972.hostingersite.com';
+          ? 'http://localhost:8000'
+          : 'http://localhost:8000';
     }
 
     // Remove leading slash if present and clean up the path
