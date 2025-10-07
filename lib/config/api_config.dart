@@ -7,10 +7,10 @@ class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
     final url = kIsWeb
-        ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For web
+        ? 'http://localhost:8000/api' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'https://navajowhite-chinchilla-897972.hostingersite.com/api' // For Android
-            : 'https://navajowhite-chinchilla-897972.hostingersite.com/api'; // For iOS and others
+            ? 'http://10.0.2.2:8000/api' // For Android (10.0.2.2 is localhost)
+            : 'http://localhost:8000/api'; // For iOS and others
 
     print(
       '[API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}',
@@ -28,10 +28,10 @@ class ApiConfig {
   // Image Base URL for serving images
   static String get imageBaseUrl {
     return kIsWeb
-        ? 'https://navajowhite-chinchilla-897972.hostingersite.com' // For web
+        ? 'http://localhost:8000' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'https://navajowhite-chinchilla-897972.hostingersite.com' // For Android
-            : 'https://navajowhite-chinchilla-897972.hostingersite.com'; // For iOS and others
+            ? 'http://10.0.2.2:8000' // For Android (10.0.2.2 is localhost)
+            : 'http://localhost:8000'; // For iOS and others
   }
 
   // API Endpoints
