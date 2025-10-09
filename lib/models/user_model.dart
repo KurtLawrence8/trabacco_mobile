@@ -92,13 +92,17 @@ class RequestModel {
   final int id;
   final int farmWorkerId;
   final int technicianId;
-  final String? type; // 'CASH ADVANCE' or 'SUPPLY'
+  final String? type; // 'CASH ADVANCE', 'SUPPLY', or 'EQUIPMENT'
   final double? amount;
   final int? quantity;
   final String? reason;
   final String? status;
   final int? supplyId;
   final String? supplyName;
+  final int? equipmentId;
+  final String? equipmentName;
+  final int? borrowDurationDays;
+  final String? expectedReturnDate;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? adminNote;
@@ -114,6 +118,10 @@ class RequestModel {
     this.status,
     this.supplyId,
     this.supplyName,
+    this.equipmentId,
+    this.equipmentName,
+    this.borrowDurationDays,
+    this.expectedReturnDate,
     required this.createdAt,
     this.updatedAt,
     this.adminNote,
@@ -126,7 +134,11 @@ class RequestModel {
       technicianId: json['technician_id'],
       type: json['request_type']?.toLowerCase() == 'cash advance'
           ? 'cash_advance'
-          : (json['request_type']?.toLowerCase() == 'supply' ? 'supply' : null),
+          : json['request_type']?.toLowerCase() == 'supply'
+              ? 'supply'
+              : json['request_type']?.toLowerCase() == 'equipment'
+                  ? 'equipment'
+                  : null,
       amount: json['amount'] != null
           ? double.tryParse(json['amount'].toString())
           : null,
@@ -137,6 +149,12 @@ class RequestModel {
       status: json['status'] ?? '-',
       supplyId: json['supply_id'],
       supplyName: json['supply_name'],
+      equipmentId: json['equipment_id'],
+      equipmentName: json['equipment_name'],
+      borrowDurationDays: json['borrow_duration_days'] != null
+          ? int.tryParse(json['borrow_duration_days'].toString())
+          : null,
+      expectedReturnDate: json['expected_return_date'],
       createdAt: DateTime.parse(
           json['created_at'] ?? DateTime.now().toIso8601String()),
       updatedAt: json['updated_at'] != null

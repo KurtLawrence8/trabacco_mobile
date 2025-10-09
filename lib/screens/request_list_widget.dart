@@ -145,8 +145,8 @@ class _RequestListWidgetState extends State<RequestListWidget> {
               children: [
                 // Date header
                 Padding(
-                  padding:
-                      const EdgeInsets.only(left: 8, right: 20, top: 0, bottom: 0),
+                  padding: const EdgeInsets.only(
+                      left: 8, right: 20, top: 0, bottom: 0),
                   child: Text(
                     date,
                     style: const TextStyle(
@@ -159,7 +159,8 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                 // Requests for this date
                 ...requestsForDate
                     .map((req) => _buildNotificationStyleRequest(req)),
-                if (groupIndex < dateGroups.length - 1) const SizedBox(height: 8),
+                if (groupIndex < dateGroups.length - 1)
+                  const SizedBox(height: 8),
               ],
             );
           },
@@ -212,16 +213,22 @@ class _RequestListWidgetState extends State<RequestListWidget> {
             decoration: BoxDecoration(
               color: req.type == 'cash_advance'
                   ? Colors.green[100]
-                  : Colors.blue[100],
+                  : req.type == 'equipment'
+                      ? Colors.orange[100]
+                      : Colors.blue[100],
               shape: BoxShape.circle,
             ),
             child: Icon(
               req.type == 'cash_advance'
                   ? Icons.account_balance_wallet_rounded
-                  : Icons.inventory_2_rounded,
+                  : req.type == 'equipment'
+                      ? Icons.build_rounded
+                      : Icons.inventory_2_rounded,
               color: req.type == 'cash_advance'
                   ? Colors.green[700]
-                  : Colors.blue[700],
+                  : req.type == 'equipment'
+                      ? Colors.orange[700]
+                      : Colors.blue[700],
               size: 20,
             ),
           ),
@@ -238,7 +245,9 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                       child: Text(
                         req.type == 'cash_advance'
                             ? 'Cash Advance'
-                            : 'Supply Request',
+                            : req.type == 'equipment'
+                                ? 'Equipment Request'
+                                : 'Supply Request',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -247,7 +256,8 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: req.status == 'approved'
                             ? Colors.green[100]
@@ -303,7 +313,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                   ],
                 ),
                 const SizedBox(height: 4),
-                // Amount or supply
+                // Amount, supply, or equipment
                 if (req.type == 'cash_advance' && req.amount != null)
                   Text(
                     'Amount: ₱${req.amount!.toStringAsFixed(2)}',
@@ -315,6 +325,14 @@ class _RequestListWidgetState extends State<RequestListWidget> {
                 else if (req.type == 'supply' && req.supplyName != null)
                   Text(
                     'Supply: ${req.supplyName}${req.quantity != null ? ' (Qty: ${req.quantity})' : ''}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  )
+                else if (req.type == 'equipment' && req.equipmentName != null)
+                  Text(
+                    'Equipment: ${req.equipmentName}${req.borrowDurationDays != null ? ' (${req.borrowDurationDays} days)' : ''}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[700],

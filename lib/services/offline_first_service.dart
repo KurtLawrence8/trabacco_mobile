@@ -12,7 +12,7 @@ class OfflineFirstService {
 
   /// Create report with offline support
   Future<Map<String, dynamic>> createReport(
-    Map<String, dynamic> reportData, 
+    Map<String, dynamic> reportData,
     String token, {
     List<File>? images,
     List<Uint8List>? imageBytes,
@@ -22,7 +22,8 @@ class OfflineFirstService {
       if (await _offlineStorage.isOnline()) {
         // Try to create report online
         try {
-          return await _createReportOnline(reportData, token, images: images, imageBytes: imageBytes);
+          return await _createReportOnline(reportData, token,
+              images: images, imageBytes: imageBytes);
         } catch (e) {
           print('Online report creation failed, saving offline: $e');
           // Fall back to offline storage
@@ -30,8 +31,10 @@ class OfflineFirstService {
           return {
             'success': true,
             'offline': true,
-            'message': 'Report saved offline. Will sync when internet is available.',
-            'offline_id': reportData['_offline_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+            'message':
+                'Report saved offline. Will sync when internet is available.',
+            'offline_id': reportData['_offline_id'] ??
+                DateTime.now().millisecondsSinceEpoch.toString(),
           };
         }
       } else {
@@ -40,8 +43,10 @@ class OfflineFirstService {
         return {
           'success': true,
           'offline': true,
-          'message': 'Report saved offline. Will sync when internet is available.',
-          'offline_id': reportData['_offline_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          'message':
+              'Report saved offline. Will sync when internet is available.',
+          'offline_id': reportData['_offline_id'] ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
         };
       }
     } catch (e) {
@@ -50,7 +55,8 @@ class OfflineFirstService {
   }
 
   /// Create request with offline support
-  Future<void> createRequest(String token, Map<String, dynamic> requestData) async {
+  Future<void> createRequest(
+      String token, Map<String, dynamic> requestData) async {
     try {
       // Check if online
       if (await _offlineStorage.isOnline()) {
@@ -85,25 +91,30 @@ class OfflineFirstService {
       if (await _offlineStorage.isOnline()) {
         // Try to update profile online
         try {
-          return await _updateProfileOnline(userType, userId, updateData, token);
+          return await _updateProfileOnline(
+              userType, userId, updateData, token);
         } catch (e) {
           print('Online profile update failed, saving offline: $e');
           // Fall back to offline storage
-          await _offlineStorage.saveProfileUpdateOffline(userType, userId, updateData);
+          await _offlineStorage.saveProfileUpdateOffline(
+              userType, userId, updateData);
           return {
             'success': true,
             'offline': true,
-            'message': 'Profile update saved offline. Will sync when internet is available.',
+            'message':
+                'Profile update saved offline. Will sync when internet is available.',
             'offline_id': DateTime.now().millisecondsSinceEpoch.toString(),
           };
         }
       } else {
         // Save offline
-        await _offlineStorage.saveProfileUpdateOffline(userType, userId, updateData);
+        await _offlineStorage.saveProfileUpdateOffline(
+            userType, userId, updateData);
         return {
           'success': true,
           'offline': true,
-          'message': 'Profile update saved offline. Will sync when internet is available.',
+          'message':
+              'Profile update saved offline. Will sync when internet is available.',
           'offline_id': DateTime.now().millisecondsSinceEpoch.toString(),
         };
       }
@@ -113,7 +124,8 @@ class OfflineFirstService {
   }
 
   /// Update schedule status with offline support
-  Future<void> updateScheduleStatus(int scheduleId, String status, String token) async {
+  Future<void> updateScheduleStatus(
+      int scheduleId, String status, String token) async {
     try {
       // Check if online
       if (await _offlineStorage.isOnline()) {
@@ -159,7 +171,7 @@ class OfflineFirstService {
   // Private methods for online operations
 
   Future<Map<String, dynamic>> _createReportOnline(
-    Map<String, dynamic> reportData, 
+    Map<String, dynamic> reportData,
     String token, {
     List<File>? images,
     List<Uint8List>? imageBytes,
@@ -230,44 +242,76 @@ class OfflineFirstService {
     }
   }
 
-  Future<void> _createRequestOnline(String token, Map<String, dynamic> requestData) async {
+  Future<void> _createRequestOnline(
+      String token, Map<String, dynamic> requestData) async {
     final url = ApiConfig.getUrl('/requests');
-    final now = DateTime.now().toIso8601String();
-    final payload = {
-      'technician_id': requestData['technician_id'],
-      'farm_worker_id': requestData['farm_worker_id'],
-      'request_type':
-          requestData['type'] == 'cash_advance' ? 'Cash Advance' : 'Supply',
-      'description': requestData['reason'],
-      'status': 'Pending',
-      'timestamp': now,
-      if (requestData['amount'] != null) 'amount': requestData['amount'],
-      if (requestData['supply_id'] != null)
-        'supply_id': requestData['supply_id'],
-      if (requestData['quantity'] != null) 'quantity': requestData['quantity'],
-    };
 
-    print('RequestService: Sending payload: $payload');
+    print('[OfflineFirstService] _createRequestOnline called');
+    print('[OfflineFirstService] Token: ${token.substring(0, 10)}...');
+    print('[OfflineFirstService] Request data received: $requestData');
+
+    // Check if data is already in new format (has 'request_type' field)
+    Map<String, dynamic> payload;
+    if (requestData.containsKey('request_type')) {
+      // New format from request_screen.dart - use as is
+      payload = requestData;
+      print('[OfflineFirstService] Using new format payload');
+    } else {
+      // Old format - transform it
+      final now = DateTime.now().toIso8601String();
+      payload = {
+        'technician_id': requestData['technician_id'],
+        'farm_worker_id': requestData['farm_worker_id'],
+        'request_type':
+            requestData['type'] == 'cash_advance' ? 'Cash Advance' : 'Supply',
+        'description': requestData['reason'],
+        'status': 'Pending',
+        'timestamp': now,
+        if (requestData['amount'] != null) 'amount': requestData['amount'],
+        if (requestData['supply_id'] != null)
+          'supply_id': requestData['supply_id'],
+        if (requestData['quantity'] != null)
+          'quantity': requestData['quantity'],
+      };
+      print('[OfflineFirstService] Using old format payload (transformed)');
+    }
+
+    print('[OfflineFirstService] Final payload being sent: $payload');
+    print(
+        '[OfflineFirstService] Headers: ${ApiConfig.getHeaders(token: token)}');
+
     final response = await http.post(Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
         body: json.encode(payload));
 
+    print('[OfflineFirstService] Response status: ${response.statusCode}');
+    print('[OfflineFirstService] Response body: ${response.body}');
+
     if (response.statusCode == 201) {
       // Request created successfully
+      print('[OfflineFirstService] Request created successfully!');
       return;
     } else if (response.statusCode == 409) {
       // Daily limit exceeded
       final errorData = json.decode(response.body);
-      throw Exception(
-          errorData['message'] ?? 'Daily limit exceeded for this request type');
+      final errorMsg =
+          errorData['message'] ?? 'Daily limit exceeded for this request type';
+      print('[OfflineFirstService] Error 409: $errorMsg');
+      throw Exception(errorMsg);
     } else if (response.statusCode == 422) {
       // Validation error
       final errorData = json.decode(response.body);
-      throw Exception(errorData['message'] ?? 'Invalid request data');
+      final errorMsg =
+          errorData['message'] ?? errorData['error'] ?? 'Invalid request data';
+      print('[OfflineFirstService] Error 422: $errorMsg');
+      print('[OfflineFirstService] Error details: $errorData');
+      throw Exception(errorMsg);
     } else {
       // Other errors
-      throw Exception(
-          json.decode(response.body)['message'] ?? 'Failed to create request');
+      final errorMsg =
+          json.decode(response.body)['message'] ?? 'Failed to create request';
+      print('[OfflineFirstService] Error ${response.statusCode}: $errorMsg');
+      throw Exception(errorMsg);
     }
   }
 
@@ -320,7 +364,8 @@ class OfflineFirstService {
     }
   }
 
-  Future<void> _updateScheduleStatusOnline(int scheduleId, String status, String token) async {
+  Future<void> _updateScheduleStatusOnline(
+      int scheduleId, String status, String token) async {
     final response = await http.put(
       Uri.parse('${ApiConfig.baseUrl}/schedules/$scheduleId'),
       headers: ApiConfig.getHeaders(token: token),
@@ -328,7 +373,8 @@ class OfflineFirstService {
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Failed to update schedule. Code: ${response.statusCode}. Body: ${response.body}');
+      throw Exception(
+          'Failed to update schedule. Code: ${response.statusCode}. Body: ${response.body}');
     }
   }
 }
