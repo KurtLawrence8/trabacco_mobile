@@ -13,6 +13,7 @@ import '../services/planting_service.dart';
 import '../models/farm.dart';
 import '../models/tobacco_variety.dart';
 import 'harvest_form_screen.dart';
+import 'accomplishment_form_screen.dart';
 
 class CameraReportScreen extends StatefulWidget {
   final String? token;
@@ -942,6 +943,20 @@ class _PhotoPreviewScreenState extends State<PhotoPreviewScreen> {
                                 builder: (context) => HarvestFormScreen(
                                   token: widget.token,
                                   technicianId: widget.technicianId,
+                                ),
+                              ),
+                            );
+                          } else if (widget.reportType == 'accomplishment') {
+                            // Navigate directly to AccomplishmentFormScreen for accomplishment reports
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AccomplishmentFormScreen(
+                                  token: widget.token,
+                                  technicianId: widget.technicianId,
+                                  initialPhoto: widget.photo,
+                                  initialPosition: widget.position,
+                                  detectedFarm: widget.detectedFarm,
                                 ),
                               ),
                             );

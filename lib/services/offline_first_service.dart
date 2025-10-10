@@ -192,7 +192,14 @@ class OfflineFirstService {
     // Add form fields
     reportData.forEach((key, value) {
       if (value != null) {
-        request.fields[key] = value.toString();
+        // Handle arrays (like farm_worker_ids, laborer_ids)
+        if (value is List) {
+          for (int i = 0; i < value.length; i++) {
+            request.fields['${key}[$i]'] = value[i].toString();
+          }
+        } else {
+          request.fields[key] = value.toString();
+        }
       }
     });
 

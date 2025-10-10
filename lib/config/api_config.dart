@@ -15,7 +15,7 @@ class ApiConfig {
     final url = kIsWeb
         ? 'http://localhost:8000/api' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'http://10.0.2.2:8000/api' // For Android Emulator ONLY
+            ? 'http://localhost:8000/api' // For Android Emulator (10.0.2.2 = host machine)
             : 'http://localhost:8000/api'; // For iOS Simulator and Physical Devices
 
     // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:
@@ -39,7 +39,7 @@ class ApiConfig {
     return kIsWeb
         ? 'http://localhost:8000' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'http://10.0.2.2:8000' // For Android Emulator ONLY
+            ? 'http://localhost:8000' // For Android Emulator (10.0.2.2 = host machine)
             : 'http://localhost:8000'; // For iOS Simulator and Physical Devices
 
     // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:

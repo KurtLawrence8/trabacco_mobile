@@ -75,7 +75,14 @@ class HarvestService {
 
       harvestData.forEach((key, value) {
         if (value != null) {
-          request.fields[key] = value.toString();
+          // Handle arrays (like laborer_ids)
+          if (value is List) {
+            for (int i = 0; i < value.length; i++) {
+              request.fields['${key}[$i]'] = value[i].toString();
+            }
+          } else {
+            request.fields[key] = value.toString();
+          }
         }
       });
 

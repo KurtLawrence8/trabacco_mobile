@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/planting_service.dart';
-import '../services/tobacco_variety_service.dart';
 import '../services/farm_service.dart';
-import '../models/tobacco_variety.dart';
+import '../services/laborer_service.dart';
 import '../models/farm.dart';
+import '../models/laborer.dart';
 
 class PlantingFormScreen extends StatefulWidget {
   final String? token;
@@ -21,53 +21,24 @@ class PlantingFormScreen extends StatefulWidget {
 
 class _PlantingFormScreenState extends State<PlantingFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _areaPlantedController = TextEditingController();
-  final _plantsPerHectareController = TextEditingController();
-  final _seedsUsedController = TextEditingController();
-  final _notesController = TextEditingController();
+  final _plantsPlantedController = TextEditingController();
 
   final _plantingService = PlantingService();
-  final _tobaccoVarietyService = TobaccoVarietyService();
   final _farmService = FarmService();
+  final _laborerService = LaborerService();
 
-  List<TobaccoVariety> _tobaccoVarieties = [];
   List<Farm> _farms = [];
-  TobaccoVariety? _selectedVariety;
   Farm? _selectedFarm;
+  List<Laborer> _allLaborers = [];
+  List<Laborer> _selectedLaborers = [];
   bool _isLoading = false;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadTobaccoVarieties();
     _loadFarms();
-  }
-
-  Future<void> _loadTobaccoVarieties() async {
-    try {
-      final varieties =
-          await _tobaccoVarietyService.getTobaccoVarieties(widget.token);
-      if (mounted) {
-        setState(() {
-          _tobaccoVarieties = varieties;
-          // Set default variety and populate fields if varieties are available
-          if (varieties.isNotEmpty && _selectedVariety == null) {
-            _selectedVariety = varieties.first;
-            _plantsPerHectareController.text =
-                _selectedVariety!.defaultSeedsPerHectare.toString();
-            _seedsUsedController.text =
-                _selectedVariety!.defaultSeedsPerHectare.toString();
-          }
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Failed to load tobacco varieties: $e';
-        });
-      }
-    }
+    _loadLaborers();
   }
 
   Future<void> _loadFarms() async {
@@ -87,14 +58,21 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     }
   }
 
+  Future<void> _loadLaborers() async {
+    try {
+      final laborers = await _laborerService.getAllLaborers(widget.token!);
+      if (mounted) {
+        setState(() {
+          _allLaborers = laborers;
+        });
+      }
+    } catch (e) {
+      print('Error loading laborers: $e');
+    }
+  }
+
   Future<void> _submitPlantingReport() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedVariety == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a tobacco variety')),
-      );
-      return;
-    }
     if (_selectedFarm == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a farm')),
@@ -111,19 +89,8 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     try {
       final plantingData = {
         'farm_id': _selectedFarm!.id,
-        'tobacco_variety_id': _selectedVariety!.id,
-        'technician_id': widget.technicianId ?? 1,
-        'farm_worker_id': _selectedFarm!.farmWorkers.isNotEmpty
-            ? _selectedFarm!.farmWorkers.first.id
-            : null,
-        'planting_date': DateTime.now().toIso8601String().split('T')[0],
-        'area_planted': double.parse(_areaPlantedController.text),
-        'plants_per_hectare': double.parse(_plantsPerHectareController.text),
-        'seeds_used': int.parse(_seedsUsedController.text),
-        'notes': _notesController.text,
-        'location_address': _selectedFarm!.farmAddress, // Add farm address
-        'status': 'pending',
-        'report_status': 'submitted',
+        'plants_planted': int.parse(_plantsPlantedController.text),
+        'laborer_ids': _selectedLaborers.map((l) => l.id).toList(),
       };
 
       final response = await _plantingService.submitPlantingReport(
@@ -243,11 +210,6 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                               if (mounted) {
                                 setState(() {
                                   _selectedFarm = farm;
-                                  // Auto-fill area planted with farm size
-                                  if (farm != null) {
-                                    _areaPlantedController.text =
-                                        farm.farmSize.toString();
-                                  }
                                 });
                               }
                             },
@@ -264,9 +226,49 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Tobacco Variety Selection
+                    // Farm Workers Info (from selected farm)
+                    if (_selectedFarm != null && _selectedFarm!.farmWorkers.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF27AE60).withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF27AE60).withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.person, color: Color(0xFF27AE60), size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Farm Workers (auto-included)',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF27AE60),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...(_selectedFarm!.farmWorkers.map((fw) => Padding(
+                              padding: const EdgeInsets.only(left: 26, top: 4),
+                              child: Text(
+                                '• ${fw.firstName} ${fw.lastName}',
+                                style: const TextStyle(fontSize: 13, color: Color(0xFF495057)),
+                              ),
+                            ))),
+                          ],
+                        ),
+                      ),
+                    if (_selectedFarm != null && _selectedFarm!.farmWorkers.isNotEmpty)
+                      const SizedBox(height: 20),
+
+                    // Laborers Selection
                     Container(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -283,50 +285,53 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Tobacco Variety',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF2C3E50),
-                            ),
+                          const Row(
+                            children: [
+                              Icon(Icons.people, color: Color(0xFF27AE60), size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Laborers Involved',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12),
-                          DropdownButtonFormField<TobaccoVariety>(
-                            value: _selectedVariety,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
+                          if (_selectedLaborers.isNotEmpty)
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _selectedLaborers.map((laborer) {
+                                return Chip(
+                                  label: Text(
+                                    '${laborer.firstName} ${laborer.lastName}',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  deleteIcon: const Icon(Icons.close, size: 16),
+                                  onDeleted: () {
+                                    setState(() {
+                                      _selectedLaborers.remove(laborer);
+                                    });
+                                  },
+                                  backgroundColor: const Color(0xFF27AE60).withOpacity(0.1),
+                                  deleteIconColor: const Color(0xFF27AE60),
+                                );
+                              }).toList(),
                             ),
-                            hint: const Text('Choose tobacco variety'),
-                            items: _tobaccoVarieties.map((variety) {
-                              return DropdownMenuItem<TobaccoVariety>(
-                                value: variety,
-                                child: Text(variety.varietyName),
-                              );
-                            }).toList(),
-                            onChanged: (TobaccoVariety? variety) {
-                              if (mounted) {
-                                setState(() {
-                                  _selectedVariety = variety;
-                                  if (variety != null) {
-                                    _plantsPerHectareController.text = variety
-                                        .defaultSeedsPerHectare
-                                        .toString();
-                                    _seedsUsedController.text = variety
-                                        .defaultSeedsPerHectare
-                                        .toString();
-                                  }
-                                });
-                              }
-                            },
-                            validator: (value) {
-                              if (value == null) {
-                                return 'Please select a tobacco variety';
-                              }
-                              return null;
-                            },
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: () => _showLaborerPicker(),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: Text(_selectedLaborers.isEmpty
+                                ? 'Add Laborers'
+                                : 'Add More Laborers'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF27AE60),
+                              side: const BorderSide(color: Color(0xFF27AE60)),
+                            ),
                           ),
                         ],
                       ),
@@ -334,7 +339,7 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Planting Details
+                    // Plants Planted
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
@@ -354,7 +359,7 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Planting Details',
+                            'Plants Planted',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -362,36 +367,10 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
-                          // Area Planted
                           TextFormField(
-                            controller: _areaPlantedController,
+                            controller: _plantsPlantedController,
                             decoration: InputDecoration(
-                              labelText: 'Area Planted (hectares)',
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.landscape, color: Color(0xFF27AE60)),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter area planted';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'Please enter a valid number';
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Plants per Hectare
-                          TextFormField(
-                            controller: _plantsPerHectareController,
-                            decoration: InputDecoration(
-                              labelText: 'Plants per Hectare',
+                              labelText: 'Number of Plants Planted',
                               border: const OutlineInputBorder(),
                               prefixIcon: const Icon(Icons.grass, color: Color(0xFF27AE60)),
                               filled: true,
@@ -400,52 +379,13 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                             keyboardType: TextInputType.number,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter plants per hectare';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'Please enter a valid number';
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Seeds Used
-                          TextFormField(
-                            controller: _seedsUsedController,
-                            decoration: InputDecoration(
-                              labelText: 'Seeds Used',
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.eco, color: Color(0xFF27AE60)),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter seeds used';
+                                return 'Please enter number of plants planted';
                               }
                               if (int.tryParse(value) == null) {
                                 return 'Please enter a valid number';
                               }
                               return null;
                             },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Notes
-                          TextFormField(
-                            controller: _notesController,
-                            decoration: InputDecoration(
-                              labelText: 'Notes (Optional)',
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.note, color: Color(0xFF27AE60)),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                            maxLines: 3,
                           ),
                         ],
                       ),
@@ -505,12 +445,66 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     );
   }
 
+  void _showLaborerPicker() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Select Laborers'),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 400,
+                child: _allLaborers.isEmpty
+                    ? const Center(child: Text('No laborers available'))
+                    : ListView.builder(
+                        itemCount: _allLaborers.length,
+                        itemBuilder: (context, index) {
+                          final laborer = _allLaborers[index];
+                          final isSelected = _selectedLaborers.contains(laborer);
+                          return CheckboxListTile(
+                            title: Text(
+                              '${laborer.firstName} ${laborer.lastName}',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            subtitle: laborer.phoneNumber != null
+                                ? Text(laborer.phoneNumber!)
+                                : null,
+                            value: isSelected,
+                            onChanged: (bool? value) {
+                              setDialogState(() {
+                                if (value == true) {
+                                  if (!_selectedLaborers.contains(laborer)) {
+                                    _selectedLaborers.add(laborer);
+                                  }
+                                } else {
+                                  _selectedLaborers.remove(laborer);
+                                }
+                              });
+                              setState(() {}); // Update parent widget
+                            },
+                            activeColor: const Color(0xFF27AE60),
+                          );
+                        },
+                      ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
-    _areaPlantedController.dispose();
-    _plantsPerHectareController.dispose();
-    _seedsUsedController.dispose();
-    _notesController.dispose();
+    _plantsPlantedController.dispose();
     super.dispose();
   }
 }
