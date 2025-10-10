@@ -4,7 +4,6 @@ class Laborer {
   final String middleName;
   final String lastName;
   final String? phoneNumber;
-  final int farmWorkerId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -14,7 +13,6 @@ class Laborer {
     required this.middleName,
     required this.lastName,
     this.phoneNumber,
-    required this.farmWorkerId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -28,7 +26,6 @@ class Laborer {
       middleName: json['middle_name']?.toString() ?? '',
       lastName: json['last_name']?.toString() ?? '',
       phoneNumber: json['phone_number']?.toString(),
-      farmWorkerId: json['farm_worker_id'] as int? ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
@@ -45,7 +42,6 @@ class Laborer {
       'middle_name': middleName,
       'last_name': lastName,
       'phone_number': phoneNumber,
-      'farm_worker_id': farmWorkerId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -53,7 +49,7 @@ class Laborer {
 
   @override
   String toString() {
-    return 'Laborer(id: $id, name: $fullName, farmWorkerId: $farmWorkerId)';
+    return 'Laborer(id: $id, name: $fullName)';
   }
 
   @override

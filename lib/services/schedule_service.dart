@@ -273,7 +273,6 @@ class ScheduleService {
     required String middleName,
     required String lastName,
     String? phoneNumber,
-    required int farmWorkerId,
     String? unit,
     double? budget,
     required String token,
@@ -290,7 +289,6 @@ class ScheduleService {
           'middle_name': middleName,
           'last_name': lastName,
           'phone_number': phoneNumber,
-          'farm_worker_id': farmWorkerId,
           'unit': unit,
           'budget': budget,
         }),
@@ -322,14 +320,13 @@ class ScheduleService {
     }
   }
 
-  // Update completed schedule laborers, unit, budget, and extra
+  // Update completed schedule laborers, unit, and budget
   Future<Map<String, dynamic>> updateCompletedSchedule({
     required int scheduleId,
     List<int>? existingLaborerIds,
     List<Map<String, String?>>? newLaborers,
     String? unit,
     double? budget,
-    Map<String, dynamic>? extra,
     required String token,
   }) async {
     print(
@@ -345,7 +342,6 @@ class ScheduleService {
           'new_laborers': newLaborers,
           'unit': unit,
           'budget': budget,
-          'extra': extra,
         }),
       );
 

@@ -57,8 +57,8 @@ class _LaborerAssignmentDialogState extends State<LaborerAssignmentDialog> {
   Future<void> _loadLaborers() async {
     setState(() => _isLoading = true);
     try {
-      final laborers = await _laborerService.getLaborersByFarmWorker(
-        widget.farmWorkerId,
+      // Fetch ALL laborers since they're now independent workers
+      final laborers = await _laborerService.getAllLaborers(
         widget.token,
       );
       setState(() {
@@ -492,7 +492,7 @@ class _LaborerAssignmentDialogState extends State<LaborerAssignmentDialog> {
         Row(
           children: [
             const Text(
-              'Existing Laborers',
+              'Available Laborers',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -567,7 +567,7 @@ class _LaborerAssignmentDialogState extends State<LaborerAssignmentDialog> {
       return Center(
         child: Text(
           _searchQuery.isEmpty
-              ? 'No laborers available'
+              ? 'No laborers in system. Create new ones below.'
               : 'No laborers found matching "$_searchQuery"',
           style: TextStyle(color: Colors.grey.shade600),
         ),

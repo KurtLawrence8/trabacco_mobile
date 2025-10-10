@@ -6,11 +6,20 @@ import 'package:http/http.dart' as http;
 class ApiConfig {
   // Base URL for the Laravel backend
   static String get baseUrl {
+    // IMPORTANT: Replace 'YOUR_IP_ADDRESS' with your computer's actual IP address
+    // To find your IP:
+    // - Windows: Open CMD and run 'ipconfig' → look for IPv4 Address
+    // - Mac/Linux: Open Terminal and run 'ifconfig' → look for inet address
+    // Example: '192.168.1.100'
+
     final url = kIsWeb
         ? 'http://localhost:8000/api' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'http://10.0.2.2:8000/api' // For Android (10.0.2.2 is localhost)
-            : 'http://localhost:8000/api'; // For iOS and others
+            ? 'http://10.0.2.2:8000/api' // For Android Emulator ONLY
+            : 'http://localhost:8000/api'; // For iOS Simulator and Physical Devices
+
+    // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:
+    // final url = 'http://YOUR_IP_ADDRESS:8000/api'; // Replace YOUR_IP_ADDRESS
 
     print(
       '[API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}',
@@ -30,8 +39,11 @@ class ApiConfig {
     return kIsWeb
         ? 'http://localhost:8000' // For web
         : (!kIsWeb && Platform.isAndroid)
-            ? 'http://10.0.2.2:8000' // For Android (10.0.2.2 is localhost)
-            : 'http://localhost:8000'; // For iOS and others
+            ? 'http://10.0.2.2:8000' // For Android Emulator ONLY
+            : 'http://localhost:8000'; // For iOS Simulator and Physical Devices
+
+    // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:
+    // return 'http://YOUR_IP_ADDRESS:8000'; // Replace YOUR_IP_ADDRESS
   }
 
   // API Endpoints

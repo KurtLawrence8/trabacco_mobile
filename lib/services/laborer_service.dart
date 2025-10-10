@@ -4,12 +4,11 @@ import '../models/laborer.dart';
 import '../config/api_config.dart';
 
 class LaborerService {
-  // Get laborers by farm worker ID (for dropdown)
-  Future<List<Laborer>> getLaborersByFarmWorker(
-      int farmWorkerId, String token) async {
+  // Get all laborers (laborers are now independent workers)
+  Future<List<Laborer>> getAllLaborers(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/farm-workers/$farmWorkerId/laborers'),
+        Uri.parse('${ApiConfig.baseUrl}/laborers'),
         headers: ApiConfig.getHeaders(token: token),
       );
 
@@ -48,7 +47,6 @@ class LaborerService {
     required String middleName,
     required String lastName,
     String? phoneNumber,
-    required int farmWorkerId,
     required String token,
   }) async {
     try {
@@ -60,7 +58,6 @@ class LaborerService {
           'middle_name': middleName,
           'last_name': lastName,
           'phone_number': phoneNumber,
-          'farm_worker_id': farmWorkerId,
         }),
       );
 
@@ -83,7 +80,6 @@ class LaborerService {
 
   // Search laborers by name
   Future<List<Laborer>> searchLaborers({
-    required int farmWorkerId,
     required String searchQuery,
     required String token,
   }) async {
@@ -92,7 +88,6 @@ class LaborerService {
         Uri.parse('${ApiConfig.baseUrl}/laborers/search'),
         headers: ApiConfig.getHeaders(token: token),
         body: json.encode({
-          'farm_worker_id': farmWorkerId,
           'search': searchQuery,
         }),
       );
@@ -120,7 +115,6 @@ class LaborerService {
     required String middleName,
     required String lastName,
     String? phoneNumber,
-    required int farmWorkerId,
     required String token,
   }) async {
     try {
@@ -132,7 +126,6 @@ class LaborerService {
           'middle_name': middleName,
           'last_name': lastName,
           'phone_number': phoneNumber,
-          'farm_worker_id': farmWorkerId,
         }),
       );
 

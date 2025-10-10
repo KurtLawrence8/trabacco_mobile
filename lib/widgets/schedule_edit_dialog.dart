@@ -29,7 +29,6 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
   // Form controllers
   final _unitController = TextEditingController();
   final _budgetController = TextEditingController();
-  final _extraController = TextEditingController();
 
   // State variables
   bool _isLoading = false;
@@ -52,7 +51,6 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
   void dispose() {
     _unitController.dispose();
     _budgetController.dispose();
-    _extraController.dispose();
     super.dispose();
   }
 
@@ -64,7 +62,6 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
       if (laborer is Map<String, dynamic>) {
         _unitController.text = laborer['unit']?.toString() ?? '';
         _budgetController.text = laborer['budget']?.toString() ?? '';
-        _extraController.text = laborer['extra']?.toString() ?? '';
       }
     }
 
@@ -91,7 +88,6 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
                 middleName: middleName,
                 lastName: lastName,
                 phoneNumber: phoneNumber,
-                farmWorkerId: widget.farmWorkerId,
                 createdAt: createdAt != null
                     ? DateTime.tryParse(createdAt) ?? DateTime.now()
                     : DateTime.now(),
@@ -110,8 +106,8 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
   Future<void> _loadLaborers() async {
     setState(() => _isLoading = true);
     try {
-      final laborers = await _laborerService.getLaborersByFarmWorker(
-        widget.farmWorkerId,
+      // Fetch ALL laborers since they're now independent workers
+      final laborers = await _laborerService.getAllLaborers(
         widget.token,
       );
       setState(() {
@@ -205,17 +201,6 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
               })
           .toList();
 
-      // Prepare extra data
-      Map<String, dynamic>? extra;
-      if (_extraController.text.trim().isNotEmpty) {
-        try {
-          extra = {'notes': _extraController.text.trim()};
-        } catch (e) {
-          // If parsing fails, just use the text as is
-          extra = {'notes': _extraController.text.trim()};
-        }
-      }
-
       // Use the update completed schedule API
       final result = await _scheduleService.updateCompletedSchedule(
         scheduleId: widget.schedule.id!,
@@ -228,7 +213,6 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
         budget: _budgetController.text.trim().isEmpty
             ? null
             : double.tryParse(_budgetController.text.trim()),
-        extra: extra,
         token: widget.token,
       );
 
@@ -364,7 +348,7 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'You can modify laborers, unit, budget, and extra information for this completed schedule.',
+                            'You can modify laborers, unit, and budget for this completed schedule.',
                             style: TextStyle(
                               color: Colors.blue.shade700,
                               fontSize: 14,
@@ -386,7 +370,7 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
 
                     const SizedBox(height: 20),
 
-                    // Unit, Budget, and Extra fields
+                    // Unit and Budget fields
                     _buildScheduleDetailsFields(),
 
                     const SizedBox(height: 20),
@@ -715,16 +699,6 @@ class _ScheduleEditDialogState extends State<ScheduleEditDialog> {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _extraController,
-          decoration: const InputDecoration(
-            labelText: 'Extra Notes (Optional)',
-            border: OutlineInputBorder(),
-            hintText: 'Additional information or notes...',
-          ),
-          maxLines: 3,
         ),
       ],
     );

@@ -8,7 +8,7 @@ class Schedule {
   final String? remarks;
   final int? laborerId; // Changed from numLaborers to laborerId (legacy field)
   final List<dynamic>?
-      laborers; // New field for multiple laborers with unit/budget/extra
+      laborers; // New field for multiple laborers with unit/budget
   final String status;
 
   Schedule({
@@ -39,7 +39,7 @@ class Schedule {
       remarks: json['remarks']?.toString(),
       laborerId: json['laborer_id'] as int?,
       laborers: json['laborers']
-          as List<dynamic>?, // Parse new laborers field with unit/budget/extra
+          as List<dynamic>?, // Parse new laborers field with unit/budget
       status: json['status']?.toString() ?? '',
     );
   }
