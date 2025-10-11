@@ -4,14 +4,14 @@ import 'dart:convert';
 class Farm {
   final int id;
   final String farmAddress;
-  final double farmSize;
+  final double area;
   final String? coordinates;
   final List<FarmWorker> farmWorkers;
 
   const Farm({
     required this.id,
     required this.farmAddress,
-    required this.farmSize,
+    required this.area,
     this.coordinates,
     required this.farmWorkers,
   });
@@ -139,7 +139,9 @@ class Farm {
     return Farm(
       id: json['id'] ?? 0,
       farmAddress: json['farm_address'] ?? '',
-      farmSize: double.tryParse(json['farm_size']?.toString() ?? '0') ?? 0.0,
+      area: double.tryParse(
+              (json['area'] ?? json['farm_area'])?.toString() ?? '0') ??
+          0.0,
       coordinates: json['coordinates'],
       farmWorkers: workers,
     );

@@ -130,7 +130,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Size: ${farm.farmSize} ha'),
+                Text('Area: ${farm.area}'),
                 Text(
                   'Workers: ${farm.farmWorkers.map((w) => '${w.firstName} ${w.lastName}').toSet().join(', ')}',
                   style: const TextStyle(fontSize: 12),
@@ -376,16 +376,16 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                     // Size Section
                     _buildDetailRow(
                       icon: Icons.straighten_rounded,
-                      label: 'Farm Size',
-                      value: '${farm.farmSize} hectares',
+                      label: 'Farm Area',
+                      value: '${farm.area}',
                       iconColor: Colors.grey,
                     ),
                     const SizedBox(height: 16),
 
                     // Map Type Indicator
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color:
                             _getMapTypeColor(_currentMapType).withOpacity(0.1),
@@ -441,7 +441,8 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                                   .map((w) => '${w.firstName} ${w.lastName}')
                                   .toSet()
                                   .map((name) => Padding(
-                                        padding: const EdgeInsets.only(bottom: 2),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 2),
                                         child: Text(
                                           '• $name',
                                           style: TextStyle(
@@ -694,7 +695,8 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.location_off, size: 64, color: Colors.grey),
+                        const Icon(Icons.location_off,
+                            size: 64, color: Colors.grey),
                         const SizedBox(height: 16),
                         const Text(
                           'No farms with coordinates found.',
@@ -805,12 +807,14 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                               color: Colors.orange,
                               child: Row(
                                 children: [
-                                  const Icon(Icons.warning, color: Colors.white),
+                                  const Icon(Icons.warning,
+                                      color: Colors.white),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       'Google Maps failed to load: $e',
-                                      style: const TextStyle(color: Colors.white),
+                                      style:
+                                          const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 ],

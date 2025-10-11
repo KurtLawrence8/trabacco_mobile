@@ -22,29 +22,33 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
   // Helper method to construct full image URL
   String _getImageUrl(String imagePath) {
     if (imagePath.isEmpty) return '';
-    
+
     // Sanitize the URL - replace any localhost references
-    String sanitizedPath = imagePath.replaceAll('localhost', 'navajowhite-chinchilla-897972.hostingersite.com');
-    sanitizedPath = sanitizedPath.replaceAll('127.0.0.1', 'navajowhite-chinchilla-897972.hostingersite.com');
+    String sanitizedPath = imagePath.replaceAll(
+        'localhost', 'navajowhite-chinchilla-897972.hostingersite.com');
+    sanitizedPath = sanitizedPath.replaceAll(
+        '127.0.0.1', 'navajowhite-chinchilla-897972.hostingersite.com');
     sanitizedPath = sanitizedPath.replaceAll('http://', 'https://');
-    
+
     // If it's already a full URL, return as is
     if (sanitizedPath.startsWith('http')) {
       print('🌐 [DETAIL SCREEN] Already full URL (sanitized): $sanitizedPath');
       return sanitizedPath;
     }
-    
+
     // Always use the hosting URL, never localhost
     String baseUrl = ApiConfig.imageBaseUrl;
-    
+
     // Remove leading slash if present and clean up the path
-    String cleanPath = sanitizedPath.startsWith('/') ? sanitizedPath.substring(1) : sanitizedPath;
-    
+    String cleanPath = sanitizedPath.startsWith('/')
+        ? sanitizedPath.substring(1)
+        : sanitizedPath;
+
     // Ensure the path starts with storage/
     if (!cleanPath.startsWith('storage/')) {
       cleanPath = 'storage/$cleanPath';
     }
-    
+
     final fullUrl = '$baseUrl/$cleanPath';
     print('🌐 [DETAIL SCREEN] Constructed URL: $fullUrl');
     print('🌐 [DETAIL SCREEN] Original path: $imagePath');
@@ -89,7 +93,8 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
               children: [
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                  icon: const Icon(Icons.arrow_back,
+                      color: Colors.white, size: 24),
                   padding: EdgeInsets.zero,
                 ),
                 const Expanded(
@@ -136,17 +141,20 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                                 color: Color(0xFFE8D5FF),
                                 shape: BoxShape.circle,
                               ),
-                              child: details.profilePicture != null && details.profilePicture!.isNotEmpty
+                              child: details.profilePicture != null &&
+                                      details.profilePicture!.isNotEmpty
                                   ? ClipOval(
                                       child: Image.network(
                                         _getImageUrl(details.profilePicture!),
                                         width: 60,
                                         height: 60,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
                                           return Center(
                                             child: Text(
-                                              details.firstName[0].toUpperCase(),
+                                              details.firstName[0]
+                                                  .toUpperCase(),
                                               style: const TextStyle(
                                                 color: Color(0xFF6B21A8),
                                                 fontSize: 24,
@@ -238,7 +246,8 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                         ],
 
                         // ID Picture Section
-                        if (details.idPicture != null && details.idPicture!.isNotEmpty) ...[
+                        if (details.idPicture != null &&
+                            details.idPicture!.isNotEmpty) ...[
                           const SizedBox(height: 20),
                           _buildIdPictureSection(details.idPicture!),
                         ],
@@ -298,7 +307,8 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                               requestListKey = UniqueKey();
                             });
                           },
-                          icon: const Icon(Icons.refresh, color: Color(0xFF27AE60)),
+                          icon: const Icon(Icons.refresh,
+                              color: Color(0xFF27AE60)),
                           tooltip: 'Refresh requests',
                         ),
                       ],
@@ -410,13 +420,13 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
             iconColor: const Color(0xFF27AE60),
           ),
 
-          // Farm Size
-          if (farm['farm_size'] != null) ...[
+          // Farm Area
+          if (farm['area'] != null || farm['farm_area'] != null) ...[
             const SizedBox(height: 12),
             _buildFarmDetailRow(
               icon: Icons.straighten,
-              label: 'Farm Size',
-              value: '${farm['farm_size'].toString()} hectares',
+              label: 'Farm Area',
+              value: '${(farm['area'] ?? farm['farm_area']).toString()} sqm',
               iconColor: Colors.grey[600]!,
             ),
           ],

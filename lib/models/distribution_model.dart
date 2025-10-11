@@ -47,11 +47,17 @@ class SupplyDistribution {
       dateDistributed: json['date_distributed'] ?? '',
       status: json['status'] ?? '',
       quantity: json['quantity'] ?? 0,
-      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      deletedAt: json['deleted_at'] != null
+          ? _parseDateTime(json['deleted_at'])
+          : null,
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
-      farmWorkerFarm: json['farm_worker_farm'] != null ? FarmWorkerFarm.fromJson(json['farm_worker_farm']) : null,
-      inventory: json['inventory'] != null ? Inventory.fromJson(json['inventory']) : null,
+      farmWorkerFarm: json['farm_worker_farm'] != null
+          ? FarmWorkerFarm.fromJson(json['farm_worker_farm'])
+          : null,
+      inventory: json['inventory'] != null
+          ? Inventory.fromJson(json['inventory'])
+          : null,
     );
   }
 
@@ -121,8 +127,12 @@ class CashDistribution {
       requestId: json['request_id'],
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
-      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
-      farmWorkerFarm: json['farm_worker_farm'] != null ? FarmWorkerFarm.fromJson(json['farm_worker_farm']) : null,
+      deletedAt: json['deleted_at'] != null
+          ? _parseDateTime(json['deleted_at'])
+          : null,
+      farmWorkerFarm: json['farm_worker_farm'] != null
+          ? FarmWorkerFarm.fromJson(json['farm_worker_farm'])
+          : null,
     );
   }
 
@@ -199,11 +209,15 @@ class FarmWorkerFarm {
       farmId: json['farm_id'] ?? 0,
       dateAssigned: json['date_assigned'] ?? '',
       status: json['status'] ?? '',
-      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      deletedAt: json['deleted_at'] != null
+          ? _parseDateTime(json['deleted_at'])
+          : null,
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
       farm: json['farm'] != null ? Farm.fromJson(json['farm']) : null,
-      farmWorker: json['farm_worker'] != null ? FarmWorker.fromJson(json['farm_worker']) : null,
+      farmWorker: json['farm_worker'] != null
+          ? FarmWorker.fromJson(json['farm_worker'])
+          : null,
     );
   }
 
@@ -225,7 +239,7 @@ class FarmWorkerFarm {
 
 class Farm {
   final int id;
-  final String farmSize;
+  final String area;
   final String farmAddress;
   final String coordinates;
   final DateTime? deletedAt;
@@ -234,7 +248,7 @@ class Farm {
 
   Farm({
     required this.id,
-    required this.farmSize,
+    required this.area,
     required this.farmAddress,
     required this.coordinates,
     this.deletedAt,
@@ -259,10 +273,12 @@ class Farm {
   factory Farm.fromJson(Map<String, dynamic> json) {
     return Farm(
       id: json['id'] ?? 0,
-      farmSize: json['farm_size'] ?? '',
+      area: (json['area'] ?? json['farm_area'] ?? '').toString(),
       farmAddress: json['farm_address'] ?? '',
       coordinates: json['coordinates'] ?? '',
-      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      deletedAt: json['deleted_at'] != null
+          ? _parseDateTime(json['deleted_at'])
+          : null,
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
     );
@@ -271,7 +287,7 @@ class Farm {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'farm_size': farmSize,
+      'area': area,
       'farm_address': farmAddress,
       'coordinates': coordinates,
       'deleted_at': deletedAt?.toIso8601String(),
@@ -335,7 +351,9 @@ class Inventory {
       dateOrdered: json['date_ordered'] ?? '',
       dateDelivered: json['date_delivered'] ?? '',
       availability: json['availability'] ?? '',
-      deletedAt: json['deleted_at'] != null ? _parseDateTime(json['deleted_at']) : null,
+      deletedAt: json['deleted_at'] != null
+          ? _parseDateTime(json['deleted_at'])
+          : null,
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
     );

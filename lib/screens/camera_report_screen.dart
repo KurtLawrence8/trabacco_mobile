@@ -631,7 +631,7 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Farm Size: ${_detectedFarm!.farmSize.toStringAsFixed(1)} hectares',
+                        'Farm Area: ${_detectedFarm!.area.toStringAsFixed(1)}',
                         style:
                             const TextStyle(color: Colors.white, fontSize: 12),
                       ),
@@ -1458,7 +1458,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                                     color: Colors.black, size: 16),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Farm Size: ${widget.detectedFarm!.farmSize.toStringAsFixed(1)} hectares',
+                                  'Farm Area: ${widget.detectedFarm!.area.toStringAsFixed(1)}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF6C757D),
@@ -1630,7 +1630,8 @@ class _ReportFormModalState extends State<ReportFormModal> {
                             contentPadding: const EdgeInsets.all(16),
                           ),
                           items: const [
-                            DropdownMenuItem(value: 'None', child: Text('None')),
+                            DropdownMenuItem(
+                                value: 'None', child: Text('None')),
                             DropdownMenuItem(value: 'Yes', child: Text('Yes')),
                           ],
                           onChanged: (value) {
@@ -1663,7 +1664,8 @@ class _ReportFormModalState extends State<ReportFormModal> {
                               ),
                               Text(
                                 ' *',
-                                style: TextStyle(color: Colors.red, fontSize: 14),
+                                style:
+                                    TextStyle(color: Colors.red, fontSize: 14),
                               ),
                             ],
                           ),
@@ -1671,7 +1673,8 @@ class _ReportFormModalState extends State<ReportFormModal> {
                           TextFormField(
                             controller: _diseaseTypeController,
                             decoration: InputDecoration(
-                              hintText: 'Specify the type of disease detected...',
+                              hintText:
+                                  'Specify the type of disease detected...',
                               hintStyle: const TextStyle(fontSize: 14),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
