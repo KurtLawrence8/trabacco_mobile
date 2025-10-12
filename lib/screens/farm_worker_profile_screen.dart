@@ -125,7 +125,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
     try {
       final token = await AuthService().getToken();
       print('Token available: ${token != null}');
-      print('Farm Worker ID: ${widget.farmWorkerId}');
+      print('Farmer ID: ${widget.farmWorkerId}');
       print('API Base URL: ${ApiConfig.baseUrl}');
 
       if (token != null) {
@@ -162,11 +162,11 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Failed to load farm worker data - No token available')),
+              content: Text('Failed to load Farmer data - No token available')),
         );
       }
     } catch (e) {
-      print('Error loading farm worker data: $e');
+      print('Error loading Farmer data: $e');
       print('Error type: ${e.runtimeType}');
       print('Error details: ${e.toString()}');
       
@@ -175,7 +175,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
         _farmWorker = FarmWorkerProfile(
           id: widget.farmWorkerId,
           firstName: 'Sample',
-          lastName: 'Farm Worker',
+          lastName: 'Farmer',
           middleName: 'M.',
           birthDate: DateTime(1990, 1, 1),
           sex: 'Male',
@@ -276,7 +276,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
               ));
             }
             
-            print('Uploading farm worker profile with images to: $url');
+            print('Uploading Farmer profile with images to: $url');
             print('Fields: ${request.fields}');
             print('Files: ${request.files.length}');
             
@@ -288,7 +288,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
             
             if (response.statusCode == 200 || response.statusCode == 201) {
               json.decode(response.body);
-              print('Farm worker profile updated with images successfully');
+              print('Farmer profile updated with images successfully');
               
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -311,7 +311,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                 _editing = false;
               });
               
-              print('Farm worker profile images cleared and data reloaded');
+              print('Farmer profile images cleared and data reloaded');
               print('Profile picture URL: ${_farmWorker?.profilePicture}');
               print('ID picture URL: ${_farmWorker?.idPicture}');
               return; // Exit early since we handled the update
@@ -322,7 +322,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
               throw Exception(errorMessage);
             }
           } catch (e) {
-            print('Error uploading farm worker profile with images: $e');
+            print('Error uploading Farmer profile with images: $e');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Failed to upload images: ${e.toString()}'),
@@ -519,7 +519,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No farm worker data available',
+                'No Farmer data available',
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.grey[600],
@@ -632,7 +632,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                       ),
                     ),
                     Text(
-                      'Farm Worker',
+                      'Farmer',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,

@@ -20,7 +20,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
   void initState() {
     super.initState();
     print(
-        'RequestListWidget: Initializing for farm worker ID: ${widget.farmWorkerId}');
+        'RequestListWidget: Initializing for Farmer ID: ${widget.farmWorkerId}');
     print('RequestListWidget: Token length: ${widget.token.length}');
     _requestsFuture = RequestService()
         .getRequestsForFarmWorker(widget.token, widget.farmWorkerId);

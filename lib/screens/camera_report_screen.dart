@@ -638,7 +638,7 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
                       if (_detectedFarm!.farmWorkers.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Farm Workers: ${_detectedFarm!.farmWorkers.map((w) => '${w.firstName} ${w.lastName}').join(', ')}',
+                          'Farmers: ${_detectedFarm!.farmWorkers.map((w) => '${w.firstName} ${w.lastName}').join(', ')}',
                           style: const TextStyle(
                               color: Colors.white, fontSize: 12),
                         ),
@@ -1443,7 +1443,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
                                     color: Colors.black, size: 16),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Farm Workers: ${widget.detectedFarm!.farmWorkers.map((w) => '${w.firstName} ${w.lastName}').join(', ')}',
+                                  'Farmers: ${widget.detectedFarm!.farmWorkers.map((w) => '${w.firstName} ${w.lastName}').join(', ')}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF6C757D),

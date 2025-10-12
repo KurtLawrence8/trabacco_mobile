@@ -282,7 +282,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                           Icon(Icons.person, color: Color(0xFF27AE60), size: 18),
                           SizedBox(width: 8),
                           Text(
-                            'Farm Workers (auto-included)',
+                            'Farmers (auto-included)',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

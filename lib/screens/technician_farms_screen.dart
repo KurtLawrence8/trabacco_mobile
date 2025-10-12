@@ -429,7 +429,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Farm Workers',
+                                'Farmers',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,

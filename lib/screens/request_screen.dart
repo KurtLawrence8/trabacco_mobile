@@ -148,8 +148,8 @@ class _RequestScreenState extends State<RequestScreen> {
     } catch (e) {
       String errorMsg = e.toString();
       if (errorMsg.contains(
-          'Only one request per technician per farm worker per day')) {
-        errorMsg = 'You can only submit one request per farm worker per day.';
+          'Only one request per technician per Farmer per day')) {
+        errorMsg = 'You can only submit one request per Farmer per day.';
       } else if (errorMsg.contains('Not enough inventory')) {
         errorMsg = 'Not enough inventory for this supply.';
       }

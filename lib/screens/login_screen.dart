@@ -393,7 +393,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   DropdownMenuItem(
                                     value: "farm_worker",
                                     child: Text(
-                                      "Farm Worker",
+                                      "Farmer",
                                       style: TextStyle(
                                         color: Color(0xFF333333),
                                         fontSize: 16,

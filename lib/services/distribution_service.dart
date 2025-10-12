@@ -8,7 +8,7 @@ class DistributionService {
     try {
       final url = '${ApiConfig.getUrl(ApiConfig.supplyDistribution)}?farm_worker_id=$farmWorkerId';
       print('[DistributionService] Fetching supply distributions from: $url');
-      print('[DistributionService] Farm Worker ID: $farmWorkerId');
+      print('[DistributionService] Farmer ID: $farmWorkerId');
       
       final response = await http.get(
         Uri.parse(url),
@@ -39,7 +39,7 @@ class DistributionService {
     try {
       final url = '${ApiConfig.getUrl(ApiConfig.cashDistribution)}?farm_worker_id=$farmWorkerId';
       print('[DistributionService] Fetching cash distributions from: $url');
-      print('[DistributionService] Farm Worker ID: $farmWorkerId');
+      print('[DistributionService] Farmer ID: $farmWorkerId');
       
       final response = await http.get(
         Uri.parse(url),

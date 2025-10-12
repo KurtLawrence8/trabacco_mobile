@@ -116,7 +116,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Hi Farm Worker!',
+                        const Text('Hi Farmer!',
                             style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -489,7 +489,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         farmWorkerName: _user!.name,
       );
     } else {
-      return const Center(child: Text('Please log in as a valid farm worker.'));
+      return const Center(child: Text('Please log in as a valid Farmer.'));
     }
   }
 

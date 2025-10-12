@@ -248,7 +248,7 @@ class FarmWorkerService {
     } else {
       print('Status: ${response.statusCode}');
       print('Body: ${response.body}');
-      throw Exception('Failed to load farm workers');
+      throw Exception('Failed to load Farmers');
     }
   }
 }
@@ -279,8 +279,8 @@ class FarmWorkerProfileService {
       String token, int farmWorkerId) async {
     try {
       final url = ApiConfig.getUrl('/farm-workers/$farmWorkerId');
-      print('Fetching farm worker profile from: $url');
-      print('Using farm worker ID: $farmWorkerId');
+      print('Fetching Farmer profile from: $url');
+      print('Using Farmer ID: $farmWorkerId');
       print('Token length: ${token.length}');
 
       final response = await http.get(
@@ -306,19 +306,19 @@ class FarmWorkerProfileService {
 
         return FarmWorkerProfile.fromJson(farmWorkerData);
       } else if (response.statusCode == 404) {
-        throw Exception('Farm worker not found (404) - Endpoint may not exist');
+        throw Exception('Farmer not found (404) - Endpoint may not exist');
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized (401) - Check token');
       } else if (response.statusCode == 403) {
         throw Exception('Forbidden (403) - Check permissions');
       } else {
         throw Exception(
-            'Failed to load farm worker profile: ${response.statusCode} - ${response.body}');
+            'Failed to load Farmer profile: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error in getFarmWorkerProfile: $e');
       print('Error stack trace: ${StackTrace.current}');
-      throw Exception('Failed to load farm worker profile: $e');
+      throw Exception('Failed to load Farmer profile: $e');
     }
   }
 
@@ -327,7 +327,7 @@ class FarmWorkerProfileService {
       String token, int farmWorkerId, Map<String, dynamic> updateData) async {
     try {
       final url = ApiConfig.getUrl('/farm-workers/$farmWorkerId');
-      print('Updating farm worker profile at: $url');
+      print('Updating Farmer profile at: $url');
 
       // Clean and validate the update data
       final cleanedData = <String, dynamic>{};
@@ -366,17 +366,17 @@ class FarmWorkerProfileService {
         throw Exception(
             'Validation error: ${errorData['message'] ?? 'Invalid data'}');
       } else if (response.statusCode == 404) {
-        throw Exception('Farm worker not found (404)');
+        throw Exception('Farmer not found (404)');
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized (401) - Check token');
       } else {
         throw Exception(
-            'Failed to update farm worker profile: ${response.statusCode} - ${response.body}');
+            'Failed to update Farmer profile: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error in updateFarmWorkerProfile: $e');
       print('Error stack trace: ${StackTrace.current}');
-      throw Exception('Failed to update farm worker profile: $e');
+      throw Exception('Failed to update Farmer profile: $e');
     }
   }
 
@@ -460,7 +460,7 @@ class RequestService {
       String token, int farmWorkerId) async {
     final url = ApiConfig.getUrl('/requests?farm_worker_id=$farmWorkerId');
     print('RequestService: Fetching requests from: $url');
-    print('RequestService: Farm worker ID: $farmWorkerId');
+    print('RequestService: Farmer ID: $farmWorkerId');
     print('RequestService: Token length: ${token.length}');
 
     final response = await http.get(Uri.parse(url),
@@ -504,7 +504,7 @@ class RequestService {
             .toList();
 
         print(
-            'RequestService: Filtered to ${filteredRequests.length} requests for farm worker $farmWorkerId');
+            'RequestService: Filtered to ${filteredRequests.length} requests for Farmer $farmWorkerId');
 
         // Log any requests that were filtered out
         final otherRequests = allRequests
@@ -513,10 +513,10 @@ class RequestService {
 
         if (otherRequests.isNotEmpty) {
           print(
-              'RequestService: WARNING - Found ${otherRequests.length} requests for other farm workers:');
+              'RequestService: WARNING - Found ${otherRequests.length} requests for other Farmers:');
           for (var req in otherRequests) {
             print(
-                'RequestService: - Request ID ${req.id} belongs to farm worker ${req.farmWorkerId}');
+                'RequestService: - Request ID ${req.id} belongs to Farmer ${req.farmWorkerId}');
           }
         }
 

@@ -32,7 +32,7 @@ class SidebarMenu extends StatelessWidget {
         ),
         _SidebarItem(
           icon: Icons.emoji_people,
-          label: "Farm Worker",
+          label: "Farmer",
           isActive: selectedIndex == 0,
           activeColor: activeColor,
           activeBg: activeBg,

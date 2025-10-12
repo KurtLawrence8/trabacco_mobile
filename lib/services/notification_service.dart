@@ -141,7 +141,7 @@ class NotificationService {
         List<Notification> notifications = jsonList.map((json) => Notification.fromJson(json)).toList();
         
         print('🔔 [MOBILE] Total notifications before filtering: ${notifications.length}');
-        print('🔔 [MOBILE] Filtering for technician ID: $technicianId, farm worker ID: $farmWorkerId');
+        print('🔔 [MOBILE] Filtering for technician ID: $technicianId, Farmer ID: $farmWorkerId');
         
         // Filter notifications for the specific user if ID is provided
         if (technicianId != null || farmWorkerId != null) {
@@ -175,7 +175,7 @@ class NotificationService {
             else if (notification.recipientType.toLowerCase() == 'farm_worker' && 
                 farmWorkerId != null && notification.recipientId == farmWorkerId) {
               shouldInclude = true;
-              print('  ✅ Included: Direct farm worker notification');
+              print('  ✅ Included: Direct Farmer notification');
             }
             // Check if it's a broadcast notification
             else if (notification.recipientType.toLowerCase() == 'all') {
@@ -190,7 +190,7 @@ class NotificationService {
             // Check if the data field contains this farm worker's ID
             else if (farmWorkerId != null && dataFarmWorkerId == farmWorkerId) {
               shouldInclude = true;
-              print('  ✅ Included: Notification data contains farm worker ID');
+              print('  ✅ Included: Notification data contains Farmer ID');
             }
             // Check if the data field contains this technician's ID
             else if (technicianId != null && dataTechnicianId == technicianId) {

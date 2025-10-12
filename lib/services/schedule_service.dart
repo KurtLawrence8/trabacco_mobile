@@ -49,7 +49,7 @@ class ScheduleService {
   Future<List<Schedule>> fetchSchedulesForFarmWorker(
       int farmWorkerId, String token) async {
     print(
-        '[ScheduleService] [fetchSchedulesForFarmWorker] Starting fetch for farm worker ID: $farmWorkerId');
+        '[ScheduleService] [fetchSchedulesForFarmWorker] Starting fetch for Farmer ID: $farmWorkerId');
     print(
         '[ScheduleService] [fetchSchedulesForFarmWorker] Using token: $token');
     print(
@@ -135,7 +135,7 @@ class ScheduleService {
       } else if (response.statusCode == 404) {
         print(
             '[ScheduleService] [fetchSchedulesForFarmWorker] ERROR: Not Found (404)');
-        throw Exception('Farm worker or schedules not found.');
+        throw Exception('Farmer or schedules not found.');
       } else if (response.statusCode >= 500) {
         print(
             '[ScheduleService] [fetchSchedulesForFarmWorker] ERROR: Server error (${response.statusCode})');
@@ -146,7 +146,7 @@ class ScheduleService {
         print(
             '[ScheduleService] [fetchSchedulesForFarmWorker] Error response body: ${response.body}');
         throw Exception(
-            'Failed to load schedules for farm worker. Status code: ${response.statusCode}. Body: ${response.body}');
+            'Failed to load schedules for Farmer. Status code: ${response.statusCode}. Body: ${response.body}');
       }
     } catch (e) {
       print('[ScheduleService] [fetchSchedulesForFarmWorker] EXCEPTION: $e');

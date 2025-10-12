@@ -99,7 +99,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                 ),
                 const Expanded(
                   child: Text(
-                    'Farm Worker Details',
+                    'Farmer Details',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 18,

@@ -43,9 +43,9 @@ class _SchedulePageState extends State<SchedulePage> {
     super.initState();
     print('[SchedulePage] [initState] Initializing SchedulePage');
     print('[SchedulePage] [initState] User type: ${widget.userType}');
-    print('[SchedulePage] [initState] Farm worker ID: ${widget.farmWorkerId}');
+    print('[SchedulePage] [initState] Farmer ID: ${widget.farmWorkerId}');
     print(
-        '[SchedulePage] [initState] Farm worker name: ${widget.farmWorkerName}');
+        '[SchedulePage] [initState] Farmer name: ${widget.farmWorkerName}');
     print('[SchedulePage] [initState] Token: ${widget.token}');
 
     _focusedDay = DateTime.now();
@@ -54,12 +54,12 @@ class _SchedulePageState extends State<SchedulePage> {
 
     if (widget.farmWorkerId != 0) {
       print(
-          '[SchedulePage] [initState] Fetching schedules for farm worker ID: ${widget.farmWorkerId}');
+          '[SchedulePage] [initState] Fetching schedules for Farmer ID: ${widget.farmWorkerId}');
       _futureSchedules = _service.fetchSchedulesForFarmWorker(
           widget.farmWorkerId, widget.token);
     } else {
       print(
-          '[SchedulePage] [initState] No farm worker ID provided, skipping schedule fetch');
+          '[SchedulePage] [initState] No Farmer ID provided, skipping schedule fetch');
     }
   }
 
@@ -238,7 +238,7 @@ class _SchedulePageState extends State<SchedulePage> {
       // GET TODAY'S DATE
       final todayDate = DateTime.now();
       print('[SchedulePage] [build] Building SchedulePage UI');
-      print('[SchedulePage] [build] Farm worker ID: ${widget.farmWorkerId}');
+      print('[SchedulePage] [build] Farmer ID: ${widget.farmWorkerId}');
       print('[SchedulePage] [build] Today\'s date: $todayDate');
 
       return GestureDetector(
@@ -266,7 +266,7 @@ class _SchedulePageState extends State<SchedulePage> {
           body: SingleChildScrollView(
             child: widget.farmWorkerId == 0
                 ? _buildEmptyState(
-                    'Please select a farm worker to view schedules')
+                    'Please select a Farmer to view schedules')
                 : FutureBuilder<List<Schedule>>(
                     future: _futureSchedules,
                     builder: (context, snapshot) {
@@ -397,7 +397,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         print(
                             '[SchedulePage] [build] First valid schedule ID: ${validSchedules.first.id} (type: ${validSchedules.first.id.runtimeType})');
                         print(
-                            '[SchedulePage] [build] First valid schedule farm worker ID: ${validSchedules.first.farmWorkerId} (type: ${validSchedules.first.farmWorkerId.runtimeType})');
+                            '[SchedulePage] [build] First valid schedule Farmer ID: ${validSchedules.first.farmWorkerId} (type: ${validSchedules.first.farmWorkerId.runtimeType})');
                       }
 
                       // Group valid schedules by their calendar date

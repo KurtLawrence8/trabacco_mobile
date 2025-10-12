@@ -285,8 +285,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 // ====================================================
                 _buildQuickActionCard(
                   icon: Icons.people_alt_rounded,
-                  title: 'Assigned Farm workers',
-                  subtitle: 'List of assigned farm workers',
+                  title: 'Assigned Farmers',
+                  subtitle: 'List of assigned Farmers',
                   color: const Color(0xFF6366F1), // Indigo
                   onTap: () {
                     Navigator.push(
@@ -324,7 +324,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                 _buildQuickActionCard(
                   icon: Icons.send_rounded,
                   title: 'Request Submission',
-                  subtitle: 'Submit farm worker request',
+                  subtitle: 'Submit Farmer request',
                   color: const Color(0xFFF59E0B), // Amber
                   onTap: () {
                     Navigator.push(
@@ -723,7 +723,7 @@ class AllFarmWorkerSchedulesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('All Farm Worker Schedules')),
+      appBar: AppBar(title: const Text('All Farmer Schedules')),
       body: ListView.builder(
         itemCount: farmWorkers.length,
         itemBuilder: (context, index) {
@@ -920,7 +920,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            hintText: 'Search Farm Worker',
+                            hintText: 'Search Farmer',
                             hintStyle: TextStyle(
                                 color: Colors.grey[500], fontSize: 16),
                             prefixIcon: Icon(Icons.search,
@@ -1004,7 +1004,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                             Text(
                               farmWorkers.isEmpty
                                   ? widget.emptyStateTitle
-                                  : 'No farm workers found',
+                                  : 'No Farmers found',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -1355,11 +1355,11 @@ class AssignedFarmWorkersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FarmWorkerListWidget(
-      title: 'Assigned Farm Workers',
+      title: 'Assigned Farmers',
       token: token,
       technicianId: technicianId,
-      emptyStateTitle: 'No assigned farm workers',
-      emptyStateSubtitle: 'Farm workers will appear here when assigned',
+      emptyStateTitle: 'No assigned Farmers',
+      emptyStateSubtitle: 'Farmers will appear here when assigned',
       emptyStateIcon: Icons.people_outline,
       actionButtons: (fw) => [
         SizedBox(
@@ -1450,8 +1450,8 @@ class TransplantingSchedulesScreen extends StatelessWidget {
       title: 'Transplanting Schedules',
       token: token,
       technicianId: technicianId,
-      emptyStateTitle: 'No farm workers assigned',
-      emptyStateSubtitle: 'Farm workers will appear here when assigned',
+      emptyStateTitle: 'No Farmers assigned',
+      emptyStateSubtitle: 'Farmers will appear here when assigned',
       emptyStateIcon: Icons.calendar_today_outlined,
       actionButtons: (fw) => [
         SizedBox(
@@ -1511,8 +1511,8 @@ class RequestSubmissionScreen extends StatelessWidget {
       title: 'Request Submission',
       token: token,
       technicianId: technicianId,
-      emptyStateTitle: 'No farm workers assigned',
-      emptyStateSubtitle: 'Farm workers will appear here when assigned',
+      emptyStateTitle: 'No Farmers assigned',
+      emptyStateSubtitle: 'Farmers will appear here when assigned',
       emptyStateIcon: Icons.message_outlined,
       actionButtons: (fw) => [
         SizedBox(
