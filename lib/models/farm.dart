@@ -4,6 +4,7 @@ import 'dart:convert';
 class Farm {
   final int id;
   final String farmAddress;
+  final String? name;
   final double area;
   final String? coordinates;
   final List<FarmWorker> farmWorkers;
@@ -11,6 +12,7 @@ class Farm {
   const Farm({
     required this.id,
     required this.farmAddress,
+    this.name,
     required this.area,
     this.coordinates,
     required this.farmWorkers,
@@ -139,6 +141,7 @@ class Farm {
     return Farm(
       id: json['id'] ?? 0,
       farmAddress: json['farm_address'] ?? '',
+      name: json['name'],
       area: double.tryParse(
               (json['area'] ?? json['farm_area'])?.toString() ?? '0') ??
           0.0,

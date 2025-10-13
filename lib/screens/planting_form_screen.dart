@@ -198,7 +198,7 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                                 child: Container(
                                   width: double.infinity,
                                   child: Text(
-                                    'Farm #${farm.id} - ${farm.farmAddress}',
+                                    '${farm.farmAddress}${farm.name != null && farm.name!.isNotEmpty ? " - ${farm.name}" : ""}',
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 2,
                                     style: const TextStyle(fontSize: 14),
@@ -227,20 +227,23 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                     const SizedBox(height: 20),
 
                     // Farm Workers Info (from selected farm)
-                    if (_selectedFarm != null && _selectedFarm!.farmWorkers.isNotEmpty)
+                    if (_selectedFarm != null &&
+                        _selectedFarm!.farmWorkers.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: const Color(0xFF27AE60).withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF27AE60).withOpacity(0.3)),
+                          border: Border.all(
+                              color: const Color(0xFF27AE60).withOpacity(0.3)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Row(
                               children: [
-                                Icon(Icons.person, color: Color(0xFF27AE60), size: 18),
+                                Icon(Icons.person,
+                                    color: Color(0xFF27AE60), size: 18),
                                 SizedBox(width: 8),
                                 Text(
                                   'Farmers (auto-included)',
@@ -254,16 +257,19 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                             ),
                             const SizedBox(height: 8),
                             ...(_selectedFarm!.farmWorkers.map((fw) => Padding(
-                              padding: const EdgeInsets.only(left: 26, top: 4),
-                              child: Text(
-                                '• ${fw.firstName} ${fw.lastName}',
-                                style: const TextStyle(fontSize: 13, color: Color(0xFF495057)),
-                              ),
-                            ))),
+                                  padding:
+                                      const EdgeInsets.only(left: 26, top: 4),
+                                  child: Text(
+                                    '• ${fw.firstName} ${fw.lastName}',
+                                    style: const TextStyle(
+                                        fontSize: 13, color: Color(0xFF495057)),
+                                  ),
+                                ))),
                           ],
                         ),
                       ),
-                    if (_selectedFarm != null && _selectedFarm!.farmWorkers.isNotEmpty)
+                    if (_selectedFarm != null &&
+                        _selectedFarm!.farmWorkers.isNotEmpty)
                       const SizedBox(height: 20),
 
                     // Laborers Selection
@@ -287,7 +293,8 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                         children: [
                           const Row(
                             children: [
-                              Icon(Icons.people, color: Color(0xFF27AE60), size: 20),
+                              Icon(Icons.people,
+                                  color: Color(0xFF27AE60), size: 20),
                               SizedBox(width: 8),
                               Text(
                                 'Laborers Involved',
@@ -316,7 +323,8 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                                       _selectedLaborers.remove(laborer);
                                     });
                                   },
-                                  backgroundColor: const Color(0xFF27AE60).withOpacity(0.1),
+                                  backgroundColor:
+                                      const Color(0xFF27AE60).withOpacity(0.1),
                                   deleteIconColor: const Color(0xFF27AE60),
                                 );
                               }).toList(),
@@ -372,7 +380,8 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                             decoration: InputDecoration(
                               labelText: 'Number of Plants Planted',
                               border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.grass, color: Color(0xFF27AE60)),
+                              prefixIcon: const Icon(Icons.grass,
+                                  color: Color(0xFF27AE60)),
                               filled: true,
                               fillColor: Colors.white,
                             ),
@@ -462,7 +471,8 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                         itemCount: _allLaborers.length,
                         itemBuilder: (context, index) {
                           final laborer = _allLaborers[index];
-                          final isSelected = _selectedLaborers.contains(laborer);
+                          final isSelected =
+                              _selectedLaborers.contains(laborer);
                           return CheckboxListTile(
                             title: Text(
                               '${laborer.firstName} ${laborer.lastName}',

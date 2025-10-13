@@ -35,7 +35,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
   final _farmService = FarmService();
   final _laborerService = LaborerService();
   final _imagePicker = ImagePicker();
-  
+
   bool _isLoading = false;
   bool _isLocationLoading = false;
   Position? _currentPosition;
@@ -58,18 +58,18 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
     super.initState();
     _loadFarms();
     _loadLaborers();
-    
+
     // If initial data is provided from camera, use it
     if (widget.initialPhoto != null) {
       _photos.add(widget.initialPhoto!);
     }
-    
+
     if (widget.initialPosition != null) {
       _currentPosition = widget.initialPosition;
     } else {
       _getCurrentLocation();
     }
-    
+
     if (widget.detectedFarm != null) {
       _selectedFarm = widget.detectedFarm;
     }
@@ -199,7 +199,8 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                         itemCount: _allLaborers.length,
                         itemBuilder: (context, index) {
                           final laborer = _allLaborers[index];
-                          final isSelected = _selectedLaborers.contains(laborer);
+                          final isSelected =
+                              _selectedLaborers.contains(laborer);
                           return CheckboxListTile(
                             title: Text(
                               '${laborer.firstName} ${laborer.lastName}',
@@ -250,7 +251,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
 
   Future<void> _submitReport() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (_selectedFarm == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a farm')),
@@ -273,7 +274,8 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
       final report = {
         'technician_id': widget.technicianId ?? 1,
         'farm_id': _selectedFarm!.id,
-        'farm_worker_ids': _selectedFarm!.farmWorkers.map((fw) => fw.id).toList(),
+        'farm_worker_ids':
+            _selectedFarm!.farmWorkers.map((fw) => fw.id).toList(),
         'laborer_ids': _selectedLaborers.map((l) => l.id).toList(),
         'accomplishments': _accomplishmentsController.text,
         'issues_observed': _issuesController.text,
@@ -382,7 +384,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                         return DropdownMenuItem<Farm>(
                           value: farm,
                           child: Text(
-                            'Farm #${farm.id} - ${farm.farmAddress}',
+                            '${farm.farmAddress}${farm.name != null && farm.name!.isNotEmpty ? " - ${farm.name}" : ""}',
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 14),
                           ),
@@ -406,20 +408,23 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
               const SizedBox(height: 20),
 
               // Farm Workers Info (from selected farm)
-              if (_selectedFarm != null && _selectedFarm!.farmWorkers.isNotEmpty)
+              if (_selectedFarm != null &&
+                  _selectedFarm!.farmWorkers.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFF27AE60).withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF27AE60).withOpacity(0.3)),
+                    border: Border.all(
+                        color: const Color(0xFF27AE60).withOpacity(0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.person, color: Color(0xFF27AE60), size: 18),
+                          Icon(Icons.person,
+                              color: Color(0xFF27AE60), size: 18),
                           SizedBox(width: 8),
                           Text(
                             'Farmers (auto-included)',
@@ -433,16 +438,18 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                       ),
                       const SizedBox(height: 8),
                       ...(_selectedFarm!.farmWorkers.map((fw) => Padding(
-                        padding: const EdgeInsets.only(left: 26, top: 4),
-                        child: Text(
-                          '• ${fw.firstName} ${fw.lastName}',
-                          style: const TextStyle(fontSize: 13, color: Color(0xFF495057)),
-                        ),
-                      ))),
+                            padding: const EdgeInsets.only(left: 26, top: 4),
+                            child: Text(
+                              '• ${fw.firstName} ${fw.lastName}',
+                              style: const TextStyle(
+                                  fontSize: 13, color: Color(0xFF495057)),
+                            ),
+                          ))),
                     ],
                   ),
                 ),
-              if (_selectedFarm != null && _selectedFarm!.farmWorkers.isNotEmpty)
+              if (_selectedFarm != null &&
+                  _selectedFarm!.farmWorkers.isNotEmpty)
                 const SizedBox(height: 20),
 
               // Location Info
@@ -476,7 +483,8 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on, color: Colors.green, size: 20),
+                      const Icon(Icons.location_on,
+                          color: Colors.green, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -580,8 +588,8 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8),
-                                  border:
-                                      Border.all(color: const Color(0xFFE9ECEF)),
+                                  border: Border.all(
+                                      color: const Color(0xFFE9ECEF)),
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
@@ -709,7 +717,8 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                                 _selectedLaborers.remove(laborer);
                               });
                             },
-                            backgroundColor: const Color(0xFF27AE60).withOpacity(0.1),
+                            backgroundColor:
+                                const Color(0xFF27AE60).withOpacity(0.1),
                             deleteIconColor: const Color(0xFF27AE60),
                           );
                         }).toList(),
