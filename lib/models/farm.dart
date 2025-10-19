@@ -8,6 +8,9 @@ class Farm {
   final double area;
   final String? coordinates;
   final List<FarmWorker> farmWorkers;
+  final String? siteNumber;
+  final String? farmerNumber;
+  final String? dataSource;
 
   const Farm({
     required this.id,
@@ -16,6 +19,9 @@ class Farm {
     required this.area,
     this.coordinates,
     required this.farmWorkers,
+    this.siteNumber,
+    this.farmerNumber,
+    this.dataSource,
   });
 
   /// Parse coordinates for center point
@@ -147,6 +153,9 @@ class Farm {
           0.0,
       coordinates: json['coordinates'],
       farmWorkers: workers,
+      siteNumber: json['site_number']?.toString(),
+      farmerNumber: json['farmer_number']?.toString(),
+      dataSource: json['data_source']?.toString(),
     );
   }
 
