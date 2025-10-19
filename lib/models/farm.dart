@@ -175,12 +175,16 @@ class FarmWorker {
   final int id;
   final String firstName;
   final String lastName;
+  final String? phoneNumber;
+  final String? address;
   final Technician? technician;
 
   const FarmWorker({
     required this.id,
     required this.firstName,
     required this.lastName,
+    this.phoneNumber,
+    this.address,
     this.technician,
   });
 
@@ -189,6 +193,8 @@ class FarmWorker {
       id: json['id'] ?? 0,
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
+      phoneNumber: json['phone_number'],
+      address: json['address'],
       technician: json['technician'] != null
           ? Technician.fromJson(json['technician'])
           : null,
