@@ -14,7 +14,9 @@ class ApiConfig {
 
     final url = kIsWeb
         ? 'http://localhost:8000/api' // For web
-        : 'http://localhost:8000/api'; // For mobile devices (using ADB port forwarding)
+        : (!kIsWeb && Platform.isAndroid)
+            ? 'http://localhost:8000/api' // For Android Emulator (10.0.2.2 = host machine)
+            : 'http://localhost:8000/api'; // For iOS Simulator and Physical Devices
 
     // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:
     // final url = 'http://YOUR_IP_ADDRESS:8000/api'; // Replace YOUR_IP_ADDRESS
@@ -36,7 +38,9 @@ class ApiConfig {
   static String get imageBaseUrl {
     return kIsWeb
         ? 'http://localhost:8000' // For web
-        : 'http://localhost:8000'; // For mobile devices (using ADB port forwarding)
+        : (!kIsWeb && Platform.isAndroid)
+            ? 'http://localhost:8000' // For Android Emulator (10.0.2.2 = host machine)
+            : 'http://localhost:8000'; // For iOS Simulator and Physical Devices
 
     // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:
     // return 'http://YOUR_IP_ADDRESS:8000'; // Replace YOUR_IP_ADDRESS
@@ -89,6 +93,10 @@ class ApiConfig {
   static String getUrl(String endpoint) {
     return '$baseUrl$endpoint';
   }
+
+  // Google Maps API Key (for Directions API and other Google Maps services)
+  static const String googleMapsApiKey =
+      'AIzaSyBqeh2FJ10ybg0JGxTG5PF4YyvKTSvJmIg';
 
   // Helper method to replace path parameters
   static String replacePathParams(

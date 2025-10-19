@@ -439,6 +439,13 @@ class FarmWorkerProfileService {
 }
 
 class InventoryService {
+  /// Helper method to clear authentication data
+  Future<void> _clearAuthData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
+  }
+
   /// Fetches only available inventory items (quantity > 0) from the backend.
   Future<List<InventoryItem>> getInventory(String token) async {
     final url = ApiConfig.getUrl('/inventories');
@@ -447,6 +454,11 @@ class InventoryService {
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
       return data.map((e) => InventoryItem.fromJson(e)).toList();
+    } else if (response.statusCode == 401) {
+      print('[InventoryService] 401 Unauthorized - Token expired');
+      await _clearAuthData();
+      throw Exception(
+          'AUTHENTICATION_EXPIRED: Session expired. Please login again.');
     } else {
       throw Exception('Failed to load inventory');
     }
@@ -553,20 +565,48 @@ class RequestService {
     print('Headers: ${ApiConfig.getHeaders(token: token)}');
     print('============================');
 
-    final response = await http.patch(
-      Uri.parse(url),
-      headers: ApiConfig.getHeaders(token: token),
-      body: json.encode(updateData),
-    );
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: ApiConfig.getHeaders(token: token),
+        body: json.encode(updateData),
+      );
 
-    print('=== RESPONSE DEBUG ===');
-    print('Status Code: ${response.statusCode}');
-    print('Response Body: ${response.body}');
-    print('=====================');
+      print('=== RESPONSE DEBUG ===');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      print('Response Headers: ${response.headers}');
+      print('=====================');
 
-    if (response.statusCode != 200) {
-      throw Exception(
-          json.decode(response.body)['message'] ?? 'Failed to update request');
+      // Accept multiple success status codes (200, 201, 204)
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        print(
+            'Request updated successfully with status: ${response.statusCode}');
+        return;
+      } else {
+        // Handle different error scenarios
+        String errorMessage =
+            'Failed to update request (Status: ${response.statusCode})';
+        try {
+          final responseBody = json.decode(response.body);
+          if (responseBody is Map<String, dynamic>) {
+            errorMessage = responseBody['message'] ??
+                responseBody['error'] ??
+                'Failed to update request (Status: ${response.statusCode})';
+            print('Detailed error response: $responseBody');
+          }
+        } catch (e) {
+          print('Could not parse error response: $e');
+          errorMessage =
+              'Failed to update request (Status: ${response.statusCode}): ${response.body}';
+        }
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('=== REQUEST SERVICE ERROR ===');
+      print('Error during update request: $e');
+      print('==============================');
+      rethrow;
     }
   }
 }

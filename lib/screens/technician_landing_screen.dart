@@ -11,7 +11,10 @@ import 'package:provider/provider.dart';
 import 'farm_worker_detail_screen.dart';
 import 'technician_farms_screen.dart';
 import 'request_screen.dart';
+import 'all_requests_screen.dart';
 import '../models/user_model.dart';
+import '../services/farm_service.dart';
+import '../models/farm.dart' as farm_models;
 
 class TechnicianLandingScreen extends StatefulWidget {
   final String token;
@@ -31,6 +34,21 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   // Notification state
   int _unreadCount = 0;
 
+  // Technician data
+  Technician? _technician;
+  bool _loadingTechnician = false;
+
+  // Dashboard metrics
+  int _totalAssignedFarmers = 0;
+  double _totalFarmArea = 0.0;
+  int _pendingRequests = 0;
+  int _activeEquipment = 0;
+
+  // Pending requests data
+  List<RequestModel> _allRequests = [];
+  bool _loadingRequests = false;
+  Map<int, FarmWorker> _farmWorkersMap = {}; // For navigation to farmer details
+
   @override
   void initState() {
     super.initState();
@@ -39,8 +57,15 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FarmWorkerProvider>(context, listen: false)
           .fetchFarmWorkers(widget.token, widget.technicianId);
-      // Fetch notifications on app start
+      // Fetch notifications and technician data on app start
       _fetchNotifications();
+      _fetchTechnicianData();
+      _fetchDashboardMetrics();
+
+      // Fetch requests after a short delay to ensure farm workers are loaded
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _fetchAllRequests();
+      });
     });
   }
 
@@ -48,40 +73,474 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   // FETCH NOTIFICATIONS
   Future<void> _fetchNotifications() async {
     try {
-      final unreadCount = await notification_service.NotificationService.getUnreadCount(
-        widget.token, 
-        technicianId: widget.technicianId
-      );
-      
-      setState(() {
-        _unreadCount = unreadCount;
-      });
+      final unreadCount =
+          await notification_service.NotificationService.getUnreadCount(
+              widget.token,
+              technicianId: widget.technicianId);
+
+      if (mounted) {
+        setState(() {
+          _unreadCount = unreadCount;
+        });
+      }
     } catch (e) {
       print('Error fetching notifications: $e');
     }
   }
 
   // ====================================================
+  // FETCH TECHNICIAN DATA
+  Future<void> _fetchTechnicianData() async {
+    if (!mounted) return;
+    setState(() => _loadingTechnician = true);
+    try {
+      final technician = await TechnicianService()
+          .getTechnicianProfile(widget.token, widget.technicianId);
+      if (mounted) {
+        setState(() {
+          _technician = technician;
+          _loadingTechnician = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching technician data: $e');
+      if (mounted) {
+        setState(() => _loadingTechnician = false);
+      }
+    }
+  }
+
+  // ====================================================
+  // FETCH DASHBOARD METRICS
+  Future<void> _fetchDashboardMetrics() async {
+    if (!mounted) return;
+    try {
+      // Get assigned farmers count from provider
+      final provider = Provider.of<FarmWorkerProvider>(context, listen: false);
+      if (mounted) {
+        setState(() {
+          _totalAssignedFarmers = provider.farmWorkers.length;
+        });
+      }
+
+      // Fetch other metrics in parallel
+      await Future.wait([
+        _fetchTotalFarmArea(),
+        _fetchPendingRequests(),
+        _fetchActiveEquipment(),
+      ]);
+    } catch (e) {
+      print('Error fetching dashboard metrics: $e');
+    }
+  }
+
+  // ====================================================
+  // FETCH TOTAL FARM AREA
+  Future<void> _fetchTotalFarmArea() async {
+    try {
+      final farmService = FarmService();
+      final List<farm_models.Farm> farms =
+          await farmService.getFarmsByTechnician(widget.token);
+
+      double totalArea = 0.0;
+      for (final farm in farms) {
+        totalArea += farm.area;
+      }
+
+      if (mounted) {
+        setState(() {
+          _totalFarmArea = totalArea;
+        });
+      }
+    } catch (e) {
+      print('Error fetching total farm area: $e');
+      // Set to 0 if error occurs
+      if (mounted) {
+        setState(() {
+          _totalFarmArea = 0.0;
+        });
+      }
+    }
+  }
+
+  // ====================================================
+  // FETCH PENDING REQUESTS
+  Future<void> _fetchPendingRequests() async {
+    try {
+      final requestService = RequestService();
+      final provider = Provider.of<FarmWorkerProvider>(context, listen: false);
+
+      int totalPendingRequests = 0;
+
+      // Get all assigned farm workers and their requests
+      for (final farmWorker in provider.farmWorkers) {
+        try {
+          final requests = await requestService.getRequestsForFarmWorker(
+              widget.token, farmWorker.id);
+
+          // Count pending requests (assuming status values like 'Pending', 'pending', etc.)
+          final pendingCount = requests
+              .where((request) =>
+                  request.status?.toLowerCase() == 'pending' ||
+                  request.status?.toLowerCase() == 'requested')
+              .length;
+
+          totalPendingRequests += pendingCount;
+        } catch (e) {
+          print('Error fetching requests for farmer ${farmWorker.id}: $e');
+          // Continue with other farmers even if one fails
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _pendingRequests = totalPendingRequests;
+        });
+      }
+    } catch (e) {
+      print('Error fetching pending requests: $e');
+      // Set to 0 if error occurs
+      if (mounted) {
+        setState(() {
+          _pendingRequests = 0;
+        });
+      }
+    }
+  }
+
+  // ====================================================
+  // FETCH ACTIVE EQUIPMENT
+  Future<void> _fetchActiveEquipment() async {
+    try {
+      final requestService = RequestService();
+      final provider = Provider.of<FarmWorkerProvider>(context, listen: false);
+
+      int totalActiveEquipment = 0;
+
+      // Get all assigned farm workers and their requests
+      for (final farmWorker in provider.farmWorkers) {
+        try {
+          final requests = await requestService.getRequestsForFarmWorker(
+              widget.token, farmWorker.id);
+
+          // Count active equipment requests (approved/borrowed equipment)
+          final activeEquipmentCount = requests.where((request) {
+            // Only count equipment type requests
+            if (request.type?.toLowerCase() != 'equipment') return false;
+
+            // Count as active if status is approved, borrowed, or active (not pending, not returned)
+            final status = request.status?.toLowerCase() ?? '';
+            return status == 'approved' ||
+                status == 'borrowed' ||
+                status == 'active' ||
+                status == 'completed' ||
+                status == 'in use';
+          }).length;
+
+          totalActiveEquipment += activeEquipmentCount;
+        } catch (e) {
+          print(
+              'Error fetching active equipment for farmer ${farmWorker.id}: $e');
+          // Continue with other farmers even if one fails
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _activeEquipment = totalActiveEquipment;
+        });
+      }
+    } catch (e) {
+      print('Error fetching active equipment: $e');
+      // Set to 0 if error occurs
+      if (mounted) {
+        setState(() {
+          _activeEquipment = 0;
+        });
+      }
+    }
+  }
+
+  // ====================================================
+  // FETCH PENDING REQUESTS
+  Future<void> _fetchAllRequests() async {
+    if (!mounted) return;
+    setState(() => _loadingRequests = true);
+
+    try {
+      final requestService = RequestService();
+      final provider = Provider.of<FarmWorkerProvider>(context, listen: false);
+
+      List<RequestModel> allRequests = [];
+
+      // Check if farm workers are loaded
+      if (provider.farmWorkers.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _allRequests = [];
+            _loadingRequests = false;
+          });
+        }
+        return;
+      }
+
+      // Get all assigned farm workers and their requests
+      Map<int, FarmWorker> farmWorkersMap = {};
+      for (final farmWorker in provider.farmWorkers) {
+        farmWorkersMap[farmWorker.id] = farmWorker;
+        try {
+          final requests = await requestService.getRequestsForFarmWorker(
+              widget.token, farmWorker.id);
+
+          // Filter only pending requests
+          final pendingRequests = requests.where((request) {
+            final status = request.status?.toLowerCase() ?? '';
+            return status == 'pending' || status == 'requested';
+          }).toList();
+
+          allRequests.addAll(pendingRequests);
+        } catch (e) {
+          print('Error fetching requests for farmer ${farmWorker.id}: $e');
+          // Continue with other farmers even if one fails
+        }
+      }
+
+      // Sort requests by creation date (newest first)
+      allRequests.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      if (mounted) {
+        setState(() {
+          _allRequests = allRequests;
+          _farmWorkersMap = farmWorkersMap;
+          _loadingRequests = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching all requests: $e');
+      if (mounted) {
+        setState(() {
+          _loadingRequests = false;
+        });
+      }
+    }
+  }
+
+  // ====================================================
+  // BUILD TECHNICIAN GREETING
+  String _buildTechnicianGreeting() {
+    if (_loadingTechnician) {
+      return 'Hi Technician!';
+    }
+
+    if (_technician != null) {
+      final firstName = _technician!.firstName;
+      final lastName = _technician!.lastName;
+      final middleName = _technician!.middleName;
+
+      // Format: "Hi [LastName], [FirstName] [MiddleName]!"
+      String fullName = lastName;
+      if (firstName.isNotEmpty) {
+        fullName += ', $firstName';
+      }
+      if (middleName != null && middleName.isNotEmpty) {
+        fullName += ' $middleName';
+      }
+
+      return 'Hi $fullName!';
+    }
+
+    return 'Hi Technician!';
+  }
+
+  // ====================================================
+  // BUILD DASHBOARD METRICS
+  Widget _buildDashboardMetrics() {
+    return Consumer<FarmWorkerProvider>(
+      builder: (context, provider, _) {
+        // Update assigned farmers count and refresh pending requests when provider data changes
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && provider.farmWorkers.length != _totalAssignedFarmers) {
+            setState(() {
+              _totalAssignedFarmers = provider.farmWorkers.length;
+            });
+            // Refresh pending requests when farm workers change to get real-time updates
+            _fetchPendingRequests();
+          }
+        });
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.dashboard,
+                    color: Color.fromARGB(255, 0, 0, 0), size: 20),
+                SizedBox(width: 8),
+                Text('Overview',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF222B45))),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Metrics Grid
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.1,
+              children: [
+                _buildMetricCard(
+                  title: 'Total Assigned Farmers',
+                  value: _totalAssignedFarmers.toString(),
+                  icon: Icons.people_alt,
+                  color: const Color(0xFF6366F1),
+                ),
+                _buildMetricCard(
+                  title: 'Total Farm Area',
+                  value: '${_totalFarmArea.toStringAsFixed(0)} sqm',
+                  icon: Icons.agriculture,
+                  color: const Color(0xFF10B981),
+                ),
+                _buildMetricCard(
+                  title: 'Pending Requests',
+                  value: _pendingRequests.toString(),
+                  icon: Icons.pending_actions,
+                  color: const Color(0xFFF59E0B),
+                ),
+                _buildMetricCard(
+                  title: 'Active Equipment',
+                  value: _activeEquipment.toString(),
+                  icon: Icons.build,
+                  color: const Color(0xFFEF4444),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ====================================================
+  // BUILD METRIC CARD
+  Widget _buildMetricCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08), // Light background color
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.15),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon container matching quick action card
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A),
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Flexible(
+                    child: Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ====================================================
   // BUILD NAVIGATION APP BAR
   PreferredSizeWidget _buildNavAppBar(String title) {
+    // Titles that should have green background
+    final greenBackgroundTitles = [
+      'Reports',
+      'Transplanting Schedules',
+      'Request Submission'
+    ];
+    final shouldHaveGreenBackground = greenBackgroundTitles.contains(title);
+
     return AppBar(
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF2C3E50),
+          color: shouldHaveGreenBackground
+              ? Colors.white
+              : const Color(0xFF2C3E50),
         ),
       ),
-      backgroundColor: Colors.white,
-      foregroundColor: const Color(0xFF2C3E50),
+      backgroundColor: shouldHaveGreenBackground ? Colors.green : Colors.white,
+      foregroundColor:
+          shouldHaveGreenBackground ? Colors.white : const Color(0xFF2C3E50),
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
+        icon: Icon(Icons.arrow_back,
+            color: shouldHaveGreenBackground
+                ? Colors.white
+                : const Color(0xFF2C3E50)),
         onPressed: () {
-          setState(() {
-            _selectedIndex = 0; // Go back to dashboard
-          });
+          if (mounted) {
+            setState(() {
+              _selectedIndex = 0; // Go back to dashboard
+            });
+            // Refresh pending requests when returning to dashboard for real-time updates
+            _fetchPendingRequests();
+          }
         },
       ),
     );
@@ -105,16 +564,33 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
               // GREETING ROW
               Row(
                 children: [
+                  // Profile icon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Hi Technician!',
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2C3E50))),
+                        Text(
+                          _buildTechnicianGreeting(),
+                          style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C3E50)),
+                        ),
                         const SizedBox(height: 2),
                         Text('May you always in a good condition',
                             style: TextStyle(
@@ -192,7 +668,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                         ],
                       ),
                       // ====================================================
-                      // POPUP MENU BUTTON
+                      // LOGOUT BUTTON
                       const SizedBox(width: 4),
                       Container(
                         width: 32,
@@ -201,36 +677,19 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                           color: Color.fromARGB(255, 255, 255, 255),
                           shape: BoxShape.circle,
                         ),
-                        child: PopupMenuButton<String>(
-                          icon: const Icon(Icons.person,
-                              color: Color.fromARGB(255, 180, 180, 180),
-                              size: 16),
+                        child: IconButton(
+                          icon: const Icon(Icons.logout,
+                              color: Colors.red, size: 16),
                           padding: EdgeInsets.zero,
-                          onSelected: (value) async {
-                            if (value == 'logout') {
-                              await AuthService().logout();
-                              if (!mounted) return;
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginScreen()),
-                                (route) => false,
-                              );
-                            }
+                          onPressed: () async {
+                            await AuthService().logout();
+                            if (!mounted) return;
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                              (route) => false,
+                            );
                           },
-                          // ====================================================
-                          // POPUP MENU ITEM BUILDER
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'logout',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.logout, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('Logout')
-                                ],
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -247,16 +706,25 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   Widget _buildDashboard() {
     return RefreshIndicator(
       onRefresh: () async {
-        // Refresh farm workers and notifications
+        // Refresh farm workers, notifications, technician data, and metrics
         Provider.of<FarmWorkerProvider>(context, listen: false)
             .fetchFarmWorkers(widget.token, widget.technicianId);
-        await _fetchNotifications();
+        await Future.wait([
+          _fetchNotifications(),
+          _fetchTechnicianData(),
+          _fetchDashboardMetrics(),
+          _fetchAllRequests(),
+        ]);
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
         child: Column(
           children: [
+            // ====================================================
+            // DASHBOARD METRICS SECTION
+            _buildDashboardMetrics(),
+            const SizedBox(height: 24),
             // ====================================================
             // QUICK ACTIONS SECTION
             const Row(
@@ -405,6 +873,10 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 24),
+            // ====================================================
+            // RECENT REQUESTS SECTION
+            _buildRequestsSection(),
           ],
         ),
       ),
@@ -482,6 +954,348 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     );
   }
 
+  // ====================================================
+  // BUILD REQUESTS SECTION
+  Widget _buildRequestsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const SizedBox(width: 8),
+            const Text(
+              'Pending Requests',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF222B45),
+              ),
+            ),
+            const Spacer(),
+            if (_allRequests.isNotEmpty)
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AllRequestsScreen(
+                        token: widget.token,
+                        technicianId: widget.technicianId,
+                      ),
+                    ),
+                  ).then((_) {
+                    // Refresh requests and dashboard metrics when returning from the screen
+                    _fetchAllRequests();
+                    _fetchDashboardMetrics(); // This will refresh pending requests count
+                  });
+                },
+                child: const Text(
+                  'View All',
+                  style: TextStyle(
+                    color: Color(0xFF27AE60),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (_loadingRequests)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF27AE60)),
+              ),
+            ),
+          )
+        else if (_allRequests.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.request_page,
+                  size: 48,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'No pending requests',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'No pending requests from assigned farmers',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[500],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            constraints: BoxConstraints(
+              maxHeight: 400, // Set maximum height for scrolling
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: _allRequests.length, // Show all pending requests
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final request = _allRequests[index];
+                return _buildRequestCard(request);
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ====================================================
+  // BUILD REQUEST CARD
+  Widget _buildRequestCard(RequestModel request) {
+    // Get request type icon and color
+    IconData typeIcon;
+    Color typeColor;
+
+    switch (request.type?.toLowerCase()) {
+      case 'equipment':
+        typeIcon = Icons.build;
+        typeColor = const Color(0xFFEF4444);
+        break;
+      case 'supply':
+        typeIcon = Icons.inventory;
+        typeColor = const Color(0xFF10B981);
+        break;
+      case 'cash_advance':
+        typeIcon = Icons.credit_card;
+        typeColor = const Color(0xFFF59E0B);
+        break;
+      default:
+        typeIcon = Icons.request_page;
+        typeColor = const Color(0xFF6366F1);
+    }
+
+    // Get status color
+    Color statusColor;
+    switch (request.status?.toLowerCase()) {
+      case 'pending':
+        statusColor = const Color(0xFFF59E0B);
+        break;
+      case 'approved':
+        statusColor = const Color(0xFF10B981);
+        break;
+      case 'rejected':
+        statusColor = const Color(0xFFEF4444);
+        break;
+      default:
+        statusColor = Colors.grey[600]!;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        // Navigate to farmer details screen for the request's farmer
+        final farmWorker = _farmWorkersMap[request.farmWorkerId];
+        if (farmWorker != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FarmWorkerDetailScreen(
+                farmWorker: farmWorker,
+                token: widget.token,
+              ),
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: typeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    typeIcon,
+                    color: typeColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getRequestTypeDisplayName(request.type ?? ''),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Request No. ${request.id} • ${_getFarmerName(request.farmWorkerId)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    request.status ?? 'Unknown',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (request.reason != null && request.reason!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                request.reason!,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                  height: 1.4,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatRequestDate(request.createdAt),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+                const Spacer(),
+                if (request.type?.toLowerCase() == 'equipment' &&
+                    request.equipmentName != null)
+                  Text(
+                    request.equipmentName!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                if (request.type?.toLowerCase() == 'supply' &&
+                    request.supplyName != null)
+                  Text(
+                    request.supplyName!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to get display name for request type
+  String _getRequestTypeDisplayName(String type) {
+    switch (type.toLowerCase()) {
+      case 'equipment':
+        return 'Equipment Request';
+      case 'supply':
+        return 'Supply Request';
+      case 'cash_advance':
+        return 'Cash Advance Request';
+      default:
+        return 'Request';
+    }
+  }
+
+  // Helper method to format request date
+  String _formatRequestDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  // Helper method to get farmer name
+  String _getFarmerName(int farmWorkerId) {
+    final farmWorker = _farmWorkersMap[farmWorkerId];
+    if (farmWorker != null) {
+      return '${farmWorker.firstName} ${farmWorker.lastName}';
+    }
+    return 'Unknown Farmer';
+  }
+
   Widget _buildSchedule() {
     // Navigate to transplanting schedules screen
     return TransplantingSchedulesScreen(
@@ -516,9 +1330,15 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 // BUILD NAV ITEM
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
+        if (mounted) {
+          setState(() {
+            _selectedIndex = index;
+          });
+          // Refresh pending requests when navigating to dashboard for real-time updates
+          if (index == 0) {
+            _fetchPendingRequests();
+          }
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -555,9 +1375,11 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     final isSelected = _selectedIndex == 2;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedIndex = 2;
-        });
+        if (mounted) {
+          setState(() {
+            _selectedIndex = 2;
+          });
+        }
       },
       // ====================================================
       // CENTER REPORT BUTTON
@@ -619,11 +1441,15 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
       backgroundColor: Colors.white,
       appBar: _selectedIndex == 0
           ? _buildAppBar()
-          : _selectedIndex == 2
-              ? _buildNavAppBar('Reports')
-              : _selectedIndex == 3
-                  ? _buildNavAppBar('Profile')
-                  : null,
+          : _selectedIndex == 1
+              ? null // TransplantingSchedulesScreen has its own header
+              : _selectedIndex == 2
+                  ? _buildNavAppBar('Reports')
+                  : _selectedIndex == 3
+                      ? _buildNavAppBar('Profile')
+                      : _selectedIndex == 4
+                          ? null // RequestSubmissionScreen has its own header
+                          : null,
       body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -689,25 +1515,52 @@ class FarmWorkerProvider with ChangeNotifier {
   List<FarmWorker> _farmWorkers = [];
   bool _loading = false;
   String? _error;
+  bool _disposed = false;
 
   List<FarmWorker> get farmWorkers => _farmWorkers;
   bool get loading => _loading;
   String? get error => _error;
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      try {
+        notifyListeners();
+      } catch (e) {
+        print('Error notifying listeners: $e');
+      }
+    }
+  }
+
   // FETCH FARM WORKERS ASSIGNED TO SPECIFIC TECHNICIAN
   Future<void> fetchFarmWorkers(String token, int technicianId) async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
+    if (_disposed) return;
+
     try {
+      _loading = true;
+      _error = null;
+
+      // Defer the initial notification to avoid calling during build
+      Future.microtask(() => _safeNotifyListeners());
+
       final service = FarmWorkerService();
       // THIS WILL NOW ONLY RETURN FARM WORKERS ASSIGNED TO THIS TECHNICIAN
       _farmWorkers = await service.getAssignedFarmWorkers(token, technicianId);
     } catch (e) {
+      print('Error fetching farm workers: $e');
       _error = e.toString();
+    } finally {
+      if (!_disposed) {
+        _loading = false;
+        // Defer the final notification as well
+        Future.microtask(() => _safeNotifyListeners());
+      }
     }
-    _loading = false;
-    notifyListeners();
   }
 }
 
@@ -788,10 +1641,12 @@ class FarmWorkerListWidget extends StatefulWidget {
 // FARM WORKER LIST WIDGET STATE
 class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
   String _searchQuery = '';
   String? _selectedStatus;
   String? _selectedLocation;
   bool _showFilterCard = false;
+  bool _isGenderDropdownExpanded = false;
 
   @override
   void initState() {
@@ -803,6 +1658,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -845,6 +1701,79 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
   }
 
 // ====================================================
+// BUILD DROPDOWN OPTION
+  Widget _buildDropdownOption({
+    required IconData icon,
+    required String label,
+    required String? value,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: Colors.grey[600],
+              size: 18,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color:
+                      isSelected ? const Color(0xFF2C3E50) : Colors.grey[600],
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.green,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.grey[400]!,
+                    width: 2,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// ====================================================
 // BUILD FARM WORKER LIST WIDGET
   @override
   Widget build(BuildContext context) {
@@ -863,7 +1792,11 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                   right: 20,
                   bottom: 10,
                 ),
-                color: Colors.white,
+                color: (widget.title == 'Assigned Farmers' ||
+                        widget.title == 'Transplanting Schedules' ||
+                        widget.title == 'Request Submission')
+                    ? Colors.green
+                    : Colors.white,
                 child: Row(
                   children: [
                     IconButton(
@@ -880,18 +1813,27 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           (route) => false,
                         );
                       },
-                      icon: const Icon(Icons.arrow_back,
-                          color: Color(0xFF2C3E50), size: 24),
+                      icon: Icon(Icons.arrow_back,
+                          color: (widget.title == 'Assigned Farmers' ||
+                                  widget.title == 'Transplanting Schedules' ||
+                                  widget.title == 'Request Submission')
+                              ? Colors.white
+                              : const Color(0xFF2C3E50),
+                          size: 24),
                       padding: EdgeInsets.zero,
                     ),
                     Expanded(
                       child: Text(
                         widget.title,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
+                          color: (widget.title == 'Assigned Farmers' ||
+                                  widget.title == 'Transplanting Schedules' ||
+                                  widget.title == 'Request Submission')
+                              ? Colors.white
+                              : const Color(0xFF2C3E50),
                         ),
                       ),
                     ),
@@ -958,20 +1900,42 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                       height: 48,
                       decoration: BoxDecoration(
                         color: (_selectedStatus != null ||
-                                _selectedLocation != null)
-                            ? const Color.fromARGB(255, 33, 168, 33)
-                            : const Color.fromARGB(163, 128, 255, 149),
+                                (_selectedLocation != null &&
+                                    _selectedLocation!.isNotEmpty))
+                            ? Colors.green // Green when filters are applied
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: (_selectedStatus != null ||
+                                  (_selectedLocation != null &&
+                                      _selectedLocation!.isNotEmpty))
+                              ? Colors
+                                  .green // Green border when filters are applied
+                              : const Color(0xFF9E9E9E),
+                          width: 1.0,
+                        ),
                       ),
-                      child: IconButton(
-                        onPressed: _toggleFilterCard,
-                        icon: Icon(Icons.tune,
-                            color: (_selectedStatus != null ||
-                                    _selectedLocation != null)
-                                ? Colors.white
-                                : const Color.fromARGB(255, 49, 168, 33),
-                            size: 22),
-                        padding: EdgeInsets.zero,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: _toggleFilterCard,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.filter_list_rounded,
+                              color: (_selectedStatus != null ||
+                                      (_selectedLocation != null &&
+                                          _selectedLocation!.isNotEmpty))
+                                  ? Colors
+                                      .white // White icon when filters are applied
+                                  : const Color(0xFF9E9E9E),
+                              size: 22,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -997,16 +1961,15 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                           children: [
                             Icon(
                               widget.emptyStateIcon,
-                              size: 80,
+                              size: 64,
                               color: const Color(0xFFB0B0B0),
                             ),
-                            const SizedBox(height: 24),
                             Text(
                               farmWorkers.isEmpty
                                   ? widget.emptyStateTitle
                                   : 'No Farmers found',
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF505050),
                               ),
@@ -1017,7 +1980,7 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                                   ? widget.emptyStateSubtitle
                                   : 'Try adjusting your search or filter criteria',
                               style: const TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Color(0xFF808080),
                               ),
                             ),
@@ -1119,6 +2082,22 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
             ],
           ),
           // ====================================================
+          // BACKGROUND OVERLAY TO CLOSE FILTER WHEN TAPPED OUTSIDE
+          if (_showFilterCard)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _showFilterCard = false;
+                    _isGenderDropdownExpanded = false;
+                  });
+                },
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          // ====================================================
           // FILTER CARD OVERLAY (APPEARS ON TOP WITH HIGHER Z-INDEX)
           if (_showFilterCard)
             Positioned(
@@ -1126,210 +2105,304 @@ class _FarmWorkerListWidgetState extends State<FarmWorkerListWidget> {
                   140, // POSITION BELOW SEARCH
               left: 20,
               right: 20,
-              child: Material(
-                elevation: 8,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFE0E0E0),
-                      width: 1.0,
+              child: GestureDetector(
+                onTap: () {
+                  // Prevent tap from propagating to background overlay
+                },
+                child: Material(
+                  elevation: 0,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFE0E0E0),
+                        width: 1.0,
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header
-                      Row(
-                        children: [
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Filter Options',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2C3E50),
-                            ),
-                          ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: _toggleFilterCard,
-                            child: Icon(Icons.close,
-                                color: Colors.grey[600], size: 20),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Gender Filter
-                      DropdownButtonFormField<String>(
-                        value: _selectedStatus,
-                        decoration: InputDecoration(
-                          labelText: 'Gender',
-                          labelStyle: TextStyle(
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE0E0E0)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE0E0E0)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE0E0E0)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          prefixIcon: Icon(
-                            Icons.person_outline,
-                            color: Colors.grey[600],
-                            size: 20,
-                          ),
-                        ),
-                        dropdownColor: Colors.white,
-                        style: const TextStyle(
-                          color: Color(0xFF2C3E50),
-                          fontSize: 14,
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: null,
-                            child: Row(
-                              children: [
-                                Icon(Icons.all_inclusive,
-                                    color: Colors.grey[600], size: 16),
-                                const SizedBox(width: 8),
-                                Text('All Gender',
-                                    style: TextStyle(color: Colors.grey[600])),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Male',
-                            child: Row(
-                              children: [
-                                Icon(Icons.male,
-                                    color: Colors.grey[600], size: 16),
-                                const SizedBox(width: 8),
-                                const Text('Male'),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Female',
-                            child: Row(
-                              children: [
-                                Icon(Icons.female,
-                                    color: Colors.grey[600], size: 16),
-                                const SizedBox(width: 8),
-                                const Text('Female'),
-                              ],
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedStatus = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      // Location Filter
-                      TextFormField(
-                        initialValue: _selectedLocation ?? '',
-                        decoration: InputDecoration(
-                          labelText: 'Location (Address)',
-                          labelStyle: TextStyle(
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE0E0E0)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE0E0E0)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE0E0E0)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          prefixIcon: Icon(
-                            Icons.location_on_outlined,
-                            color: Colors.grey[600],
-                            size: 20,
-                          ),
-                          hintText: 'Enter city, province, or area',
-                          hintStyle:
-                              TextStyle(color: Colors.grey[500], fontSize: 14),
-                        ),
-                        style: const TextStyle(
-                          color: Color(0xFF2C3E50),
-                          fontSize: 14,
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedLocation = value.isEmpty ? null : value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Action Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedStatus = null;
-                                _selectedLocation = null;
-                              });
-                            },
-                            child: Text(
-                              'Clear All',
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: _toggleFilterCard,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Row(
+                          children: [
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Filter Options',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3E50),
                               ),
                             ),
-                            child: const Text('Apply'),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: _toggleFilterCard,
+                              child: Icon(Icons.close,
+                                  color: Colors.grey[600], size: 20),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Gender Label
+                        Text(
+                          'Gender',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Gender Filter - Custom Dropdown
+                        Column(
+                          children: [
+                            // Dropdown Header
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _isGenderDropdownExpanded =
+                                      !_isGenderDropdownExpanded;
+                                });
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(0xFFE0E0E0),
+                                    width: 1.0,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person_outline,
+                                      color: Colors.grey[600],
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _selectedStatus != null
+                                            ? _selectedStatus!
+                                            : 'All Sex',
+                                        style: TextStyle(
+                                          color: _selectedStatus != null
+                                              ? const Color(0xFF2C3E50)
+                                              : Colors.grey[600],
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      _isGenderDropdownExpanded
+                                          ? Icons.keyboard_arrow_up
+                                          : Icons.keyboard_arrow_down,
+                                      color: Colors.grey[600],
+                                      size: 24,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Dropdown Options
+                            if (_isGenderDropdownExpanded) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(0xFFE0E0E0),
+                                    width: 1.0,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    // All Sex Option
+                                    _buildDropdownOption(
+                                      icon: Icons.all_inclusive,
+                                      label: 'All Sex',
+                                      value: null,
+                                      isSelected: _selectedStatus == null,
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedStatus = null;
+                                          _isGenderDropdownExpanded = false;
+                                        });
+                                      },
+                                    ),
+                                    Divider(
+                                      height: 1,
+                                      color: Colors.grey[200],
+                                      thickness: 1,
+                                    ),
+                                    // Male Option
+                                    _buildDropdownOption(
+                                      icon: Icons.male,
+                                      label: 'Male',
+                                      value: 'Male',
+                                      isSelected: _selectedStatus == 'Male',
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedStatus = 'Male';
+                                          _isGenderDropdownExpanded = false;
+                                        });
+                                      },
+                                    ),
+                                    Divider(
+                                      height: 1,
+                                      color: Colors.grey[200],
+                                      thickness: 1,
+                                    ),
+                                    // Female Option
+                                    _buildDropdownOption(
+                                      icon: Icons.female,
+                                      label: 'Female',
+                                      value: 'Female',
+                                      isSelected: _selectedStatus == 'Female',
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedStatus = 'Female';
+                                          _isGenderDropdownExpanded = false;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Location Label
+                        Text(
+                          'Address',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Location Filter
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFFE0E0E0),
+                              width: 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: TextFormField(
+                            controller: _locationController,
+                            decoration: InputDecoration(
+                              hintText: 'Enter city, province, or area',
+                              hintStyle: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
+                              prefixIcon: Icon(
+                                Icons.location_on_outlined,
+                                color: Colors.grey[600],
+                                size: 20,
+                              ),
+                            ),
+                            style: const TextStyle(
+                              color: Color(0xFF2C3E50),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedLocation =
+                                    value.isEmpty ? null : value;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Action Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedStatus = null;
+                                  _selectedLocation = null;
+                                  _locationController.clear();
+                                });
+                              },
+                              child: Text(
+                                'Clear All',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: _toggleFilterCard,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Apply'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1551,4 +2624,3 @@ class RequestSubmissionScreen extends StatelessWidget {
     );
   }
 }
-

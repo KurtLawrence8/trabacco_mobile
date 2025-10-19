@@ -50,6 +50,8 @@ dependencies:
   gal: ^2.3.0
   photo_view: ^0.15.0
   connectivity_plus: ^5.0.2
+  location: ^5.0.3
+  url_launcher: ^6.2.1
 
 dev_dependencies:
   flutter_test:

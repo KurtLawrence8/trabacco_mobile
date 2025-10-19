@@ -44,8 +44,7 @@ class _SchedulePageState extends State<SchedulePage> {
     print('[SchedulePage] [initState] Initializing SchedulePage');
     print('[SchedulePage] [initState] User type: ${widget.userType}');
     print('[SchedulePage] [initState] Farmer ID: ${widget.farmWorkerId}');
-    print(
-        '[SchedulePage] [initState] Farmer name: ${widget.farmWorkerName}');
+    print('[SchedulePage] [initState] Farmer name: ${widget.farmWorkerName}');
     print('[SchedulePage] [initState] Token: ${widget.token}');
 
     _focusedDay = DateTime.now();
@@ -250,23 +249,22 @@ class _SchedulePageState extends State<SchedulePage> {
           backgroundColor: Colors.white,
           resizeToAvoidBottomInset: true,
           appBar: AppBar(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
             elevation: 0,
             centerTitle: true,
             title: Text(
               '${widget.farmWorkerName} Schedule',
               style: const TextStyle(
-                fontSize: 16, // Reduced from 18
+                fontSize: 18, // Reduced from 18
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: Colors.white,
               ),
             ),
           ),
           body: SingleChildScrollView(
             child: widget.farmWorkerId == 0
-                ? _buildEmptyState(
-                    'Please select a Farmer to view schedules')
+                ? _buildEmptyState('Please select a Farmer to view schedules')
                 : FutureBuilder<List<Schedule>>(
                     future: _futureSchedules,
                     builder: (context, snapshot) {

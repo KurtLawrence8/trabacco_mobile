@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 
 class Equipment {
@@ -43,6 +44,13 @@ class Equipment {
 }
 
 class EquipmentService {
+  // Helper method to clear authentication data
+  Future<void> _clearAuthData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
+  }
+
   // Get all available equipment
   Future<List<Equipment>> getAvailableEquipment(String token) async {
     try {
@@ -74,6 +82,12 @@ class EquipmentService {
           print('[EquipmentService] API returned error: $errorMsg');
           throw Exception('Failed to fetch equipment: $errorMsg');
         }
+      } else if (response.statusCode == 401) {
+        print('[EquipmentService] 401 Unauthorized - Token expired');
+        // Clear stored token and user data
+        await _clearAuthData();
+        throw Exception(
+            'AUTHENTICATION_EXPIRED: Session expired. Please login again.');
       } else {
         print(
             '[EquipmentService] Error response: ${response.statusCode} - ${response.body}');
@@ -100,6 +114,11 @@ class EquipmentService {
         } else {
           throw Exception('Failed to fetch equipment: ${data['message']}');
         }
+      } else if (response.statusCode == 401) {
+        print('[EquipmentService] 401 Unauthorized - Token expired');
+        await _clearAuthData();
+        throw Exception(
+            'AUTHENTICATION_EXPIRED: Session expired. Please login again.');
       } else {
         throw Exception('Failed to fetch equipment: ${response.statusCode}');
       }

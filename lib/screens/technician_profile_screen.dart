@@ -63,8 +63,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
     String baseUrl;
     if (kIsWeb) {
       // For web, try both localhost and 127.0.0.1
-      baseUrl =
-          'http://localhost:8000'; // Try localhost first
+      baseUrl = 'http://localhost:8000'; // Try localhost first
     } else {
       baseUrl = Platform.isAndroid
           ? 'http://localhost:8000'
@@ -124,6 +123,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
   }
 
   Future<void> _loadTechnicianData() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final token = await AuthService().getToken();
@@ -139,6 +139,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
 
         final technician = await _technicianService.getTechnicianProfile(
             token, widget.technicianId);
+        if (!mounted) return;
         setState(() {
           _technician = technician;
           _firstNameController.text = technician.firstName;
@@ -153,6 +154,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
           _loading = false;
         });
       } else {
+        if (!mounted) return;
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -166,6 +168,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
       print('Error details: ${e.toString()}');
 
       // Fallback: Show sample data for development/testing
+      if (!mounted) return;
       setState(() {
         _technician = Technician(
           id: widget.technicianId,
@@ -204,6 +207,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final token = await AuthService().getToken();
@@ -213,6 +217,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
             _selectedProfileImage != null || _selectedIdImage != null;
 
         if (hasImages) {
+          if (!mounted) return;
           setState(() => _loading = true);
           try {
             // Create multipart request for profile update with images
@@ -299,6 +304,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
               );
 
               // Clear selected images and reload profile data
+              if (!mounted) return;
               setState(() {
                 _selectedProfileImage = null;
                 _selectedIdImage = null;
@@ -309,6 +315,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
               await _loadTechnicianData();
 
               // Exit edit mode and force UI refresh
+              if (!mounted) return;
               setState(() {
                 _editing = false;
               });
@@ -334,6 +341,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
             );
             // Continue to regular profile update without images
           } finally {
+            if (!mounted) return;
             setState(() => _loading = false);
           }
         }
@@ -372,6 +380,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
         final updatedTechnician = await _technicianService
             .updateTechnicianProfile(token, widget.technicianId, updateData);
 
+        if (!mounted) return;
         setState(() {
           _technician = updatedTechnician;
           _editing = false;
@@ -395,6 +404,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
         ),
       );
     } finally {
+      if (!mounted) return;
       setState(() => _loading = false);
     }
   }
@@ -406,7 +416,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() {
         _birthDateController.text = picked.toIso8601String().split('T')[0];
       });
@@ -446,7 +456,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
           imageQuality: 80,
         );
 
-        if (image != null) {
+        if (image != null && mounted) {
           setState(() {
             if (isProfile) {
               _selectedProfileImage = File(image.path);
@@ -568,7 +578,11 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
         actions: [
           if (!_editing)
             IconButton(
-              onPressed: () => setState(() => _editing = true),
+              onPressed: () {
+                if (mounted) {
+                  setState(() => _editing = true);
+                }
+              },
               icon: const Icon(Icons.edit, color: Color(0xFF27AE60)),
               tooltip: 'Edit Profile',
             ),
@@ -880,8 +894,13 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                         DropdownMenuItem(
                             value: 'Female', child: Text('Female')),
                       ],
-                      onChanged:
-                          _editing ? (v) => setState(() => _sex = v) : null,
+                      onChanged: _editing
+                          ? (v) {
+                              if (mounted) {
+                                setState(() => _sex = v);
+                              }
+                            }
+                          : null,
                     ),
                   ),
                 ],
@@ -962,12 +981,14 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                           onPressed: _loading
                               ? null
                               : () {
-                                  setState(() {
-                                    _editing = false;
-                                    _selectedProfileImage = null;
-                                    _selectedIdImage = null;
-                                  });
-                                  _loadTechnicianData(); // Reload original data
+                                  if (mounted) {
+                                    setState(() {
+                                      _editing = false;
+                                      _selectedProfileImage = null;
+                                      _selectedIdImage = null;
+                                    });
+                                    _loadTechnicianData(); // Reload original data
+                                  }
                                 },
                           icon: const Icon(Icons.cancel, size: 18),
                           label: const Text('Cancel'),
