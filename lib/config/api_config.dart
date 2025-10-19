@@ -14,9 +14,7 @@ class ApiConfig {
 
     final url = kIsWeb
         ? 'http://localhost:8000/api' // For web
-        : (!kIsWeb && Platform.isAndroid)
-            ? 'http://localhost:8000/api' // For Android Emulator (10.0.2.2 = host machine)
-            : 'http://localhost:8000/api'; // For iOS Simulator and Physical Devices
+        : 'http://localhost:8000/api'; // For mobile devices (using ADB port forwarding)
 
     // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:
     // final url = 'http://YOUR_IP_ADDRESS:8000/api'; // Replace YOUR_IP_ADDRESS
@@ -38,9 +36,7 @@ class ApiConfig {
   static String get imageBaseUrl {
     return kIsWeb
         ? 'http://localhost:8000' // For web
-        : (!kIsWeb && Platform.isAndroid)
-            ? 'http://localhost:8000' // For Android Emulator (10.0.2.2 = host machine)
-            : 'http://localhost:8000'; // For iOS Simulator and Physical Devices
+        : 'http://localhost:8000'; // For mobile devices (using ADB port forwarding)
 
     // UNCOMMENT AND USE THIS FOR PHYSICAL DEVICES:
     // return 'http://YOUR_IP_ADDRESS:8000'; // Replace YOUR_IP_ADDRESS
