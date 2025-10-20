@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 import 'farm_worker_landing_screen.dart';
 import 'technician_landing_screen.dart';
@@ -27,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isSendingVerificationEmail = false;
   bool _rememberMe = false;
   bool _obscurePassword = true;
+  bool _isRoleDropdownExpanded = false;
   final AuthService _authService = AuthService();
 
   @override
@@ -270,6 +272,74 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Build role dropdown option helper method
+  Widget _buildRoleDropdownOption({
+    required String label,
+    required String value,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color:
+                        isSelected ? const Color(0xFF2C3E50) : Colors.grey[600],
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (isSelected)
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.green,
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.grey[400]!,
+                      width: 2,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -277,397 +347,514 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top -
-                  MediaQuery.of(context).padding.bottom,
-            ),
-            child: IntrinsicHeight(
-              child: Column(
-                children: [
-                  // Green Header Section
-                  Container(
-                    height: MediaQuery.of(context).size.height * 0.28,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color.fromARGB(255, 33, 152, 82),
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(0),
-                        bottomRight: Radius.circular(0),
-                      ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.only(left: 24, right: 24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Logo/Icon                          // Main Title
-                          Text(
-                            'Sign in to your\nAccount',
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              height: 1.2,
-                            ),
+        child: Stack(
+          children: [
+            // Main content
+            SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      // White Header Section
+                      Container(
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(0),
+                            bottomRight: Radius.circular(0),
                           ),
-                          SizedBox(height: 8),
-                          // Subtitle
-                          Text(
-                            'Enter your email and password to log in',
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.normal,
-                            ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              left: 24, right: 24, top: 20, bottom: 20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Main Logo (TRABACCO_LOGO.svg) - smaller size
+                              Container(
+                                height: 60,
+                                child: SvgPicture.asset(
+                                  'assets/TRABACCO_LOGO.svg',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              // Main Title - left aligned and bigger
+                              const Text(
+                                'Sign in to your Account',
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  color: Color(0xFF1A1A1A),
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Subtitle - left aligned
+                              const Text(
+                                'Enter your email and password to log in',
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  color: Color(0xFF666666),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  // White Content Section
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Role Dropdown
-                            const Text(
-                              'Role',
-                              style: TextStyle(
-                                color: Color(0xFF666666),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: const Color(0xFFE0E0E0), width: 1.5),
-                              ),
-                              child: DropdownButtonFormField<String>(
-                                value: _roleType,
-                                decoration: const InputDecoration(
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(8)),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(8)),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(8)),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: "technician",
-                                    child: Text(
-                                      "Technician",
-                                      style: TextStyle(
-                                        color: Color(0xFF333333),
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "farm_worker",
-                                    child: Text(
-                                      "Farmer",
-                                      style: TextStyle(
-                                        color: Color(0xFF333333),
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (v) => setState(() {
-                                  _roleType = v!;
-                                }),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Email/Phone Field
-                            const Text(
-                              'Email',
-                              style: TextStyle(
-                                color: Color(0xFF666666),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: const Color(0xFFE0E0E0), width: 1.5),
-                              ),
-                              child: Focus(
-                                onFocusChange: (hasFocus) {
-                                  setState(() {});
-                                },
-                                child: TextFormField(
-                                  controller: _loginController,
-                                  decoration: InputDecoration(
-                                    hintText: (_roleType == "technician")
-                                        ? "Enter your email address"
-                                        : "Enter phone number",
-                                    hintStyle: const TextStyle(
-                                      color: Color(0xFF999999),
-                                      fontSize: 16,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                  style: const TextStyle(
-                                    color: Color(0xFF333333),
-                                    fontSize: 16,
-                                  ),
-                                  validator: (v) =>
-                                      (v == null || v.trim().isEmpty)
-                                          ? "Please enter a value."
-                                          : null,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Password Field
-                            const Text(
-                              'Password',
-                              style: TextStyle(
-                                color: Color(0xFF666666),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: const Color(0xFFE0E0E0), width: 1.5),
-                              ),
-                              child: Focus(
-                                onFocusChange: (hasFocus) {
-                                  setState(() {});
-                                },
-                                child: TextFormField(
-                                  controller: _passwordController,
-                                  decoration: InputDecoration(
-                                    hintText: "********",
-                                    hintStyle: const TextStyle(
-                                      color: Color(0xFF999999),
-                                      fontSize: 16,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                        color: const Color(0xFF999999),
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _obscurePassword = !_obscurePassword;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  style: const TextStyle(
-                                    color: Color(0xFF333333),
-                                    fontSize: 16,
-                                  ),
-                                  obscureText: _obscurePassword,
-                                  validator: (v) =>
-                                      (v == null || v.trim().isEmpty)
-                                          ? "Please enter a password."
-                                          : null,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            // Remember Me and Forgot Password Row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // White Content Section
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Remember Me Checkbox
-                                Row(
+                                // Role Dropdown
+                                const Text(
+                                  'Role',
+                                  style: TextStyle(
+                                    color: Color(0xFF666666),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // Custom Role Dropdown
+                                Column(
                                   children: [
-                                    Checkbox(
-                                      value: _rememberMe,
-                                      onChanged: (value) {
+                                    // Dropdown Header
+                                    GestureDetector(
+                                      onTap: () {
                                         setState(() {
-                                          _rememberMe = value ?? false;
+                                          _isRoleDropdownExpanded =
+                                              !_isRoleDropdownExpanded;
                                         });
                                       },
-                                      activeColor: const Color(0xFF27AE60),
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    const Text(
-                                      'Remember me',
-                                      style: TextStyle(
-                                        color: Color(0xFF666666),
-                                        fontSize: 14,
+                                      child: Container(
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: const Color(0xFFE0E0E0),
+                                            width: 1.0,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withOpacity(0.05),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 16,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.person_outline,
+                                              color: Colors.grey[600],
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                _roleType == 'technician'
+                                                    ? 'Technician'
+                                                    : 'Farmer',
+                                                style: TextStyle(
+                                                  color:
+                                                      const Color(0xFF2C3E50),
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            Icon(
+                                              _isRoleDropdownExpanded
+                                                  ? Icons.keyboard_arrow_up
+                                                  : Icons.keyboard_arrow_down,
+                                              color: Colors.grey[600],
+                                              size: 24,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
+                                    // Dropdown Options
+                                    if (_isRoleDropdownExpanded) ...[
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: const Color(0xFFE0E0E0),
+                                            width: 1.0,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withOpacity(0.05),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            // Technician Option
+                                            _buildRoleDropdownOption(
+                                              label: 'Technician',
+                                              value: 'technician',
+                                              isSelected:
+                                                  _roleType == 'technician',
+                                              onTap: () {
+                                                // Clear input when switching to different role
+                                                if (_roleType != 'technician') {
+                                                  _loginController.clear();
+                                                }
+                                                setState(() {
+                                                  _roleType = 'technician';
+                                                  _isRoleDropdownExpanded =
+                                                      false;
+                                                });
+                                              },
+                                            ),
+                                            Divider(
+                                              height: 1,
+                                              color: Colors.grey[200],
+                                              thickness: 1,
+                                            ),
+                                            // Farmer Option
+                                            _buildRoleDropdownOption(
+                                              label: 'Farmer',
+                                              value: 'farm_worker',
+                                              isSelected:
+                                                  _roleType == 'farm_worker',
+                                              onTap: () {
+                                                // Clear input when switching to different role
+                                                if (_roleType !=
+                                                    'farm_worker') {
+                                                  _loginController.clear();
+                                                }
+                                                setState(() {
+                                                  _roleType = 'farm_worker';
+                                                  _isRoleDropdownExpanded =
+                                                      false;
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
-                                // Forgot Password Link (only show for technicians)
-                                if (_roleType == 'technician')
-                                  TextButton(
-                                    onPressed: _showForgotPasswordDialog,
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: Size.zero,
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: const Text(
-                                      'Forgot Password?',
-                                      style: TextStyle(
-                                        color: Color(0xFF27AE60),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                const SizedBox(height: 8),
+                                // Email/Phone Field
+                                Text(
+                                  _roleType == "technician"
+                                      ? 'Email'
+                                      : 'Phone Number',
+                                  style: const TextStyle(
+                                    color: Color(0xFF666666),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: const Color(0xFFE0E0E0),
+                                        width: 1.5),
+                                  ),
+                                  child: Focus(
+                                    onFocusChange: (hasFocus) {
+                                      setState(() {});
+                                    },
+                                    child: TextFormField(
+                                      controller: _loginController,
+                                      keyboardType: _roleType == "technician"
+                                          ? TextInputType.emailAddress
+                                          : TextInputType.phone,
+                                      decoration: InputDecoration(
+                                        hintText: (_roleType == "technician")
+                                            ? "Enter your email address"
+                                            : "Enter phone number",
+                                        hintStyle: const TextStyle(
+                                          color: Color(0xFF999999),
+                                          fontSize: 16,
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: BorderSide.none,
+                                        ),
                                       ),
+                                      style: const TextStyle(
+                                        color: Color(0xFF333333),
+                                        fontSize: 16,
+                                      ),
+                                      validator: (v) {
+                                        if (v == null || v.trim().isEmpty) {
+                                          return _roleType == "technician"
+                                              ? "Please enter your email address."
+                                              : "Please enter your phone number.";
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ),
+                                ),
+                                const SizedBox(height: 16),
+                                // Password Field
+                                const Text(
+                                  'Password',
+                                  style: TextStyle(
+                                    color: Color(0xFF666666),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: const Color(0xFFE0E0E0),
+                                        width: 1.5),
+                                  ),
+                                  child: Focus(
+                                    onFocusChange: (hasFocus) {
+                                      setState(() {});
+                                    },
+                                    child: TextFormField(
+                                      controller: _passwordController,
+                                      decoration: InputDecoration(
+                                        hintText: "********",
+                                        hintStyle: const TextStyle(
+                                          color: Color(0xFF999999),
+                                          fontSize: 16,
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_off_outlined
+                                                : Icons.visibility_outlined,
+                                            color: const Color(0xFF999999),
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      style: const TextStyle(
+                                        color: Color(0xFF333333),
+                                        fontSize: 16,
+                                      ),
+                                      obscureText: _obscurePassword,
+                                      validator: (v) =>
+                                          (v == null || v.trim().isEmpty)
+                                              ? "Please enter a password."
+                                              : null,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                // Remember Me and Forgot Password Row
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Remember Me Checkbox
+                                    Row(
+                                      children: [
+                                        Checkbox(
+                                          value: _rememberMe,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _rememberMe = value ?? false;
+                                            });
+                                          },
+                                          activeColor: const Color(0xFF27AE60),
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        const Text(
+                                          'Remember me',
+                                          style: TextStyle(
+                                            color: Color(0xFF666666),
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    // Forgot Password Link (only show for technicians)
+                                    if (_roleType == 'technician')
+                                      TextButton(
+                                        onPressed: _showForgotPasswordDialog,
+                                        style: TextButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          minimumSize: Size.zero,
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        child: const Text(
+                                          'Forgot Password?',
+                                          style: TextStyle(
+                                            color: Color(0xFF27AE60),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                                // Login Button
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 50,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF27AE60),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    onPressed: _isLoading ? null : _login,
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Log In',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
                               ],
                             ),
-                            const SizedBox(height: 24),
-                            // Login Button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 50,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF27AE60),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                onPressed: _isLoading ? null : _login,
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Log In',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            const Spacer(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Legal Disclaimer Footer at the very bottom
-                  const Padding(
-                    padding: EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                      bottom: 20,
-                    ),
-                    child: Center(
-                      child: Text.rich(
-                        TextSpan(
-                          text: 'By signing up, you agree to the ',
-                          style: TextStyle(
-                            color: Color(0xFF666666),
-                            fontSize: 12,
                           ),
-                          children: [
-                            TextSpan(
-                              text: 'Terms of Service',
-                              style: TextStyle(
-                                color: Color(0xFF333333),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            TextSpan(text: ' and '),
-                            TextSpan(
-                              text: 'Data Processing Agreement',
-                              style: TextStyle(
-                                color: Color(0xFF333333),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ),
+                      // Legal Disclaimer Footer at the very bottom
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          left: 20,
+                          right: 20,
+                          bottom: 20,
+                        ),
+                        child: Center(
+                          child: Text.rich(
+                            TextSpan(
+                              text: 'By signing up, you agree to the ',
+                              style: TextStyle(
+                                color: Color(0xFF666666),
+                                fontSize: 12,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Terms of Service',
+                                  style: TextStyle(
+                                    color: Color(0xFF333333),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(text: ' and '),
+                                TextSpan(
+                                  text: 'Data Processing Agreement',
+                                  style: TextStyle(
+                                    color: Color(0xFF333333),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
