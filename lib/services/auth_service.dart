@@ -51,7 +51,7 @@ class AuthService {
         print('🔐 [AUTH] Parsed data: $data');
         final user = User.fromJson(data['user']);
         print('🔐 [AUTH] User object created: ${user.toString()}');
-        await _saveUserData(user);
+        await _saveUserData(user, roleType);
         print('🔐 [AUTH] User data saved to local storage');
         client.close();
         print('🔐 [AUTH] HTTP client closed');
@@ -100,7 +100,8 @@ class AuthService {
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
         final user = User.fromJson(data['user']);
-        await _saveUserData(user);
+        await _saveUserData(
+            user, 'technician'); // Default role for registration
         return user;
       } else {
         throw Exception(
@@ -195,10 +196,12 @@ class AuthService {
   }
 
   // Save user data to local storage
-  Future<void> _saveUserData(User user) async {
+  Future<void> _saveUserData(User user, String roleType) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, user.token ?? '');
     await prefs.setString(_userKey, json.encode(user.toJson()));
+    await prefs.setString(
+        'user_role_type', roleType); // Store role type for navigation
   }
 
   // Clear user data from local storage
@@ -206,6 +209,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_userKey);
+    await prefs.remove('user_role_type');
   }
 
   // Helper method to create a client with credentials

@@ -1,11 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'screens/technician_landing_screen.dart';
+import 'services/firebase_messaging_service.dart';
 
-void main() {
+// Global navigator key for navigation from notifications
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Suppress Flutter framework debug prints (including GestureDetector logs)
+  debugPrint = (String? message, {int? wrapWidth}) {
+    // Only print Firebase logs, main logs, and local notification logs, suppress all other logs
+    if (message != null &&
+        (message.startsWith('[main]') ||
+            message.startsWith('🔥') ||
+            message.startsWith('📱 [LOCAL]') ||
+            message.startsWith('📅 [SCHEDULE NOTIFICATIONS]'))) {
+      print(message);
+    }
+  };
+
   print('[main] Starting Trabacco Mobile App');
   print('[main] App initialization started');
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  print('[main] ✅ Firebase initialized');
+
+  // Set background message handler
+  FirebaseMessaging.onBackgroundMessage(
+    FirebaseMessagingService.firebaseMessagingBackgroundHandler,
+  );
+
+  // Initialize Firebase messaging
+  try {
+    await FirebaseMessagingService.initialize();
+    print('[main] ✅ Firebase messaging initialized');
+  } catch (e) {
+    print(
+        '[main] ⚠️ Firebase messaging initialization failed (device may not have Google Play Services)');
+    print('[main] ℹ️ App will continue with local notifications only');
+  }
 
   runApp(
     MultiProvider(
@@ -24,6 +66,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Trabacco Mobile',
       theme: ThemeData(

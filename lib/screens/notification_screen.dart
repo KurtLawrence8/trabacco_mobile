@@ -20,7 +20,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   List<notification_service.Notification> _notifications = [];
   bool _isLoading = true;
   int _unreadCount = 0;
-  bool _showAllNotifications = false; // Debug toggle
+  bool _showAllNotifications =
+      false; // Toggle between schedule only and all notifications
 
   @override
   void initState() {
@@ -29,47 +30,45 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _loadNotifications() async {
-    print('🔔 [MOBILE SCREEN] Starting _loadNotifications...');
+    // print('🔔 [MOBILE SCREEN] Starting _loadNotifications...');
     setState(() => _isLoading = true);
     try {
-      print(
-          '🔔 [MOBILE SCREEN] Loading notifications for technician ${widget.technician.id}');
-      print(
-          '🔔 [MOBILE SCREEN] Technician name: ${widget.technician.firstName} ${widget.technician.lastName}');
-      print(
-          '🔔 [MOBILE SCREEN] Using token: ${widget.token.substring(0, 20)}...');
-      print('🔔 [MOBILE SCREEN] Token length: ${widget.token.length}');
+      // print(
+      //     '🔔 [MOBILE SCREEN] Loading notifications for technician ${widget.technician.id}');
+      // print(
+      //     '🔔 [MOBILE SCREEN] Technician name: ${widget.technician.firstName} ${widget.technician.lastName}');
+      // print(
+      //     '🔔 [MOBILE SCREEN] Using token: ${widget.token.substring(0, 20)}...');
+      // print('🔔 [MOBILE SCREEN] Token length: ${widget.token.length}');
 
-      print('🔔 [MOBILE SCREEN] Calling getNotifications...');
-      // Temporarily get all notifications for debugging
-      final allNotifications = await notification_service.NotificationService.getAllNotifications(widget.token);
-      print('🔔 [MOBILE SCREEN] Total notifications available: ${allNotifications.length}');
-      
-      // Get notifications based on debug toggle
-      // Note: We use technicianId for both technicians and farm workers since the NotificationScreen
-      // was originally designed for technicians. The service will handle the filtering properly.
-      final notifications = _showAllNotifications 
-          ? allNotifications
-          : await notification_service.NotificationService.getNotifications(
-              widget.token, 
-              technicianId: widget.technician.id); // This works for both technicians and farm workers
+      // print('🔔 [MOBILE SCREEN] Calling getNotifications...');
 
-      print('🔔 [MOBILE SCREEN] Calling getUnreadCount...');
-      final unreadCount =
-          await notification_service.NotificationService.getUnreadCount(
-              widget.token, 
-              technicianId: widget.technician.id); // This works for both technicians and farm workers
+      // Get notifications based on toggle - schedule only by default, all if toggled
+      final notifications = _showAllNotifications
+          ? await notification_service.NotificationService.getNotifications(
+              widget.token,
+              technicianId: widget.technician.id)
+          : await notification_service.NotificationService
+              .getScheduleNotifications(widget.token,
+                  technicianId: widget.technician.id);
 
-      print(
-          '🔔 [MOBILE SCREEN] SUCCESS: Fetched ${notifications.length} notifications');
-      print('🔔 [MOBILE SCREEN] SUCCESS: Unread count: $unreadCount');
+      // Get unread count based on current filter
+      final unreadCount = _showAllNotifications
+          ? await notification_service.NotificationService.getUnreadCount(
+              widget.token,
+              technicianId: widget.technician.id)
+          : notifications.where((n) => n.readAt == null).length;
+
+      // print(
+      //     '🔔 [MOBILE SCREEN] SUCCESS: Fetched ${notifications.length} notifications');
+      // print('🔔 [MOBILE SCREEN] SUCCESS: Unread count: $unreadCount');
 
       // Log each notification for debugging
-      for (int i = 0; i < notifications.length; i++) {
-        final notification = notifications[i];
-        print(
-            '🔔 [MOBILE SCREEN] Notification $i: ID=${notification.id}, Type=${notification.type}, Message=${notification.message}');
-      }
+      // for (int i = 0; i < notifications.length; i++) {
+      //   final notification = notifications[i];
+      //   print(
+      //       '🔔 [MOBILE SCREEN] Notification $i: ID=${notification.id}, Type=${notification.type}, Message=${notification.message}');
+      // }
 
       setState(() {
         _notifications = notifications;
@@ -77,10 +76,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         _isLoading = false;
       });
 
-      print('🔔 [MOBILE SCREEN] State updated successfully');
+      // print('🔔 [MOBILE SCREEN] State updated successfully');
     } catch (e) {
-      print('🔔 [MOBILE SCREEN] ERROR: Error loading notifications: $e');
-      print('🔔 [MOBILE SCREEN] ERROR: Stack trace: ${StackTrace.current}');
+      // print('🔔 [MOBILE SCREEN] ERROR: Error loading notifications: $e');
+      // print('🔔 [MOBILE SCREEN] ERROR: Stack trace: ${StackTrace.current}');
       setState(() => _isLoading = false);
     }
   }
@@ -118,12 +117,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<void> _markAllAsRead() async {
     // Mark all current filtered notifications as read individually
-    final unreadNotifications = _notifications.where((n) => n.readAt == null).toList();
-    
+    final unreadNotifications =
+        _notifications.where((n) => n.readAt == null).toList();
+
     for (final notification in unreadNotifications) {
-      await notification_service.NotificationService.markAsRead(notification.id, widget.token);
+      await notification_service.NotificationService.markAsRead(
+          notification.id, widget.token);
     }
-    
+
     // Refresh the notifications list
     await _loadNotifications();
   }
@@ -136,6 +137,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         return '❌';
       case 'request_submitted':
         return '📝';
+      case 'schedule_reminder':
+        return '📅';
       default:
         return '🔔';
     }
@@ -149,6 +152,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
         return Colors.red;
       case 'request_submitted':
         return Colors.blue;
+      case 'schedule_reminder':
+        return Colors.orange;
       default:
         return Colors.grey;
     }
@@ -158,9 +163,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _showAllNotifications 
-            ? const Text('Notifications (DEBUG)')
-            : const Text('Notifications'),
+        title: _showAllNotifications
+            ? const Text('All Notifications')
+            : const Text('Schedule Notifications'),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF2C3E50),
         elevation: 0,
@@ -173,14 +178,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
         actions: [
           // Debug toggle button
           IconButton(
-            icon: Icon(_showAllNotifications ? Icons.filter_list_off : Icons.filter_list),
+            icon: Icon(_showAllNotifications
+                ? Icons.filter_list_off
+                : Icons.filter_list),
             onPressed: () {
               setState(() {
                 _showAllNotifications = !_showAllNotifications;
               });
               _loadNotifications();
             },
-            tooltip: _showAllNotifications ? 'Show filtered notifications' : 'Show all notifications (debug)',
+            tooltip: _showAllNotifications
+                ? 'Show schedule notifications only'
+                : 'Show all notifications',
           ),
           if (_unreadCount > 0)
             IconButton(
@@ -219,7 +228,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
-                        color: isRead ? Colors.grey[50] : const Color(0xFF27AE60).withOpacity(0.1),
+                        color: isRead
+                            ? Colors.grey[50]
+                            : const Color(0xFF27AE60).withOpacity(0.1),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
@@ -240,6 +251,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              // Show notification message/body
                               if (notification.body != null)
                                 Text(
                                   notification.body!,
@@ -251,6 +263,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                              // Show additional details for schedule notifications
+                              if (notification.type == 'schedule_reminder' &&
+                                  notification.data != null)
+                                _buildScheduleNotificationDetails(
+                                    notification, isRead),
                               const SizedBox(height: 4),
                               Text(
                                 _formatTimestamp(notification.timestamp),
@@ -300,6 +317,97 @@ class _NotificationScreenState extends State<NotificationScreen> {
       }
     } catch (e) {
       return 'Unknown time';
+    }
+  }
+
+  Widget _buildScheduleNotificationDetails(
+      notification_service.Notification notification, bool isRead) {
+    try {
+      if (notification.data == null) return const SizedBox.shrink();
+
+      final data = notification.data as Map<String, dynamic>;
+      final farmWorkerName =
+          data['farm_worker_name']?.toString() ?? 'Unknown Farmer';
+      final activity = data['activity']?.toString() ?? 'Unknown Activity';
+      final scheduleDate = data['schedule_date']?.toString() ?? 'Unknown Date';
+
+      return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.person,
+                  size: 16,
+                  color: isRead ? Colors.grey[600] : Colors.orange[700],
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'Farmer: $farmWorkerName',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isRead ? Colors.grey[600] : Colors.orange[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.schedule,
+                  size: 16,
+                  color: isRead ? Colors.grey[600] : Colors.orange[700],
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'Activity: $activity',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isRead ? Colors.grey[600] : Colors.orange[700],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: isRead ? Colors.grey[600] : Colors.orange[700],
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'Date: $scheduleDate',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isRead ? Colors.grey[600] : Colors.orange[700],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      print('Error building schedule notification details: $e');
+      return const SizedBox.shrink();
     }
   }
 }

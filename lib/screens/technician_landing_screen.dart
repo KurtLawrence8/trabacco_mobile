@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart' as notification_service;
+import '../services/schedule_notification_service.dart';
+import '../services/firebase_messaging_service.dart';
 import 'login_screen.dart';
 import 'technician_report_screen.dart';
 import 'schedule_page.dart';
@@ -62,6 +64,15 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
       _fetchTechnicianData();
       _fetchDashboardMetrics();
 
+      // Initialize Firebase messaging for push notifications
+      _initializeFirebaseMessaging();
+
+      // Start scheduled notifications for schedule-based reminders
+      ScheduleNotificationService.startScheduledNotifications(
+        widget.token,
+        widget.technicianId,
+      );
+
       // Fetch requests after a short delay to ensure farm workers are loaded
       Future.delayed(const Duration(milliseconds: 500), () {
         _fetchAllRequests();
@@ -69,10 +80,54 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    // Stop scheduled notifications when leaving the screen
+    ScheduleNotificationService.stopScheduledNotifications();
+    super.dispose();
+  }
+
+  // ====================================================
+  // FIREBASE MESSAGING INITIALIZATION
+  Future<void> _initializeFirebaseMessaging() async {
+    try {
+      print('🔥 [TECHNICIAN LANDING] Initializing Firebase messaging...');
+
+      // Subscribe to schedule reminder notifications
+      await FirebaseMessagingService.subscribeToScheduleNotifications();
+
+      // Get and update FCM token
+      final fcmToken = await FirebaseMessagingService.getFCMToken();
+      if (fcmToken != null) {
+        print(
+            '🔥 [TECHNICIAN LANDING] FCM Token obtained: ${fcmToken.substring(0, 20)}...');
+      }
+
+      print(
+          '🔥 [TECHNICIAN LANDING] ✅ Firebase messaging initialized successfully');
+    } catch (e) {
+      print(
+          '🔥 [TECHNICIAN LANDING] ❌ Error initializing Firebase messaging: $e');
+    }
+  }
+
   // ====================================================
   // FETCH NOTIFICATIONS
   Future<void> _fetchNotifications() async {
     try {
+      // Check and create schedule-based notifications first
+      print('🔔 [TECHNICIAN LANDING] Checking schedule notifications...');
+      print(
+          '🔔 [TECHNICIAN LANDING] Token: ${widget.token.substring(0, 20)}..., Technician ID: ${widget.technicianId}');
+
+      await ScheduleNotificationService.checkAndCreateScheduleNotifications(
+        widget.token,
+        widget.technicianId,
+      );
+
+      print('🔔 [TECHNICIAN LANDING] ✅ Schedule notification check completed');
+
+      // Then get the updated notification count
       final unreadCount =
           await notification_service.NotificationService.getUnreadCount(
               widget.token,

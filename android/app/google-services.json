@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "84461588961",
+    "project_id": "trabacco-mobile",
+    "storage_bucket": "trabacco-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:84461588961:android:506f51156b934b0ad782a0",
+        "android_client_info": {
+          "package_name": "com.example.trabacco_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMvytoise4OCR8TQZ7KN6rvUQ135FLNmU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

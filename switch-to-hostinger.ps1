@@ -14,21 +14,24 @@ if (Test-Path $apiConfigFile) {
     $content = Get-Content $apiConfigFile -Raw
     $updated = $false
     
-    # Replace localhost URLs with Hostinger
-    $localhostUrl = "http://localhost:8000"
-    $hostingerUrl = "https://navajowhite-chinchilla-897972.hostingersite.com"
+    # Enable production mode
+    if ($content -match 'const bool isProduction = false;') {
+        $content = $content -replace 'const bool isProduction = false;', 'const bool isProduction = true;'
+        $updated = $true
+    }
     
-    if ($content -match $localhostUrl) {
-        $content = $content -replace $localhostUrl, $hostingerUrl
+    # Ensure production host is set to Hostinger
+    if ($content -notmatch "static const String _productionHost = 'navajowhite-chinchilla-897972\.hostingersite\.com';") {
+        $content = $content -replace "static const String _productionHost = '[^']*';", "static const String _productionHost = 'navajowhite-chinchilla-897972.hostingersite.com';"
         $updated = $true
     }
     
     if ($updated) {
         Set-Content -Path $apiConfigFile -Value $content -NoNewline
         $updatedFiles += $apiConfigFile
-        Write-Host "  [OK] Updated: $apiConfigFile" -ForegroundColor Green
+        Write-Host "  [OK] Updated: $apiConfigFile (Production mode enabled)" -ForegroundColor Green
     } else {
-        Write-Host "  [SKIP] Already set to Hostinger" -ForegroundColor Gray
+        Write-Host "  [SKIP] Already set to Hostinger production mode" -ForegroundColor Gray
     }
 } else {
     Write-Host "  [ERROR] $apiConfigFile not found!" -ForegroundColor Red
