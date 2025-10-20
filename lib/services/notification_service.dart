@@ -109,10 +109,10 @@ class NotificationService {
       {int? technicianId, int? farmWorkerId}) async {
     try {
       final url = '$_baseUrl/notifications';
-      // print('🔔 [MOBILE] NotificationService: Starting notification fetch...');
-      // print('🔔 [MOBILE] URL: $url');
-      // print('🔔 [MOBILE] Token length: ${token.length}');
-      // print('🔔 [MOBILE] Token preview: ${token.substring(0, 20)}...');
+      print('🔔 [MOBILE] NotificationService: Starting notification fetch...');
+      print('🔔 [MOBILE] URL: $url');
+      print('🔔 [MOBILE] Token length: ${token.length}');
+      print('🔔 [MOBILE] Token preview: ${token.substring(0, 20)}...');
 
       final response = await http.get(
         Uri.parse(url),
@@ -123,10 +123,10 @@ class NotificationService {
         },
       );
 
-      // print('🔔 [MOBILE] Response status: ${response.statusCode}');
-      // print('🔔 [MOBILE] Response headers: ${response.headers}');
-      // print('🔔 [MOBILE] Response body length: ${response.body.length}');
-      // print('🔔 [MOBILE] Response body: ${response.body}');
+      print('🔔 [MOBILE] Response status: ${response.statusCode}');
+      print('🔔 [MOBILE] Response headers: ${response.headers}');
+      print('🔔 [MOBILE] Response body length: ${response.body.length}');
+      print('🔔 [MOBILE] Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = jsonDecode(response.body);
@@ -145,10 +145,16 @@ class NotificationService {
         List<Notification> notifications =
             jsonList.map((json) => Notification.fromJson(json)).toList();
 
-        // print(
-        //     '🔔 [MOBILE] Total notifications before filtering: ${notifications.length}');
-        // print(
-        //     '🔔 [MOBILE] Filtering for technician ID: $technicianId, Farmer ID: $farmWorkerId');
+        print(
+            '🔔 [MOBILE] Total notifications before filtering: ${notifications.length}');
+        print(
+            '🔔 [MOBILE] Filtering for technician ID: $technicianId, Farmer ID: $farmWorkerId');
+
+        // Debug: Show all notification types
+        for (var notification in notifications) {
+          print(
+              '🔔 [MOBILE] Notification: ID=${notification.id}, Type=${notification.type}, RecipientType=${notification.recipientType}, RecipientId=${notification.recipientId}');
+        }
 
         // Filter notifications for the specific user if ID is provided
         if (technicianId != null || farmWorkerId != null) {

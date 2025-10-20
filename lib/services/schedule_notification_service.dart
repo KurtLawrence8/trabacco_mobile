@@ -498,6 +498,20 @@ class ScheduleNotificationService {
     Map<String, dynamic> data,
   ) async {
     try {
+      final requestBody = {
+        'recipient_type': 'technician',
+        'recipient_id': technicianId,
+        'title': title,
+        'message': message,
+        'type': 'schedule_reminder',
+        'data': data,
+      };
+
+      print('📅 [SCHEDULE NOTIFICATIONS] Sending notification to backend:');
+      print('📅 [SCHEDULE NOTIFICATIONS] URL: $_baseUrl/notifications');
+      print(
+          '📅 [SCHEDULE NOTIFICATIONS] Request body: ${json.encode(requestBody)}');
+
       // Send notification to backend for storage
       final response = await http.post(
         Uri.parse('$_baseUrl/notifications'),
@@ -506,15 +520,13 @@ class ScheduleNotificationService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({
-          'recipient_type': 'technician',
-          'recipient_id': technicianId,
-          'title': title,
-          'message': message,
-          'type': 'schedule_reminder',
-          'data': data,
-        }),
+        body: json.encode(requestBody),
       );
+
+      print(
+          '📅 [SCHEDULE NOTIFICATIONS] Backend response status: ${response.statusCode}');
+      print(
+          '📅 [SCHEDULE NOTIFICATIONS] Backend response body: ${response.body}');
 
       // Always show local notification regardless of backend response
       await _sendLocalNotificationFallback(title, message, data);
@@ -522,7 +534,8 @@ class ScheduleNotificationService {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         print(
-            '📅 [SCHEDULE NOTIFICATIONS] Successfully sent notification to backend');
+            '📅 [SCHEDULE NOTIFICATIONS] ✅ Successfully sent notification to backend');
+        print('📅 [SCHEDULE NOTIFICATIONS] Notification stored in database');
 
         // Now send Firebase push notification
         await _sendFirebasePushNotification(
@@ -534,7 +547,7 @@ class ScheduleNotificationService {
         );
       } else {
         print(
-            '📅 [SCHEDULE NOTIFICATIONS] Failed to send notification to backend. Status: ${response.statusCode}, Body: ${response.body}');
+            '📅 [SCHEDULE NOTIFICATIONS] ❌ Failed to send notification to backend. Status: ${response.statusCode}, Body: ${response.body}');
         print(
             '📱 [LOCAL] ✅ Local notification still shown despite backend error');
       }

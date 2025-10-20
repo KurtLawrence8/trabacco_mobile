@@ -336,16 +336,25 @@ class FirebaseMessagingService {
       final authToken = prefs.getString('auth_token');
 
       if (authToken != null) {
-        // Get user info to determine if it's technician or farm worker
-        final userInfo = prefs.getString('user_info');
-        if (userInfo != null) {
-          final userData = jsonDecode(userInfo);
-          final userType = userData['role_type'];
+        // Get user data using correct keys (from auth_service.dart)
+        final userDataString = prefs.getString('user_data');
+        final userRoleType = prefs.getString('user_role_type');
+
+        if (userDataString != null && userRoleType != null) {
+          final userData = jsonDecode(userDataString);
           final userId = userData['id'];
 
+          print(
+              '🔥 [FCM] Saving FCM token for user: ID=$userId, Type=$userRoleType');
+
           // Send token to backend
-          await _sendTokenToBackend(token, authToken, userType, userId);
+          await _sendTokenToBackend(token, authToken, userRoleType, userId);
+        } else {
+          print(
+              '🔥 [FCM] ❌ Missing user data or role type: userDataString=${userDataString != null}, userRoleType=$userRoleType');
         }
+      } else {
+        print('🔥 [FCM] ❌ Missing auth token, cannot save FCM token');
       }
 
       // Save token locally
@@ -364,6 +373,18 @@ class FirebaseMessagingService {
   ) async {
     try {
       final url = '${ApiConfig.baseUrl}/fcm-token';
+      final requestBody = {
+        'fcm_token': token,
+        'user_type': userType,
+        'user_id': userId,
+        'platform': 'mobile',
+      };
+
+      print('🔥 [FCM] Sending FCM token to backend:');
+      print('🔥 [FCM] URL: $url');
+      print('🔥 [FCM] User: $userType (ID: $userId)');
+      print('🔥 [FCM] Token preview: ${token.substring(0, 20)}...');
+
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -371,19 +392,17 @@ class FirebaseMessagingService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'fcm_token': token,
-          'user_type': userType,
-          'user_id': userId,
-          'platform': 'mobile',
-        }),
+        body: jsonEncode(requestBody),
       );
+
+      print('🔥 [FCM] Backend response status: ${response.statusCode}');
+      print('🔥 [FCM] Backend response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('🔥 [FCM] ✅ Token sent to backend successfully');
       } else {
         print(
-            '🔥 [FCM] ❌ Failed to send token to backend: ${response.statusCode}');
+            '🔥 [FCM] ❌ Failed to send token to backend: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('🔥 [FCM] ❌ Error sending token to backend: $e');
