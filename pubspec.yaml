@@ -113,7 +113,7 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/TRABACC0_LOGO.png"
+  image_path: "assets/TRABACCO_LOGO.png"
   min_sdk_android: 21
   ios_content_mode: "scaleAspectFit"
   remove_alpha_ios: true
