@@ -39,7 +39,7 @@ class ApiConfig {
   static bool _isProduction() {
     // For now, you can set this to true when building for production
     // Or use build flavors/constants to determine this
-    const bool isProduction = false; // CHANGE THIS TO TRUE FOR PRODUCTION BUILD
+    const bool isProduction = true; // CHANGE THIS TO TRUE FOR PRODUCTION BUILD
     return isProduction;
   }
 

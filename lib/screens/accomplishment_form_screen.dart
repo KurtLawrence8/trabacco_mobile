@@ -50,12 +50,17 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
   final TextEditingController _issuesController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _diseaseTypeController = TextEditingController();
+  final TextEditingController _laborerSearchController = TextEditingController();
 
+  List<Laborer> _filteredLaborers = [];
+  bool _isLoadingLaborers = false;
+  String? _laborerErrorMessage;
   String _diseaseDetected = 'None';
 
   @override
   void initState() {
     super.initState();
+    _laborerSearchController.addListener(_filterLaborers);
     _loadFarms();
     _loadLaborers();
 
@@ -89,16 +94,62 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
   }
 
   Future<void> _loadLaborers() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingLaborers = true;
+        _laborerErrorMessage = null;
+      });
+    }
+
     try {
       final laborers = await _laborerService.getAllLaborers(widget.token!);
       if (mounted) {
         setState(() {
           _allLaborers = laborers;
+          _filteredLaborers = List.from(laborers);
+          _isLoadingLaborers = false;
         });
       }
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _laborerErrorMessage = e.toString();
+          _isLoadingLaborers = false;
+        });
+      }
       print('Error loading laborers: $e');
     }
+  }
+
+  void _filterItems<T>({
+    required TextEditingController searchController,
+    required List<T> sourceList,
+    required void Function(List<T>) setFilteredList,
+    required bool Function(T item, String query) filterFunction,
+  }) {
+    final query = searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        setFilteredList(List.from(sourceList));
+      } else {
+        setFilteredList(
+            sourceList.where((item) => filterFunction(item, query)).toList());
+      }
+    });
+  }
+
+  void _filterLaborers() {
+    _filterItems<Laborer>(
+      searchController: _laborerSearchController,
+      sourceList: _allLaborers,
+      setFilteredList: (filtered) => _filteredLaborers = filtered,
+      filterFunction: (laborer, query) {
+        final searchableText =
+            '${laborer.firstName} ${laborer.lastName} ${laborer.phoneNumber ?? ''}'
+                .toLowerCase();
+        return searchableText.contains(query);
+      },
+    );
   }
 
   Future<void> _getCurrentLocation() async {
@@ -188,51 +239,355 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Select Laborers'),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 400,
-                child: _allLaborers.isEmpty
-                    ? const Center(child: Text('No laborers available'))
-                    : ListView.builder(
-                        itemCount: _allLaborers.length,
-                        itemBuilder: (context, index) {
-                          final laborer = _allLaborers[index];
-                          final isSelected =
-                              _selectedLaborers.contains(laborer);
-                          return CheckboxListTile(
-                            title: Text(
-                              '${laborer.firstName} ${laborer.lastName}',
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            subtitle: laborer.phoneNumber != null
-                                ? Text(laborer.phoneNumber!)
-                                : null,
-                            value: isSelected,
-                            onChanged: (bool? value) {
-                              setDialogState(() {
-                                if (value == true) {
-                                  if (!_selectedLaborers.contains(laborer)) {
-                                    _selectedLaborers.add(laborer);
-                                  }
-                                } else {
-                                  _selectedLaborers.remove(laborer);
-                                }
-                              });
-                              setState(() {}); // Update parent widget
-                            },
-                            activeColor: const Color(0xFF27AE60),
-                          );
-                        },
-                      ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Done'),
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom:
+                              BorderSide(color: Color(0xFFE0E0E0), width: 1),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Select Laborers',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              _laborerSearchController.clear();
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(Icons.close, size: 20),
+                            color: Colors.grey[600],
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Content
+                    Flexible(
+                      child: Container(
+                        height: 400,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          children: [
+                            // Search field for laborers
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  8.0, 16.0, 8.0, 16.0),
+                              child: Semantics(
+                                label: 'Search laborers',
+                                textField: true,
+                                child: TextField(
+                                  controller: _laborerSearchController,
+                                  onChanged: (value) {
+                                    setDialogState(() {
+                                      // This triggers the StatefulBuilder to rebuild
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Search laborers...',
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 14,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: Colors.grey[600],
+                                      size: 18,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide:
+                                          BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide:
+                                          BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFF27AE60)),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                  ),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                            ),
+                            // Laborers list
+                            Expanded(
+                              child: _isLoadingLaborers
+                                  ? const Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Color(0xFF27AE60)),
+                                      ),
+                                    )
+                                  : _laborerErrorMessage != null
+                                      ? Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.error_outline,
+                                                color: Colors.red[400],
+                                                size: 48,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                _laborerErrorMessage!,
+                                                style: TextStyle(
+                                                  color: Colors.red[700],
+                                                  fontSize: 14,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              ElevatedButton.icon(
+                                                onPressed: _loadLaborers,
+                                                icon: const Icon(Icons.refresh,
+                                                    size: 16),
+                                                label: const Text('Retry'),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      const Color(0xFF27AE60),
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 8),
+                                                  textStyle: const TextStyle(
+                                                      fontSize: 12),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : _allLaborers.isEmpty
+                                          ? Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    'No laborers available',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            )
+                                          : ListView.separated(
+                                              padding: EdgeInsets.zero,
+                                              itemCount:
+                                                  _filteredLaborers.length,
+                                              separatorBuilder:
+                                                  (context, index) => Divider(
+                                                height: 1,
+                                                color: Colors.grey[200],
+                                              ),
+                                              itemBuilder: (context, index) {
+                                                final laborer =
+                                                    _filteredLaborers[index];
+                                                final isSelected =
+                                                    _selectedLaborers
+                                                        .contains(laborer);
+                                                return Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      vertical: 8,
+                                                      horizontal: 4),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      setDialogState(() {
+                                                        if (isSelected) {
+                                                          _selectedLaborers
+                                                              .remove(laborer);
+                                                        } else {
+                                                          _selectedLaborers
+                                                              .add(laborer);
+                                                        }
+                                                      });
+                                                      setState(
+                                                          () {}); // Update parent widget
+                                                    },
+                                                    child: Row(
+                                                      children: [
+                                                        Container(
+                                                          width: 20,
+                                                          height: 20,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            border: Border.all(
+                                                              color: isSelected
+                                                                  ? const Color(
+                                                                      0xFF27AE60)
+                                                                  : Colors.grey[
+                                                                      400]!,
+                                                              width: 2,
+                                                            ),
+                                                            color: isSelected
+                                                                ? const Color(
+                                                                    0xFF27AE60)
+                                                                : Colors
+                                                                    .transparent,
+                                                          ),
+                                                          child: isSelected
+                                                              ? const Center(
+                                                                  child: Icon(
+                                                                    Icons.check,
+                                                                    size: 14,
+                                                                    color: Colors
+                                                                        .white,
+                                                                  ),
+                                                                )
+                                                              : null,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 12),
+                                                        Expanded(
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Text(
+                                                                '${laborer.firstName} ${laborer.lastName}',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 14,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                  color: isSelected
+                                                                      ? const Color(
+                                                                          0xFF2C3E50)
+                                                                      : Colors.grey[
+                                                                          700],
+                                                                ),
+                                                              ),
+                                                              if (laborer
+                                                                      .phoneNumber !=
+                                                                  null) ...[
+                                                                const SizedBox(
+                                                                    height: 2),
+                                                                Text(
+                                                                  laborer
+                                                                      .phoneNumber!,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        12,
+                                                                    color: Colors
+                                                                            .grey[
+                                                                        500],
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Footer with buttons
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: Color(0xFFE0E0E0), width: 1),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              _laborerSearchController.clear();
+                              Navigator.pop(context);
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              _laborerSearchController.clear();
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF27AE60),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Done',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         );
@@ -246,6 +601,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
     _issuesController.dispose();
     _descriptionController.dispose();
     _diseaseTypeController.dispose();
+    _laborerSearchController.dispose();
     super.dispose();
   }
 

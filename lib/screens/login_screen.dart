@@ -573,7 +573,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const SizedBox(height: 8),
                                 // Email/Phone Field
                                 Text(
-                                  _roleType == "technician"
+                                  _roleType == 'technician'
                                       ? 'Email'
                                       : 'Phone Number',
                                   style: const TextStyle(
@@ -597,11 +597,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     },
                                     child: TextFormField(
                                       controller: _loginController,
-                                      keyboardType: _roleType == "technician"
+                                      keyboardType: _roleType == 'technician'
                                           ? TextInputType.emailAddress
                                           : TextInputType.phone,
                                       decoration: InputDecoration(
-                                        hintText: (_roleType == "technician")
+                                        hintText: (_roleType == 'technician')
                                             ? "Enter your email address"
                                             : "Enter phone number",
                                         hintStyle: const TextStyle(
@@ -635,7 +635,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       validator: (v) {
                                         if (v == null || v.trim().isEmpty) {
-                                          return _roleType == "technician"
+                                          return _roleType == 'technician'
                                               ? "Please enter your email address."
                                               : "Please enter your phone number.";
                                         }

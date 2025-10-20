@@ -664,6 +664,11 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                                 textField: true,
                                 child: TextField(
                                   controller: _laborerSearchController,
+                                  onChanged: (value) {
+                                    setDialogState(() {
+                                      // This triggers the StatefulBuilder to rebuild
+                                    });
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Search laborers...',
                                     hintStyle: TextStyle(

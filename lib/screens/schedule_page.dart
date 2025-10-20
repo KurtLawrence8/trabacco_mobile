@@ -3,8 +3,6 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../models/schedule.dart';
 import '../services/schedule_service.dart';
-import '../widgets/laborer_assignment_dialog.dart';
-import '../widgets/schedule_edit_dialog.dart';
 
 // ADD CONSTANTS FOR COLORS AT THE TOP
 const Color K_TODAY_HIGHLIGHT = Color(0xFFFFF9C4); // LIGHT YELLOW
@@ -130,43 +128,6 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
-  void _showLaborerAssignmentDialog(Schedule schedule) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => LaborerAssignmentDialog(
-        schedule: schedule,
-        farmWorkerId: widget.farmWorkerId,
-        token: widget.token,
-        onScheduleUpdated: (updatedSchedule) {
-          // Refresh schedules after assignment
-          setState(() {
-            _futureSchedules = _service.fetchSchedulesForFarmWorker(
-                widget.farmWorkerId, widget.token);
-          });
-        },
-      ),
-    );
-  }
-
-  void _showScheduleEditDialog(Schedule schedule) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => ScheduleEditDialog(
-        schedule: schedule,
-        farmWorkerId: widget.farmWorkerId,
-        token: widget.token,
-        onScheduleUpdated: (updatedSchedule) {
-          // Refresh schedules after edit
-          setState(() {
-            _futureSchedules = _service.fetchSchedulesForFarmWorker(
-                widget.farmWorkerId, widget.token);
-          });
-        },
-      ),
-    );
-  }
 
   // Helper functions to get unit and budget from laborers array
   String? _getScheduleUnit(Schedule schedule) {
@@ -1138,7 +1099,14 @@ class _SchedulePageState extends State<SchedulePage> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: canComplete
-                              ? () => _showLaborerAssignmentDialog(s)
+                              ? () => _showConfirmationDialog(
+                                context,
+                                'Complete Task',
+                                'Are you sure you want to complete "${s.activity}"?',
+                                'Complete',
+                                const Color(0xFF4CAF50),
+                                () => onStatusChange?.call('Completed'),
+                              )
                               : null,
                           icon: const Icon(Icons.check_circle, size: 20),
                           label: const Text('Complete'),
@@ -1186,32 +1154,6 @@ class _SchedulePageState extends State<SchedulePage> {
                 ],
               ],
 
-              // Edit button for completed schedules
-              if (actionsEnabled && isCompleted) ...[
-                const SizedBox(height: 16),
-                const Divider(height: 1, color: Colors.grey),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showScheduleEditDialog(s),
-                        icon: const Icon(Icons.edit, size: 20),
-                        label: const Text('Edit Schedule'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2196F3),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
             ],
           ),
         ),
