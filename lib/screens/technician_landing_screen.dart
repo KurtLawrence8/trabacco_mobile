@@ -51,9 +51,24 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   bool _loadingRequests = false;
   Map<int, FarmWorker> _farmWorkersMap = {}; // For navigation to farmer details
 
+  // Performance optimization - cache pages to avoid rebuilding
+  late final List<Widget> _pages;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize cached pages for better performance
+    _pages = [
+      _buildDashboard(),
+      _buildSchedule(),
+      _buildReports(),
+      _buildManageProfile(),
+      RequestSubmissionScreen(
+        token: widget.token,
+        technicianId: widget.technicianId,
+      ),
+    ];
 
     // FETCH FARM WORKERS ASSIGNED TO THIS SPECIFIC TECHNICIAN
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -564,7 +579,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     final greenBackgroundTitles = [
       'Reports',
       'Transplanting Schedules',
-      'Request Submission'
+      'Request Submission',
+      'Profile'
     ];
     final shouldHaveGreenBackground = greenBackgroundTitles.contains(title);
 
@@ -579,6 +595,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
               : const Color(0xFF2C3E50),
         ),
       ),
+      centerTitle: true,
       backgroundColor: shouldHaveGreenBackground ? Colors.green : Colors.white,
       foregroundColor:
           shouldHaveGreenBackground ? Colors.white : const Color(0xFF2C3E50),
@@ -1377,48 +1394,60 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
     required int index,
   }) {
     final isSelected = _selectedIndex == index;
-    double iconSize = 24;
-    if (index == 1 || index == 2) {
-      iconSize = 22;
-    }
-// ====================================================
-// BUILD NAV ITEM
-    return GestureDetector(
-      onTap: () {
-        if (mounted) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          // Refresh pending requests when navigating to dashboard for real-time updates
-          if (index == 0) {
-            _fetchPendingRequests();
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          if (mounted && _selectedIndex != index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+            // Refresh pending requests when navigating to dashboard for real-time updates
+            if (index == 0) {
+              _fetchPendingRequests();
+            }
           }
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected
-                  ? const Color(0xFF27AE60)
-                  : const Color(0xFF8F9BB3),
-              size: iconSize,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          width: 60, // Fixed width for consistent highlight size
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF27AE60).withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? activeIcon : icon,
                 color: isSelected
                     ? const Color(0xFF27AE60)
-                    : const Color(0xFF8F9BB3),
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    : const Color(0xFF757575),
+                size: 22,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? const Color(0xFF27AE60)
+                      : const Color(0xFF757575),
+                  fontSize: 9,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: 0.1,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1428,52 +1457,57 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 // BUILD CENTER REQUEST BUTTON
   Widget _buildCenterReportButton() {
     final isSelected = _selectedIndex == 2;
-    return GestureDetector(
-      onTap: () {
-        if (mounted) {
-          setState(() {
-            _selectedIndex = 2;
-          });
-        }
-      },
-      // ====================================================
-      // CENTER REPORT BUTTON
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Circular icon with green outline
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF27AE60) : Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          if (mounted && _selectedIndex != 2) {
+            setState(() {
+              _selectedIndex = 2;
+            });
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          width: 60, // Fixed width for consistent highlight size
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF27AE60).withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isSelected ? Icons.assessment : Icons.assessment_outlined,
                 color: isSelected
                     ? const Color(0xFF27AE60)
-                    : const Color(0xFF8F9BB3),
-                width: 2,
+                    : const Color(0xFF757575),
+                size: 22,
               ),
-            ),
-            child: Icon(
-              isSelected ? Icons.assessment : Icons.assessment_outlined,
-              color: isSelected ? Colors.white : const Color(0xFF8F9BB3),
-              size: 24,
-            ),
+              const SizedBox(height: 2),
+              Text(
+                'Report',
+                style: TextStyle(
+                  color: isSelected
+                      ? const Color(0xFF27AE60)
+                      : const Color(0xFF757575),
+                  fontSize: 9,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: 0.1,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
-          // Label
-          Text(
-            'Report',
-            style: TextStyle(
-              color: isSelected
-                  ? const Color(0xFF27AE60)
-                  : const Color(0xFF8F9BB3),
-              fontSize: 10,
-              fontWeight: FontWeight.normal,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1482,16 +1516,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 // BUILD TECHNICIAN LANDING SCREEN
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      _buildDashboard(),
-      _buildSchedule(),
-      _buildReports(),
-      _buildManageProfile(),
-      RequestSubmissionScreen(
-        token: widget.token,
-        technicianId: widget.technicianId,
-      ),
-    ];
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _selectedIndex == 0
@@ -1505,27 +1529,37 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                       : _selectedIndex == 4
                           ? null // RequestSubmissionScreen has its own header
                           : null,
-      body: SafeArea(child: pages[_selectedIndex]),
+      body: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: _pages,
+        ),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.withOpacity(0.2),
+              width: 0.5,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
             ),
           ],
         ),
         // ====================================================
-        // BOTTOM NAVIGATION BAR
+        // GOOGLE-STYLE BOTTOM NAVIGATION BAR
         child: SafeArea(
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 60),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 // Home
                 _buildNavItem(
@@ -1536,8 +1570,8 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
                 ),
                 // Schedule
                 _buildNavItem(
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today,
+                  icon: Icons.schedule_outlined,
+                  activeIcon: Icons.schedule,
                   label: 'Schedule',
                   index: 1,
                 ),

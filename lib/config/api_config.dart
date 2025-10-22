@@ -11,7 +11,7 @@ class ApiConfig {
   static const String _localHost = 'localhost';
   static const String _emulatorHost = '10.0.2.2'; // Android emulator host
   static const String _physicalDeviceHost =
-      '192.168.100.21'; // Your computer's IP address for development
+      'localhost'; // Your computer's IP address for development
   static const String _productionHost =
       'navajowhite-chinchilla-897972.hostingersite.com'; // PRODUCTION: Hostinger backend URL
   static const String _port = '8000';
@@ -39,7 +39,7 @@ class ApiConfig {
   static bool _isProduction() {
     // For now, you can set this to true when building for production
     // Or use build flavors/constants to determine this
-    const bool isProduction = true; // CHANGE THIS TO TRUE FOR PRODUCTION BUILD
+    const bool isProduction = false; // CHANGE THIS TO TRUE FOR PRODUCTION BUILD
     return isProduction;
   }
 

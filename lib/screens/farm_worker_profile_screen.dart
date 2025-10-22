@@ -6,20 +6,21 @@ import '../config/api_config.dart';
 
 class FarmWorkerProfileScreen extends StatefulWidget {
   final int farmWorkerId;
-  
+
   const FarmWorkerProfileScreen({
     super.key,
     required this.farmWorkerId,
   });
 
   @override
-  State<FarmWorkerProfileScreen> createState() => _FarmWorkerProfileScreenState();
+  State<FarmWorkerProfileScreen> createState() =>
+      _FarmWorkerProfileScreenState();
 }
 
 class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _farmWorkerService = FarmWorkerProfileService();
-  
+
   bool _loading = false;
   FarmWorkerProfile? _farmWorker;
 
@@ -44,53 +45,59 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
   void _testUrlConstruction() {
     print('🧪 [URL TEST] Testing URL construction...');
     print('🧪 [URL TEST] Image Base URL: ${ApiConfig.imageBaseUrl}');
-    
+
     // Test with your provided URL
-    String testUrl = 'https://navajowhite-chinchilla-897972.hostingersite.com/storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
+    String testUrl =
+        'https://navajowhite-chinchilla-897972.hostingersite.com/storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
     print('🧪 [URL TEST] Full URL test: ${_getImageUrl(testUrl)}');
-    
+
     // Test with relative path
-    String testPath = 'profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
+    String testPath =
+        'profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
     print('🧪 [URL TEST] Relative path test: ${_getImageUrl(testPath)}');
-    
+
     // Test with storage path
-    String testStoragePath = 'storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
+    String testStoragePath =
+        'storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
     print('🧪 [URL TEST] Storage path test: ${_getImageUrl(testStoragePath)}');
   }
 
   // Helper method to construct full image URL
   String _getImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return '';
-    
+
     // Sanitize the URL - replace any localhost references
-    String sanitizedPath = imagePath.replaceAll('localhost', 'navajowhite-chinchilla-897972.hostingersite.com');
-    sanitizedPath = sanitizedPath.replaceAll('127.0.0.1', 'navajowhite-chinchilla-897972.hostingersite.com');
+    String sanitizedPath = imagePath.replaceAll(
+        'localhost', 'navajowhite-chinchilla-897972.hostingersite.com');
+    sanitizedPath = sanitizedPath.replaceAll(
+        '127.0.0.1', 'navajowhite-chinchilla-897972.hostingersite.com');
     sanitizedPath = sanitizedPath.replaceAll('http://', 'https://');
-    
+
     // If it's already a full URL, return as is
     if (sanitizedPath.startsWith('http')) {
       print('🌐 [IMAGE URL] Already full URL (sanitized): $sanitizedPath');
       return sanitizedPath;
     }
-    
+
     // Always use the hosting URL, never localhost
     String baseUrl = ApiConfig.imageBaseUrl;
-    
+
     // Remove leading slash if present and clean up the path
-    String cleanPath = sanitizedPath.startsWith('/') ? sanitizedPath.substring(1) : sanitizedPath;
-    
+    String cleanPath = sanitizedPath.startsWith('/')
+        ? sanitizedPath.substring(1)
+        : sanitizedPath;
+
     // Ensure the path starts with storage/
     if (!cleanPath.startsWith('storage/')) {
       cleanPath = 'storage/$cleanPath';
     }
-    
+
     final fullUrl = '$baseUrl/$cleanPath';
     print('🌐 [IMAGE URL] Constructed URL: $fullUrl');
     print('🌐 [IMAGE URL] Original path: $imagePath');
     print('🌐 [IMAGE URL] Sanitized path: $sanitizedPath');
     return fullUrl;
   }
-
 
   void _initializeControllers() {
     _firstNameController = TextEditingController();
@@ -122,7 +129,8 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
 
       if (token != null) {
         // Test API connection first
-        final isApiReachable = await _farmWorkerService.testApiConnection(token);
+        final isApiReachable =
+            await _farmWorkerService.testApiConnection(token);
         print('API reachable: $isApiReachable');
 
         final farmWorker = await _farmWorkerService.getFarmWorkerProfile(
@@ -139,16 +147,19 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
           _sex = farmWorker.sex;
           _loading = false;
         });
-        
+
         // Debug: Print image URLs
-        print('🖼️ [PROFILE] Profile Picture URL: ${farmWorker.profilePicture}');
+        print(
+            '🖼️ [PROFILE] Profile Picture URL: ${farmWorker.profilePicture}');
         print('🖼️ [PROFILE] ID Picture URL: ${farmWorker.idPicture}');
         print('🖼️ [PROFILE] Image Base URL: ${ApiConfig.imageBaseUrl}');
         if (farmWorker.profilePicture != null) {
-          print('🖼️ [PROFILE] Full Profile Picture URL: ${_getImageUrl(farmWorker.profilePicture)}');
+          print(
+              '🖼️ [PROFILE] Full Profile Picture URL: ${_getImageUrl(farmWorker.profilePicture)}');
         }
         if (farmWorker.idPicture != null) {
-          print('🖼️ [PROFILE] Full ID Picture URL: ${_getImageUrl(farmWorker.idPicture)}');
+          print(
+              '🖼️ [PROFILE] Full ID Picture URL: ${_getImageUrl(farmWorker.idPicture)}');
         }
       } else {
         setState(() => _loading = false);
@@ -161,7 +172,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
       print('Error loading Farmer data: $e');
       print('Error type: ${e.runtimeType}');
       print('Error details: ${e.toString()}');
-      
+
       // Fallback: Show sample data for development/testing
       setState(() {
         _farmWorker = FarmWorkerProfile(
@@ -197,7 +208,6 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -301,7 +311,9 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF27AE60).withOpacity(0.2), width: 1),
+                  border: Border.all(
+                      color: const Color(0xFF27AE60).withOpacity(0.2),
+                      width: 1),
                 ),
                 child: Column(
                   children: [
@@ -311,11 +323,17 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.grey[100],
-                          backgroundImage: (_farmWorker!.profilePicture != null && _farmWorker!.profilePicture!.isNotEmpty
-                                  ? NetworkImage(_getImageUrl(_farmWorker!.profilePicture!)) as ImageProvider?
+                          backgroundImage:
+                              (_farmWorker!.profilePicture != null &&
+                                      _farmWorker!.profilePicture!.isNotEmpty
+                                  ? NetworkImage(_getImageUrl(
+                                          _farmWorker!.profilePicture!))
+                                      as ImageProvider?
                                   : null),
-                          child: ((_farmWorker!.profilePicture == null || _farmWorker!.profilePicture!.isEmpty))
-                              ? const Icon(Icons.person, size: 50, color: Color(0xFF27AE60))
+                          child: ((_farmWorker!.profilePicture == null ||
+                                  _farmWorker!.profilePicture!.isEmpty))
+                              ? const Icon(Icons.person,
+                                  size: 50, color: Color(0xFF27AE60))
                               : null,
                         ),
                       ],
@@ -368,39 +386,17 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: _farmWorker!.idPicture != null
-                                ? Image.network(
-                                    _getImageUrl(_farmWorker!.idPicture!),
-                                    width: double.infinity,
-                                    height: 200,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: Colors.grey[100],
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.credit_card,
-                                              size: 60,
-                                              color: Color(0xFF27AE60),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              'Error loading ID picture',
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Container(
+                            ? Image.network(
+                                _getImageUrl(_farmWorker!.idPicture!),
+                                width: double.infinity,
+                                height: 200,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
                                     color: Colors.grey[100],
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         const Icon(
                                           Icons.credit_card,
@@ -409,7 +405,7 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          'No ID picture uploaded',
+                                          'Error loading ID picture',
                                           style: TextStyle(
                                             color: Colors.grey[600],
                                             fontSize: 14,
@@ -417,7 +413,30 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                                         ),
                                       ],
                                     ),
-                                  ),
+                                  );
+                                },
+                              )
+                            : Container(
+                                color: Colors.grey[100],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.credit_card,
+                                      size: 60,
+                                      color: Color(0xFF27AE60),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'No ID picture uploaded',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -455,7 +474,8 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                       controller: _firstNameController,
                       labelText: 'First Name *',
                       fieldId: 'first_name',
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -464,7 +484,8 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                       controller: _lastNameController,
                       labelText: 'Last Name *',
                       fieldId: 'last_name',
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
                 ],
@@ -498,7 +519,8 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                       labelText: 'Sex',
                       items: const [
                         DropdownMenuItem(value: 'Male', child: Text('Male')),
-                        DropdownMenuItem(value: 'Female', child: Text('Female')),
+                        DropdownMenuItem(
+                            value: 'Female', child: Text('Female')),
                       ],
                       onChanged: null,
                     ),
@@ -527,7 +549,6 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 32),
-
             ],
           ),
         ),
@@ -614,7 +635,8 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
           color: Colors.grey[600],
           fontWeight: FontWeight.w400,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       validator: validator,
       enabled: false,
@@ -652,7 +674,8 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
           color: Colors.grey[600],
           fontWeight: FontWeight.w400,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       dropdownColor: Colors.white,
       style: const TextStyle(

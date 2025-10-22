@@ -41,16 +41,21 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
   Position? _currentPosition;
   Farm? _selectedFarm;
   List<Farm> _farms = [];
+  List<Farm> _filteredFarms = [];
   List<File> _photos = [];
   List<Laborer> _allLaborers = [];
   List<Laborer> _selectedLaborers = [];
+  bool _isFarmDropdownExpanded = false;
+  bool _isDiseaseDropdownExpanded = false;
+  final TextEditingController _farmSearchController = TextEditingController();
 
   final TextEditingController _accomplishmentsController =
       TextEditingController();
   final TextEditingController _issuesController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _diseaseTypeController = TextEditingController();
-  final TextEditingController _laborerSearchController = TextEditingController();
+  final TextEditingController _laborerSearchController =
+      TextEditingController();
 
   List<Laborer> _filteredLaborers = [];
   bool _isLoadingLaborers = false;
@@ -60,6 +65,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
   @override
   void initState() {
     super.initState();
+    _farmSearchController.addListener(_filterFarms);
     _laborerSearchController.addListener(_filterLaborers);
     _loadFarms();
     _loadLaborers();
@@ -86,6 +92,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
       if (mounted) {
         setState(() {
           _farms = farms;
+          _filteredFarms = List.from(farms);
         });
       }
     } catch (e) {
@@ -136,6 +143,19 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
             sourceList.where((item) => filterFunction(item, query)).toList());
       }
     });
+  }
+
+  void _filterFarms() {
+    _filterItems<Farm>(
+      searchController: _farmSearchController,
+      sourceList: _farms,
+      setFilteredList: (filtered) => _filteredFarms = filtered,
+      filterFunction: (farm, query) {
+        final farmName = farm.name?.toLowerCase() ?? '';
+        final farmAddress = farm.farmAddress.toLowerCase();
+        return farmName.contains(query) || farmAddress.contains(query);
+      },
+    );
   }
 
   void _filterLaborers() {
@@ -595,8 +615,157 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
     );
   }
 
+  Widget _buildFarmOption({
+    required Farm farm,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    farm.name != null && farm.name!.isNotEmpty
+                        ? farm.name!
+                        : farm.farmAddress,
+                    style: TextStyle(
+                      color: isSelected
+                          ? const Color(0xFF2C3E50)
+                          : Colors.grey[600],
+                      fontSize: 16,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                  if (farm.name != null && farm.name!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      farm.farmAddress,
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (isSelected)
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.green,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.grey[400]!,
+                    width: 2,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDiseaseOption({
+    required String value,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color:
+                      isSelected ? const Color(0xFF2C3E50) : Colors.grey[600],
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.green,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.grey[400]!,
+                    width: 2,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
+    _farmSearchController.removeListener(_filterFarms);
+    _laborerSearchController.removeListener(_filterLaborers);
+    _farmSearchController.dispose();
     _accomplishmentsController.dispose();
     _issuesController.dispose();
     _descriptionController.dispose();
@@ -700,113 +869,323 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Farm Selection
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE9ECEF)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Select Farm',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2C3E50),
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Select Farm',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<Farm>(
-                      value: _selectedFarm,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      hint: const Text('Choose a farm'),
-                      isExpanded: true,
-                      items: _farms.map((farm) {
-                        return DropdownMenuItem<Farm>(
-                          value: farm,
-                          child: Text(
-                            '${farm.farmAddress}${farm.name != null && farm.name!.isNotEmpty ? " - ${farm.name}" : ""}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  Column(
+                    children: [
+                      // Dropdown Header
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            final wasExpanded = _isFarmDropdownExpanded;
+                            _isFarmDropdownExpanded = !_isFarmDropdownExpanded;
+                            if (wasExpanded) {
+                              _farmSearchController.clear();
+                            }
+                          });
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE0E0E0),
+                              width: 1.0,
+                            ),
                           ),
-                        );
-                      }).toList(),
-                      onChanged: (Farm? farm) {
-                        setState(() {
-                          _selectedFarm = farm;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select a farm';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _selectedFarm != null
+                                      ? '${_selectedFarm!.farmAddress}${_selectedFarm!.name != null && _selectedFarm!.name!.isNotEmpty ? " - ${_selectedFarm!.name}" : ""}'
+                                      : 'Choose a farm',
+                                  style: TextStyle(
+                                    color: _selectedFarm != null
+                                        ? const Color(0xFF2C3E50)
+                                        : Colors.grey[500],
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                ),
+                              ),
+                              Icon(
+                                _isFarmDropdownExpanded
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
+                                color: Colors.grey[600],
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Dropdown Options
+                      if (_isFarmDropdownExpanded) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE0E0E0),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              // Search field for farms
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: TextField(
+                                  controller: _farmSearchController,
+                                  decoration: InputDecoration(
+                                    hintText: 'Search farms...',
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 14,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: Colors.grey[600],
+                                      size: 18,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide:
+                                          BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide:
+                                          BorderSide(color: Colors.grey[300]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFF27AE60)),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                  ),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              Container(
+                                constraints:
+                                    const BoxConstraints(maxHeight: 200),
+                                child: _filteredFarms.isEmpty
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: Center(
+                                          child: Text(
+                                            'No farms available',
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        shrinkWrap: true,
+                                        padding: EdgeInsets.zero,
+                                        itemCount: _filteredFarms.length,
+                                        itemBuilder: (context, index) {
+                                          final farm = _filteredFarms[index];
+                                          return Column(
+                                            children: [
+                                              _buildFarmOption(
+                                                farm: farm,
+                                                isSelected:
+                                                    _selectedFarm != null &&
+                                                        _selectedFarm!.id ==
+                                                            farm.id,
+                                                onTap: () {
+                                                  setState(() {
+                                                    _selectedFarm = farm;
+                                                    _isFarmDropdownExpanded =
+                                                        false;
+                                                  });
+                                                },
+                                              ),
+                                              if (index <
+                                                  _filteredFarms.length - 1)
+                                                const Divider(
+                                                  height: 1,
+                                                  color: Color(0xFFE0E0E0),
+                                                  thickness: 1,
+                                                ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
               // Farm Workers Info (from selected farm)
               if (_selectedFarm != null &&
-                  _selectedFarm!.farmWorkers.isNotEmpty)
+                  _selectedFarm!.farmWorkers.isNotEmpty) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFF27AE60).withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: const Color(0xFF27AE60).withOpacity(0.3)),
+                      color: const Color(0xFF27AE60).withOpacity(0.2),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.green.withOpacity(0.05),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.person,
-                              color: Color(0xFF27AE60), size: 18),
-                          SizedBox(width: 8),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF27AE60),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           Text(
                             'Farmers (auto-included)',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF27AE60),
+                              color: Colors.grey[800],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      ...(_selectedFarm!.farmWorkers.map((fw) => Padding(
-                            padding: const EdgeInsets.only(left: 26, top: 4),
-                            child: Text(
-                              '• ${fw.firstName} ${fw.lastName}',
-                              style: const TextStyle(
-                                  fontSize: 13, color: Color(0xFF495057)),
-                            ),
-                          ))),
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.grey[200]!,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _selectedFarm!.farmWorkers
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                            final index = entry.key;
+                            final fw = entry.value;
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index <
+                                        _selectedFarm!.farmWorkers.length - 1
+                                    ? 8
+                                    : 0,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF27AE60)
+                                          .withOpacity(0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${fw.firstName} ${fw.lastName}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF2C3E50),
+                                          ),
+                                        ),
+                                        if (fw.phoneNumber != null &&
+                                            fw.phoneNumber!.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Contact: ${fw.phoneNumber}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                        if (fw.address != null &&
+                                            fw.address!.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Address: ${fw.address}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              if (_selectedFarm != null &&
-                  _selectedFarm!.farmWorkers.isNotEmpty)
                 const SizedBox(height: 20),
+              ],
 
               // Location Info
               if (_isLocationLoading)
@@ -986,40 +1365,104 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
               const SizedBox(height: 20),
 
               // Accomplishments
-              TextFormField(
-                controller: _accomplishmentsController,
-                decoration: InputDecoration(
-                  labelText: 'Accomplishments',
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your accomplishments';
-                  }
-                  return null;
-                },
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ACCOMPLISHMENTS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF27AE60),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _accomplishmentsController,
+                    decoration: InputDecoration(
+                      hintText: 'Describe what was accomplished...',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF27AE60), width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    maxLines: 3,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your accomplishments';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 
               // Issues Observed
-              TextFormField(
-                controller: _issuesController,
-                decoration: InputDecoration(
-                  labelText: 'Issues Observed',
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter issues observed';
-                  }
-                  return null;
-                },
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ISSUES OBSERVED',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF27AE60),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _issuesController,
+                    decoration: InputDecoration(
+                      hintText: 'Describe any issues or concerns...',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF27AE60), width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    maxLines: 3,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter issues observed';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 
@@ -1029,12 +1472,12 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE9ECEF)),
+                  border: Border.all(color: Colors.grey[300]!),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withOpacity(0.08),
                       spreadRadius: 1,
-                      blurRadius: 4,
+                      blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -1042,19 +1485,13 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.people, color: Color(0xFF27AE60), size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Laborers Involved',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2C3E50),
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      'Laborers Involved',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     if (_selectedLaborers.isNotEmpty)
@@ -1062,34 +1499,93 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: _selectedLaborers.map((laborer) {
-                          return Chip(
-                            label: Text(
-                              '${laborer.firstName} ${laborer.lastName}',
-                              style: const TextStyle(fontSize: 12),
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF27AE60).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFF27AE60).withOpacity(0.3),
+                              ),
                             ),
-                            deleteIcon: const Icon(Icons.close, size: 16),
-                            onDeleted: () {
-                              setState(() {
-                                _selectedLaborers.remove(laborer);
-                              });
-                            },
-                            backgroundColor:
-                                const Color(0xFF27AE60).withOpacity(0.1),
-                            deleteIconColor: const Color(0xFF27AE60),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${laborer.firstName} ${laborer.lastName}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF27AE60),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedLaborers.remove(laborer);
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF27AE60),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         }).toList(),
                       ),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => _showLaborerPicker(),
-                      icon: const Icon(Icons.add, size: 18),
-                      label: Text(_selectedLaborers.isEmpty
-                          ? 'Add Laborers'
-                          : 'Add More Laborers'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF27AE60),
-                        side: const BorderSide(color: Color(0xFF27AE60)),
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => _showLaborerPicker(),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF27AE60),
+                              side: const BorderSide(color: Color(0xFF27AE60)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(_selectedLaborers.isEmpty
+                                ? 'Add Laborers'
+                                : 'Add More Laborers'),
+                          ),
+                        ),
+                        if (_selectedLaborers.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedLaborers.clear();
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red[600],
+                              side: BorderSide(color: Colors.red[300]!),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text('Clear All'),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
@@ -1097,62 +1593,218 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
               const SizedBox(height: 16),
 
               // Disease Detection
-              DropdownButtonFormField<String>(
-                value: _diseaseDetected,
-                decoration: InputDecoration(
-                  labelText: 'Disease Detected',
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'None', child: Text('None')),
-                  DropdownMenuItem(value: 'Yes', child: Text('Yes')),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'DISEASE DETECTED',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF27AE60),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Column(
+                    children: [
+                      // Dropdown Header
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isDiseaseDropdownExpanded =
+                                !_isDiseaseDropdownExpanded;
+                          });
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE0E0E0),
+                              width: 1.0,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _diseaseDetected == 'None' ? 'None' : 'Yes',
+                                  style: TextStyle(
+                                    color: const Color(0xFF2C3E50),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                _isDiseaseDropdownExpanded
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
+                                color: Colors.grey[600],
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Dropdown Options
+                      if (_isDiseaseDropdownExpanded) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE0E0E0),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              _buildDiseaseOption(
+                                value: 'None',
+                                label: 'None',
+                                isSelected: _diseaseDetected == 'None',
+                                onTap: () {
+                                  setState(() {
+                                    _diseaseDetected = 'None';
+                                    _isDiseaseDropdownExpanded = false;
+                                  });
+                                },
+                              ),
+                              const Divider(
+                                height: 1,
+                                color: Color(0xFFE0E0E0),
+                                thickness: 1,
+                              ),
+                              _buildDiseaseOption(
+                                value: 'Yes',
+                                label: 'Yes',
+                                isSelected: _diseaseDetected == 'Yes',
+                                onTap: () {
+                                  setState(() {
+                                    _diseaseDetected = 'Yes';
+                                    _isDiseaseDropdownExpanded = false;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    _diseaseDetected = value!;
-                  });
-                },
               ),
               const SizedBox(height: 16),
 
               // Disease Type (only shown if disease is detected)
               if (_diseaseDetected == 'Yes')
-                TextFormField(
-                  controller: _diseaseTypeController,
-                  decoration: InputDecoration(
-                    labelText: 'Disease Type',
-                    border: const OutlineInputBorder(),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  validator: (value) {
-                    if (_diseaseDetected == 'Yes' &&
-                        (value == null || value.isEmpty)) {
-                      return 'Please specify the disease type';
-                    }
-                    return null;
-                  },
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DISEASE TYPE',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF27AE60),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _diseaseTypeController,
+                      decoration: InputDecoration(
+                        hintText: 'Specify the type of disease...',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF27AE60), width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (_diseaseDetected == 'Yes' &&
+                            (value == null || value.isEmpty)) {
+                          return 'Please specify the disease type';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
               if (_diseaseDetected == 'Yes') const SizedBox(height: 16),
 
               // Description
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
-                },
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'DESCRIPTION',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF27AE60),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      hintText: 'Additional details or notes...',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF27AE60), width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    maxLines: 3,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a description';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
 
@@ -1166,6 +1818,7 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 2,
                 ),
                 child: _isLoading
                     ? const SizedBox(

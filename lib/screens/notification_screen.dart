@@ -31,6 +31,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<void> _loadNotifications() async {
     // print('🔔 [MOBILE SCREEN] Starting _loadNotifications...');
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       // print(
@@ -70,6 +71,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       //       '🔔 [MOBILE SCREEN] Notification $i: ID=${notification.id}, Type=${notification.type}, Message=${notification.message}');
       // }
 
+      if (!mounted) return;
       setState(() {
         _notifications = notifications;
         _unreadCount = unreadCount;
@@ -80,6 +82,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     } catch (e) {
       // print('🔔 [MOBILE SCREEN] ERROR: Error loading notifications: $e');
       // print('🔔 [MOBILE SCREEN] ERROR: Stack trace: ${StackTrace.current}');
+      if (!mounted) return;
       setState(() => _isLoading = false);
     }
   }
@@ -90,7 +93,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     final success = await notification_service.NotificationService.markAsRead(
         notification.id, widget.token);
-    if (success) {
+    if (success && mounted) {
       setState(() {
         final index = _notifications.indexWhere((n) => n.id == notification.id);
         if (index != -1) {
@@ -116,17 +119,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _markAllAsRead() async {
+    if (!mounted) return;
+
     // Mark all current filtered notifications as read individually
     final unreadNotifications =
         _notifications.where((n) => n.readAt == null).toList();
 
     for (final notification in unreadNotifications) {
+      if (!mounted) return;
       await notification_service.NotificationService.markAsRead(
           notification.id, widget.token);
     }
 
     // Refresh the notifications list
-    await _loadNotifications();
+    if (mounted) {
+      await _loadNotifications();
+    }
   }
 
   String _getNotificationIcon(String? type) {
