@@ -174,14 +174,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
         title: _showAllNotifications
             ? const Text('All Notifications')
             : const Text('Schedule Notifications'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF2C3E50),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF2C3E50),
+          color: Colors.white,
         ),
         actions: [
           // Debug toggle button

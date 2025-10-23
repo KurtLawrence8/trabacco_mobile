@@ -29,12 +29,24 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   // Notification state
   int _unreadCount = 0;
 
+  // Search and filter state
+  String _searchQuery = '';
+  String _selectedStatusFilter = 'All';
+  final TextEditingController _searchController = TextEditingController();
+  bool _showFilterCard = false;
+
   @override
   void initState() {
     super.initState();
     _loadUser();
     // Fetch notifications on app start
     _fetchNotifications();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUser() async {
@@ -55,11 +67,12 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
   Future<void> _fetchNotifications() async {
     try {
       if (_user != null) {
-        final unreadCount = await notification_service.NotificationService.getUnreadCount(
-          widget.token, 
-          farmWorkerId: _user!.id // Use farm worker ID for filtering
-        );
-        
+        final unreadCount =
+            await notification_service.NotificationService.getUnreadCount(
+                widget.token,
+                farmWorkerId: _user!.id // Use farm worker ID for filtering
+                );
+
         setState(() {
           _unreadCount = unreadCount;
         });
@@ -78,14 +91,15 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF2C3E50),
+          color: Colors.white,
         ),
       ),
-      backgroundColor: Colors.white,
-      foregroundColor: const Color(0xFF2C3E50),
+      centerTitle: true,
+      backgroundColor: Colors.green,
+      foregroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Color(0xFF2C3E50)),
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () {
           setState(() {
             _selectedIndex = 0; // Go back to dashboard
@@ -116,8 +130,8 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Hi Farmer!',
-                            style: TextStyle(
+                        Text('Hi ${_user?.name ?? 'Farm Worker'}!',
+                            style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF2C3E50))),
@@ -154,10 +168,15 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                                         token: widget.token,
                                         technician: Technician(
                                           id: _user!.id,
-                                          firstName: _user!.name.split(' ').first,
-                                          lastName: _user!.name.split(' ').length > 1 
-                                              ? _user!.name.split(' ').skip(1).join(' ')
-                                              : '',
+                                          firstName:
+                                              _user!.name.split(' ').first,
+                                          lastName:
+                                              _user!.name.split(' ').length > 1
+                                                  ? _user!.name
+                                                      .split(' ')
+                                                      .skip(1)
+                                                      .join(' ')
+                                                  : '',
                                           emailAddress: _user!.email ?? '',
                                           status: 'Active',
                                         ),
@@ -202,7 +221,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                         ],
                       ),
                       // ====================================================
-                      // POPUP MENU BUTTON
+                      // LOGOUT BUTTON
                       const SizedBox(width: 4),
                       Container(
                         width: 32,
@@ -211,36 +230,19 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                           color: Color.fromARGB(255, 255, 255, 255),
                           shape: BoxShape.circle,
                         ),
-                        child: PopupMenuButton<String>(
-                          icon: const Icon(Icons.person,
-                              color: Color.fromARGB(255, 180, 180, 180),
-                              size: 16),
+                        child: IconButton(
+                          icon: const Icon(Icons.logout,
+                              color: Colors.red, size: 16),
                           padding: EdgeInsets.zero,
-                          onSelected: (value) async {
-                            if (value == 'logout') {
-                              await AuthService().logout();
-                              if (!mounted) return;
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginScreen()),
-                                (route) => false,
-                              );
-                            }
+                          onPressed: () async {
+                            await AuthService().logout();
+                            if (!mounted) return;
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                              (route) => false,
+                            );
                           },
-                          // ====================================================
-                          // POPUP MENU ITEM BUILDER
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'logout',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.logout, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('Logout')
-                                ],
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -293,7 +295,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
               children: [
 // ====================================================
                 _buildQuickActionCard(
-                  icon: Icons.calendar_today_rounded,
+                  icon: Icons.calendar_month_rounded,
                   title: 'My Schedules',
                   subtitle: 'View my work schedules',
                   color: const Color(0xFF10B981), // Emerald
@@ -306,7 +308,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 // ====================================================
 // REQUESTS
                 _buildQuickActionCard(
-                  icon: Icons.request_quote_rounded,
+                  icon: Icons.list_alt_rounded,
                   title: 'My Requests',
                   subtitle: 'View my submitted requests',
                   color: const Color(0xFFF59E0B), // Amber
@@ -330,6 +332,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                         builder: (_) => SupplyCashScreen(
                           token: widget.token,
                           user: _user,
+                          initialTabIndex: 0, // Supply Records tab
                         ),
                       ),
                     );
@@ -338,7 +341,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 // ====================================================
 // CASH DISTRIBUTIONS
                 _buildQuickActionCard(
-                  icon: Icons.attach_money_rounded,
+                  icon: Icons.credit_card_rounded,
                   title: 'Cash Records',
                   subtitle: 'View cash distributions',
                   color: const Color(0xFF8B5CF6), // Violet
@@ -349,6 +352,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                         builder: (_) => SupplyCashScreen(
                           token: widget.token,
                           user: _user,
+                          initialTabIndex: 1, // Cash Records tab
                         ),
                       ),
                     );
@@ -373,7 +377,7 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                             technician: Technician(
                               id: _user!.id,
                               firstName: _user!.name.split(' ').first,
-                              lastName: _user!.name.split(' ').length > 1 
+                              lastName: _user!.name.split(' ').length > 1
                                   ? _user!.name.split(' ').skip(1).join(' ')
                                   : '',
                               emailAddress: _user!.email ?? '',
@@ -495,111 +499,436 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
 
   Widget _buildRequests() {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('My Requests'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF2C3E50),
-        elevation: 0,
-        centerTitle: true,
-        titleTextStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF2C3E50),
-        ),
-      ),
-      body: _futureRequests == null
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF4CAF50),
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Stack(
+        children: [
+          // Main content
+          Column(
+            children: [
+              // Search and Filter Section
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF9E9E9E),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search requests...',
+                            hintStyle: TextStyle(
+                                color: Colors.grey[500], fontSize: 16),
+                            prefixIcon: Icon(Icons.search,
+                                color: Colors.grey[600], size: 22),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(Icons.clear,
+                                        color: Colors.grey[600]),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: _selectedStatusFilter != 'All'
+                            ? Colors.green // Green when filters are applied
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _selectedStatusFilter != 'All'
+                              ? Colors
+                                  .green // Green border when filters are applied
+                              : const Color(0xFF9E9E9E),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: _toggleFilterCard,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.filter_list_rounded,
+                              color: _selectedStatusFilter != 'All'
+                                  ? Colors
+                                      .white // White icon when filters are applied
+                                  : const Color(0xFF9E9E9E),
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )
-          : FutureBuilder<List<RequestModel>>(
-              future: _futureRequests,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF4CAF50),
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red.shade400,
+              // Content
+              Expanded(
+                child: _futureRequests == null
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF4CAF50),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error loading requests',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.red.shade700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${snapshot.error}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.red.shade600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.request_page_outlined,
-                          size: 64,
-                          color: const Color(0xFF4CAF50).withOpacity(0.6),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'No Requests Yet',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2C3E50),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Your requests will appear here',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF7F8C8D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  final requests = snapshot.data!;
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: requests.length,
-                    itemBuilder: (context, index) {
-                      final request = requests[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildRequestCard(request),
-                      );
-                    },
-                  );
-                }
-              },
+                      )
+                    : FutureBuilder<List<RequestModel>>(
+                        future: _futureRequests,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF4CAF50),
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 64,
+                                    color: Colors.red.shade400,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Error loading requests',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red.shade700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${snapshot.error}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.red.shade600,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.request_page_outlined,
+                                    size: 64,
+                                    color: const Color(0xFF4CAF50)
+                                        .withOpacity(0.6),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'No Requests Yet',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Your requests will appear here',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF7F8C8D),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            final requests = snapshot.data!;
+                            final filteredRequests = _filterRequests(requests);
+
+                            if (filteredRequests.isEmpty) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.search_off,
+                                      size: 64,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'No Requests Found',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Try adjusting your search or filter criteria',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF7F8C8D),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+
+                            return ListView.builder(
+                              padding: const EdgeInsets.all(20),
+                              itemCount: filteredRequests.length,
+                              itemBuilder: (context, index) {
+                                final request = filteredRequests[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: _buildRequestCard(request),
+                                );
+                              },
+                            );
+                          }
+                        },
+                      ),
+              ),
+            ],
+          ),
+          // Background overlay to close filter when tapped outside
+          if (_showFilterCard)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _showFilterCard = false;
+                  });
+                },
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
             ),
+          // Filter card overlay
+          if (_showFilterCard)
+            Positioned(
+              top: MediaQuery.of(context).padding.top +
+                  140, // Position below search
+              left: 20,
+              right: 20,
+              child: GestureDetector(
+                onTap: () {
+                  // Prevent tap from propagating to background overlay
+                },
+                child: Material(
+                  elevation: 0,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFE0E0E0),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Row(
+                          children: [
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Filter Options',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: _toggleFilterCard,
+                              child: Icon(Icons.close,
+                                  color: Colors.grey[600], size: 20),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Status Filter
+                        Text(
+                          'Status',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Status Filter Options
+                        Column(
+                          children: [
+                            _buildFilterOption(
+                              icon: Icons.all_inclusive,
+                              label: 'All',
+                              value: 'All',
+                              isSelected: _selectedStatusFilter == 'All',
+                              onTap: () {
+                                setState(() {
+                                  _selectedStatusFilter = 'All';
+                                  _showFilterCard = false;
+                                });
+                              },
+                            ),
+                            Divider(
+                                height: 1,
+                                color: Colors.grey[200],
+                                thickness: 1),
+                            _buildFilterOption(
+                              icon: Icons.check_circle_outline,
+                              label: 'Approved',
+                              value: 'Approved',
+                              isSelected: _selectedStatusFilter == 'Approved',
+                              onTap: () {
+                                setState(() {
+                                  _selectedStatusFilter = 'Approved';
+                                  _showFilterCard = false;
+                                });
+                              },
+                            ),
+                            Divider(
+                                height: 1,
+                                color: Colors.grey[200],
+                                thickness: 1),
+                            _buildFilterOption(
+                              icon: Icons.schedule,
+                              label: 'Pending',
+                              value: 'Pending',
+                              isSelected: _selectedStatusFilter == 'Pending',
+                              onTap: () {
+                                setState(() {
+                                  _selectedStatusFilter = 'Pending';
+                                  _showFilterCard = false;
+                                });
+                              },
+                            ),
+                            Divider(
+                                height: 1,
+                                color: Colors.grey[200],
+                                thickness: 1),
+                            _buildFilterOption(
+                              icon: Icons.local_shipping,
+                              label: 'Distributed',
+                              value: 'Distributed',
+                              isSelected:
+                                  _selectedStatusFilter == 'Distributed',
+                              onTap: () {
+                                setState(() {
+                                  _selectedStatusFilter = 'Distributed';
+                                  _showFilterCard = false;
+                                });
+                              },
+                            ),
+                            Divider(
+                                height: 1,
+                                color: Colors.grey[200],
+                                thickness: 1),
+                            _buildFilterOption(
+                              icon: Icons.cancel_outlined,
+                              label: 'Rejected',
+                              value: 'Rejected',
+                              isSelected: _selectedStatusFilter == 'Rejected',
+                              onTap: () {
+                                setState(() {
+                                  _selectedStatusFilter = 'Rejected';
+                                  _showFilterCard = false;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Action Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedStatusFilter = 'All';
+                                });
+                              },
+                              child: Text(
+                                'Clear All',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: _toggleFilterCard,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Apply'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -650,160 +979,274 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     final statusIcon = _getRequestStatusIcon(request.status ?? 'unknown');
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: statusColor.withOpacity(0.3),
-          width: 1.5,
-        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 1,
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.05),
+            spreadRadius: 0,
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // Handle card tap if needed
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with status
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        statusIcon,
+                        color: statusColor,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getRequestTypeDisplayName(
+                                request.type ?? 'Unknown'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat('MMM dd, yyyy')
+                                .format(request.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        (request.status ?? 'unknown').toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Icon(
-                  statusIcon,
-                  color: statusColor,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  request.type ?? 'Unknown',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFF2C3E50),
+                const SizedBox(height: 12),
+                // Equipment name (for equipment requests)
+                if (request.type?.toLowerCase() == 'equipment' &&
+                    request.equipmentName != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.orange.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Equipment',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFFF9800),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          request.equipmentName!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF2C3E50),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                ],
+                // Details row
+                Row(
+                  children: [
+                    if (request.amount != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '₱${request.amount!.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF4CAF50),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (request.quantity != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Quantity: ${request.quantity}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF2196F3),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  (request.status ?? 'unknown').toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            request.reason ?? 'No description',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF7F8C8D),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                size: 14,
-                color: Colors.grey.shade600,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                DateFormat('MMM dd, yyyy').format(request.createdAt),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(width: 16),
-              if (request.amount != null) ...[
-                Icon(
-                  Icons.attach_money,
-                  size: 14,
-                  color: Colors.grey.shade600,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '₱${request.amount!.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-              if (request.quantity != null) ...[
-                const SizedBox(width: 16),
-                Icon(
-                  Icons.inventory,
-                  size: 14,
-                  color: Colors.grey.shade600,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Qty: ${request.quantity}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          if (request.adminNote != null && request.adminNote!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withOpacity(0.05),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.2),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.note,
-                    size: 14,
-                    color: Color(0xFF4CAF50),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                // Expected return date for equipment
+                if (request.type?.toLowerCase() == 'equipment' &&
+                    request.expectedReturnDate != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Text(
-                      'Admin Note: ${request.adminNote}',
+                      'Expected Return: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(request.expectedReturnDate!))}',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF4CAF50),
-                        fontStyle: FontStyle.italic,
+                        color: Color(0xFF9C27B0),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
-              ),
+                // Description
+                if (request.reason != null && request.reason!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Description',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6C757D),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          request.reason!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF2C3E50),
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // Admin note
+                if (request.adminNote != null &&
+                    request.adminNote!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50).withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF4CAF50).withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Admin Note',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF4CAF50),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          request.adminNote!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF4CAF50),
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -815,42 +1258,56 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     required int index,
   }) {
     final isSelected = _selectedIndex == index;
-    double iconSize = 24;
-    if (index == 1) {
-      iconSize = 22;
-    }
-// ====================================================
-// BUILD NAV ITEM
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected
-                  ? const Color(0xFF27AE60)
-                  : const Color(0xFF8F9BB3),
-              size: iconSize,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          if (mounted && _selectedIndex != index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          width: 60, // Fixed width for consistent highlight size
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF27AE60).withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? activeIcon : icon,
                 color: isSelected
                     ? const Color(0xFF27AE60)
-                    : const Color(0xFF8F9BB3),
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    : const Color(0xFF757575),
+                size: 22,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? const Color(0xFF27AE60)
+                      : const Color(0xFF757575),
+                  fontSize: 9,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: 0.1,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -879,23 +1336,28 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.withOpacity(0.2),
+              width: 0.5,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
             ),
           ],
         ),
         // ====================================================
-        // BOTTOM NAVIGATION BAR
+        // GOOGLE-STYLE BOTTOM NAVIGATION BAR
         child: SafeArea(
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 60),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 // Home
                 _buildNavItem(
@@ -906,10 +1368,17 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
                 ),
                 // Schedule
                 _buildNavItem(
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today,
+                  icon: Icons.calendar_month_rounded,
+                  activeIcon: Icons.calendar_month,
                   label: 'Schedule',
                   index: 1,
+                ),
+                // Requests
+                _buildNavItem(
+                  icon: Icons.list_alt_rounded,
+                  activeIcon: Icons.list_alt,
+                  label: 'Requests',
+                  index: 2,
                 ),
                 // Profile
                 _buildNavItem(
@@ -925,5 +1394,82 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
       ),
     );
   }
-}
 
+  // Helper methods for search and filtering
+  void _toggleFilterCard() {
+    setState(() {
+      _showFilterCard = !_showFilterCard;
+    });
+  }
+
+  Widget _buildFilterOption({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? Colors.green : Colors.grey[600],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? Colors.green : const Color(0xFF2C3E50),
+                  ),
+                ),
+              ),
+              if (isSelected)
+                Icon(
+                  Icons.check,
+                  size: 20,
+                  color: Colors.green,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<RequestModel> _filterRequests(List<RequestModel> requests) {
+    return requests.where((request) {
+      final matchesSearch = _searchQuery.isEmpty ||
+          (request.type?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+              false) ||
+          (request.reason?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+              false);
+      final matchesStatus = _selectedStatusFilter == 'All' ||
+          (request.status?.toLowerCase() ==
+              _selectedStatusFilter.toLowerCase());
+      return matchesSearch && matchesStatus;
+    }).toList();
+  }
+
+  String _getRequestTypeDisplayName(String type) {
+    switch (type.toLowerCase()) {
+      case 'equipment':
+        return 'Equipment Request';
+      case 'supply':
+        return 'Supply Request';
+      case 'cash_advance':
+        return 'Cash Advance Request';
+      default:
+        return 'Request';
+    }
+  }
+}

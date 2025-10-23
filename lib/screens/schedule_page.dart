@@ -128,7 +128,6 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
-
   // Helper functions to get unit and budget from laborers array
   String? _getScheduleUnit(Schedule schedule) {
     if (schedule.laborers != null && schedule.laborers!.isNotEmpty) {
@@ -209,20 +208,6 @@ class _SchedulePageState extends State<SchedulePage> {
         child: Scaffold(
           backgroundColor: Colors.white,
           resizeToAvoidBottomInset: true,
-          appBar: AppBar(
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            title: Text(
-              '${widget.farmWorkerName} Schedule',
-              style: const TextStyle(
-                fontSize: 18, // Reduced from 18
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-          ),
           body: SingleChildScrollView(
             child: widget.farmWorkerId == 0
                 ? _buildEmptyState('Please select a Farmer to view schedules')
@@ -791,20 +776,6 @@ class _SchedulePageState extends State<SchedulePage> {
       return Scaffold(
         backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          centerTitle: true,
-          title: Text(
-            '${widget.farmWorkerName} Schedule',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-          ),
-        ),
         body: SingleChildScrollView(
           child: Center(
             child: Column(
@@ -1100,13 +1071,13 @@ class _SchedulePageState extends State<SchedulePage> {
                         child: ElevatedButton.icon(
                           onPressed: canComplete
                               ? () => _showConfirmationDialog(
-                                context,
-                                'Complete Task',
-                                'Are you sure you want to complete "${s.activity}"?',
-                                'Complete',
-                                const Color(0xFF4CAF50),
-                                () => onStatusChange?.call('Completed'),
-                              )
+                                    context,
+                                    'Complete Task',
+                                    'Are you sure you want to complete "${s.activity}"?',
+                                    'Complete',
+                                    const Color(0xFF4CAF50),
+                                    () => onStatusChange?.call('Completed'),
+                                  )
                               : null,
                           icon: const Icon(Icons.check_circle, size: 20),
                           label: const Text('Complete'),
@@ -1153,7 +1124,6 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                 ],
               ],
-
             ],
           ),
         ),
