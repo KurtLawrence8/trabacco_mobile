@@ -10,11 +10,11 @@ class SupplyCashScreen extends StatefulWidget {
   final int initialTabIndex;
 
   const SupplyCashScreen({
-    Key? key,
+    super.key,
     required this.token,
     this.user,
     this.initialTabIndex = 0,
-  }) : super(key: key);
+  });
 
   @override
   State<SupplyCashScreen> createState() => _SupplyCashScreenState();

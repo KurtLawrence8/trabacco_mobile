@@ -5,7 +5,10 @@ import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'screens/technician_landing_screen.dart';
+import 'screens/farm_worker_landing_screen.dart';
 import 'services/firebase_messaging_service.dart';
+import 'services/auth_service.dart';
+import 'models/user_model.dart';
 
 // Global navigator key for navigation from notifications
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -108,8 +111,121 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(),
+      home: const AuthWrapper(),
     );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isLoading = true;
+  Widget _targetWidget = const LoginScreen();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthStatus();
+  }
+
+  Future<void> _checkAuthStatus() async {
+    try {
+      print('[main] 🔍 Checking authentication status...');
+
+      final authService = AuthService();
+      final user = await authService.getCurrentUser();
+      final token = await authService.getToken();
+      final roleType = await authService.getUserRoleType();
+
+      print('[main] 📊 Auth Check Results:');
+      print('[main]   - User exists: ${user != null}');
+      print('[main]   - Token exists: ${token != null}');
+      print('[main]   - Role type: $roleType');
+
+      if (user != null && token != null && roleType != null) {
+        print('[main] 🔐 All auth data found, validating token...');
+
+        // Validate token is still valid
+        final isValid = await authService.isTokenValid();
+        print('[main] 🎯 Token validation result: $isValid');
+
+        if (isValid) {
+          print('[main] ✅ Token is valid, auto-login successful');
+        } else {
+          print(
+              '[main] ⚠️ Token validation failed, but attempting auto-login anyway...');
+          print(
+              '[main] 💡 This might be due to network issues or server temporarily down');
+
+          // For now, let's be more lenient and allow auto-login if we have
+          // stored user data, even if token validation fails
+          // This prevents users from being logged out due to temporary network issues
+        }
+
+        // Proceed with auto-login if we have all the required data
+        print('[main] ✅ Auto-login proceeding, redirecting to dashboard...');
+
+        // Refresh FCM token when auto-login happens
+        try {
+          await FirebaseMessagingService.initialize();
+          print('[main] ✅ FCM token refreshed for auto-login');
+        } catch (e) {
+          print('[main] ⚠️ FCM refresh failed during auto-login: $e');
+        }
+
+        // Navigate to appropriate dashboard
+        setState(() {
+          _targetWidget = _getLandingScreen(roleType, token, user);
+          _isLoading = false;
+        });
+        return;
+      } else {
+        print('[main] ❌ Missing auth data:');
+        print('[main]   - User: ${user != null}');
+        print('[main]   - Token: ${token != null}');
+        print('[main]   - Role: ${roleType != null}');
+      }
+    } catch (e) {
+      print('[main] ❌ Auth check error: $e');
+    }
+
+    // If we get here, user needs to login
+    print('[main] 🚪 Redirecting to login screen...');
+    setState(() {
+      _targetWidget = const LoginScreen();
+      _isLoading = false;
+    });
+  }
+
+  Widget _getLandingScreen(String roleType, String token, User user) {
+    if (roleType == 'technician') {
+      return TechnicianLandingScreen(
+        token: token,
+        technicianId: user.id,
+      );
+    } else {
+      return FarmWorkerLandingScreen(
+        token: token,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return _targetWidget;
   }
 }
 

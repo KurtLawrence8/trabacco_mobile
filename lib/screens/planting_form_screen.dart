@@ -5,8 +5,10 @@ import 'dart:convert';
 import '../services/planting_service.dart';
 import '../services/farm_service.dart';
 import '../services/laborer_service.dart';
+import '../services/auth_service.dart';
 import '../models/farm.dart';
 import '../models/laborer.dart';
+import 'login_screen.dart';
 
 class PlantingFormScreen extends StatefulWidget {
   final String? token;
@@ -31,6 +33,7 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
   final _plantingService = PlantingService();
   final _farmService = FarmService();
   final _laborerService = LaborerService();
+  final _authService = AuthService();
 
   List<Farm> _farms = [];
   List<Farm> _filteredFarms = [];
@@ -68,7 +71,19 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     }
 
     try {
-      final farms = await _farmService.getFarmsByTechnician(widget.token!);
+      // Get fresh token and validate it
+      final token = await _authService.getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('No authentication token found');
+      }
+
+      // Validate token before making API call
+      final isValid = await _authService.isTokenValid();
+      if (!isValid) {
+        throw Exception('Authentication token expired. Please log in again.');
+      }
+
+      final farms = await _farmService.getFarmsByTechnician(token);
       if (mounted) {
         setState(() {
           _farms = farms;
@@ -78,11 +93,18 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
         _restoreDraftAfterDataLoad();
       }
     } catch (e) {
+      print('Error loading farms: $e');
       if (mounted) {
         setState(() {
           _farmErrorMessage = 'Failed to load farms. Tap to retry.';
           _isLoadingFarms = false;
         });
+
+        // If it's an authentication error, show login prompt
+        if (e.toString().contains('Authentication token expired') ||
+            e.toString().contains('No authentication token')) {
+          _showLoginPrompt();
+        }
       }
     }
   }
@@ -96,7 +118,19 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     }
 
     try {
-      final laborers = await _laborerService.getAllLaborers(widget.token!);
+      // Get fresh token and validate it
+      final token = await _authService.getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('No authentication token found');
+      }
+
+      // Validate token before making API call
+      final isValid = await _authService.isTokenValid();
+      if (!isValid) {
+        throw Exception('Authentication token expired. Please log in again.');
+      }
+
+      final laborers = await _laborerService.getAllLaborers(token);
       if (mounted) {
         setState(() {
           _allLaborers = laborers;
@@ -106,11 +140,18 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
         _restoreDraftAfterDataLoad();
       }
     } catch (e) {
+      print('Error loading laborers: $e');
       if (mounted) {
         setState(() {
           _laborerErrorMessage = 'Failed to load laborers. Tap to retry.';
           _isLoadingLaborers = false;
         });
+
+        // If it's an authentication error, show login prompt
+        if (e.toString().contains('Authentication token expired') ||
+            e.toString().contains('No authentication token')) {
+          _showLoginPrompt();
+        }
       }
     }
   }
@@ -1807,6 +1848,31 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLoginPrompt() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Session Expired'),
+          content: const Text('Your session has expired. Please log in again.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false, // Remove all previous routes
+                );
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 

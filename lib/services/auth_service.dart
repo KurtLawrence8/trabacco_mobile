@@ -195,6 +195,61 @@ class AuthService {
     return prefs.getString(_tokenKey);
   }
 
+  // Validate if stored token is still valid
+  Future<bool> isTokenValid() async {
+    try {
+      final token = await getToken();
+      if (token == null || token.isEmpty) {
+        print('🔐 [AUTH] No token found for validation');
+        return false;
+      }
+
+      print('🔐 [AUTH] Validating token: ${token.substring(0, 20)}...');
+      print('🔐 [AUTH] URL: ${ApiConfig.getUrl(ApiConfig.me)}');
+
+      // Test the token by making a simple API call with timeout
+      final response = await http
+          .get(
+            Uri.parse(ApiConfig.getUrl(ApiConfig.me)),
+            headers: ApiConfig.getHeaders(token: token),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      print('🔐 [AUTH] Token validation response: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        print('🔐 [AUTH] ✅ Token is valid');
+        return true;
+      } else if (response.statusCode == 401) {
+        print('🔐 [AUTH] ❌ Token expired (401 Unauthorized)');
+        return false;
+      } else {
+        print('🔐 [AUTH] ⚠️ Unexpected status code: ${response.statusCode}');
+        print('🔐 [AUTH] Response body: ${response.body}');
+        // For now, consider non-network errors as valid token (server might be temporarily down)
+        return response.statusCode < 500;
+      }
+    } catch (e) {
+      print('🔐 [AUTH] Token validation failed: $e');
+
+      // If it's a timeout or network error, don't invalidate the token immediately
+      // User might be offline but token could still be valid
+      if (e.toString().contains('timeout') ||
+          e.toString().contains('SocketException')) {
+        print('🔐 [AUTH] Network error during validation, keeping token');
+        return true; // Assume token is valid if we can't reach server
+      }
+
+      return false;
+    }
+  }
+
+  // Get user role type from storage
+  Future<String?> getUserRoleType() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_role_type');
+  }
+
   // Save user data to local storage
   Future<void> _saveUserData(User user, String roleType) async {
     final prefs = await SharedPreferences.getInstance();

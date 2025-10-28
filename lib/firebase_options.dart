@@ -67,7 +67,7 @@ class DefaultFirebaseOptions {
     projectId: 'your-project-id',
     storageBucket: 'your-project-id.appspot.com',
     iosClientId: 'your-ios-client-id',
-    iosBundleId: 'com.example.trabacco_mobile',
+    iosBundleId: 'com.trabacco.mobile',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -77,6 +77,6 @@ class DefaultFirebaseOptions {
     projectId: 'your-project-id',
     storageBucket: 'your-project-id.appspot.com',
     iosClientId: 'your-macos-client-id',
-    iosBundleId: 'com.example.trabacco_mobile',
+    iosBundleId: 'com.trabacco.mobile',
   );
 }

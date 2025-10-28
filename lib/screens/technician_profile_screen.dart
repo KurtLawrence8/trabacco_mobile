@@ -21,6 +21,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
 
   bool _loading = false;
   Technician? _technician;
+  String? _sex;
 
   // Form controllers
   late TextEditingController _firstNameController;
@@ -47,9 +48,45 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
       return imagePath;
     }
 
-    // Construct direct storage URL
-    String baseUrl = ApiConfig.imageBaseUrl;
-    return '$baseUrl/storage/$imagePath';
+    // Construct full URL for Laravel storage
+    // Try different approaches for web compatibility
+    String baseUrl;
+    if (kIsWeb) {
+      // For web, try both localhost and 127.0.0.1
+      baseUrl =
+          'https://navajowhite-chinchilla-897972.hostingersite.com'; // Try localhost first
+    } else {
+      baseUrl = 'https://navajowhite-chinchilla-897972.hostingersite.com';
+    }
+
+    // Remove leading slash if present and clean up the path
+    String cleanPath =
+        imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+
+    // Ensure the path starts with storage/
+    if (!cleanPath.startsWith('storage/')) {
+      cleanPath = 'storage/$cleanPath';
+    }
+
+    return '$baseUrl/$cleanPath';
+  }
+
+  // Helper method to get image provider that works on web and mobile
+  ImageProvider? _getImageProvider(dynamic selectedImage,
+      Uint8List? selectedImageBytes, String? networkImageUrl) {
+    if (selectedImage != null) {
+      // For web, we need to use bytes instead of File
+      if (kIsWeb) {
+        // On web, we'll need to load the image bytes first
+        // For now, return null to show fallback icon
+        return null;
+      } else {
+        return null; // Removed FileImage since we removed dart:io
+      }
+    } else if (networkImageUrl != null && networkImageUrl.isNotEmpty) {
+      return NetworkImage(_getImageUrl(networkImageUrl));
+    }
+    return null;
   }
 
   void _initializeControllers() {
@@ -102,6 +139,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
           _addressController.text = technician.address ?? '';
           _birthDateController.text =
               technician.birthDate?.toIso8601String().split('T')[0] ?? '';
+          _sex = technician.sex;
           _loading = false;
         });
       } else {
@@ -143,6 +181,7 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
         _addressController.text = _technician!.address ?? '';
         _birthDateController.text =
             _technician!.birthDate?.toIso8601String().split('T')[0] ?? '';
+        _sex = _technician!.sex;
         _loading = false;
       });
 
@@ -236,7 +275,13 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        actions: [],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -264,70 +309,35 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
                     offset: const Offset(0, -35),
                     child: Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: CircleAvatar(
-                            radius: 35,
-                            backgroundColor: Colors.grey[100],
-                            backgroundImage: _technician!.profilePicture != null
-                                ? NetworkImage(
-                                    _getImageUrl(_technician!.profilePicture))
-                                : null,
-                            child: _technician!.profilePicture == null
-                                ? Icon(Icons.person,
-                                    size: 35, color: Colors.grey[400])
-                                : null,
-                          ),
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey[100],
+                          backgroundImage: _getImageProvider(
+                              null, null, _technician!.profilePicture),
+                          child: _getImageProvider(null, null,
+                                      _technician!.profilePicture) ==
+                                  null
+                              ? const Icon(Icons.person,
+                                  size: 50, color: Color(0xFF27AE60))
+                              : null,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         Text(
-                          '${_technician!.firstName} ${_technician!.middleName ?? ""} ${_technician!.lastName}',
+                          '${_technician!.firstName} ${_technician!.lastName}',
                           style: const TextStyle(
                             color: Color(0xFF2C3E50),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.3,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 4),
                         Text(
-                          'Agricultural Technician',
+                          _technician!.emailAddress,
                           style: TextStyle(
                             color: Colors.grey[600],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF27AE60).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            _technician!.status,
-                            style: const TextStyle(
-                              color: Color(0xFF27AE60),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -551,6 +561,149 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Helper method to build section headers
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 24,
+            decoration: BoxDecoration(
+              color: const Color(0xFF27AE60),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Icon(
+            icon,
+            color: const Color(0xFF27AE60),
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to build text fields
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    String? Function(String?)? validator,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    Widget? suffixIcon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    String? fieldId,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: TextFormField(
+        key: fieldId != null ? Key(fieldId) : null,
+        controller: controller,
+        readOnly: readOnly,
+        onTap: onTap,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: labelText,
+          suffixIcon: suffixIcon,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF27AE60), width: 1),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.red),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          labelStyle: TextStyle(
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w400,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        validator: validator,
+        enabled: false,
+      ),
+    );
+  }
+
+  // Helper method to build dropdown fields
+  Widget _buildDropdownField<T>({
+    required T? value,
+    required String labelText,
+    required List<DropdownMenuItem<T>> items,
+    void Function(T?)? onChanged,
+    String? Function(T?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: labelText,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF27AE60), width: 1),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.red),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          labelStyle: TextStyle(
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w400,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        items: items,
+        onChanged: onChanged,
+        validator: validator,
       ),
     );
   }

@@ -80,9 +80,20 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to initialize camera: $e';
+          // Provide better error messages for different camera issues
+          String errorMsg = 'Failed to initialize camera';
+          if (e.toString().contains('Google Play Services')) {
+            errorMsg =
+                'Camera requires Google Play Services - device may not be compatible';
+          } else if (e.toString().contains('Permission')) {
+            errorMsg = 'Camera permission denied';
+          } else {
+            errorMsg = 'Camera initialization failed: ${e.toString()}';
+          }
+          _errorMessage = errorMsg;
         });
       }
+      print('❌ [CAMERA] Camera initialization error: $e');
     }
   }
 
@@ -145,7 +156,32 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
           _isLocationLoading = false;
         });
       }
-      print('Error getting current location: $e');
+
+      // Handle different types of location errors
+      String errorMessage = 'Location unavailable';
+      if (e.toString().contains('TimeoutException')) {
+        print(
+            '⏰ [LOCATION] Timeout getting current location - device may not have GPS or network location access');
+        errorMessage =
+            'Location timeout - please check GPS and network settings';
+      } else if (e.toString().contains('PERMISSION_DENIED')) {
+        print('🚫 [LOCATION] Location permission denied');
+        errorMessage = 'Location permission denied';
+      } else if (e.toString().contains('SERVICE_DISABLED')) {
+        print('📴 [LOCATION] Location services disabled');
+        errorMessage = 'Location services disabled';
+      } else {
+        print('❌ [LOCATION] Error getting current location: $e');
+      }
+
+      // Don't show error to user if it's just a timeout - they can still use the app
+      if (!e.toString().contains('TimeoutException')) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = errorMessage;
+          });
+        }
+      }
     }
   }
 
@@ -196,9 +232,11 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
         return;
       }
 
-      // GET CURRENT LOCATION
+      // GET CURRENT LOCATION with timeout for better error handling
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: LocationAccuracy
+            .medium, // Changed from high to medium for better performance
+        timeLimit: const Duration(seconds: 15), // Add timeout limit
       );
 
       if (mounted) {
@@ -213,8 +251,26 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to get location: $e';
           _isLocationLoading = false;
+        });
+      }
+
+      // Handle different types of location errors with better user feedback
+      String errorMessage = 'Failed to get location';
+      if (e.toString().contains('TimeoutException')) {
+        print(
+            '⏰ [LOCATION] Timeout getting current location during permission request');
+        errorMessage = 'Location timeout - GPS may be weak or unavailable';
+      } else if (e.toString().contains('PERMISSION_DENIED')) {
+        print('🚫 [LOCATION] Location permission denied');
+        errorMessage = 'Location permission denied';
+      } else {
+        print('❌ [LOCATION] Error getting location: $e');
+      }
+
+      if (mounted) {
+        setState(() {
+          _errorMessage = errorMessage;
         });
       }
     }

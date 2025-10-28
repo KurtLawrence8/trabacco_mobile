@@ -48,14 +48,14 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
   bool _isFarmDropdownExpanded = false;
   bool _isDiseaseDropdownExpanded = false;
   final TextEditingController _farmSearchController = TextEditingController();
+  final TextEditingController _laborerSearchController =
+      TextEditingController();
 
   final TextEditingController _accomplishmentsController =
       TextEditingController();
   final TextEditingController _issuesController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _diseaseTypeController = TextEditingController();
-  final TextEditingController _laborerSearchController =
-      TextEditingController();
 
   List<Laborer> _filteredLaborers = [];
   bool _isLoadingLaborers = false;
@@ -65,10 +65,12 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
   @override
   void initState() {
     super.initState();
-    _farmSearchController.addListener(_filterFarms);
-    _laborerSearchController.addListener(_filterLaborers);
     _loadFarms();
     _loadLaborers();
+
+    // Add listeners for search controllers
+    _farmSearchController.addListener(_filterFarms);
+    _laborerSearchController.addListener(_filterLaborers);
 
     // If initial data is provided from camera, use it
     if (widget.initialPhoto != null) {
@@ -128,48 +130,37 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
     }
   }
 
-  void _filterItems<T>({
-    required TextEditingController searchController,
-    required List<T> sourceList,
-    required void Function(List<T>) setFilteredList,
-    required bool Function(T item, String query) filterFunction,
-  }) {
-    final query = searchController.text.toLowerCase();
+  void _filterFarms() {
+    final query = _farmSearchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        setFilteredList(List.from(sourceList));
+        _filteredFarms = List.from(_farms);
       } else {
-        setFilteredList(
-            sourceList.where((item) => filterFunction(item, query)).toList());
+        _filteredFarms = _farms.where((farm) {
+          final farmName = farm.name?.toLowerCase() ?? '';
+          final farmAddress = farm.farmAddress.toLowerCase();
+          return farmName.contains(query) || farmAddress.contains(query);
+        }).toList();
       }
     });
   }
 
-  void _filterFarms() {
-    _filterItems<Farm>(
-      searchController: _farmSearchController,
-      sourceList: _farms,
-      setFilteredList: (filtered) => _filteredFarms = filtered,
-      filterFunction: (farm, query) {
-        final farmName = farm.name?.toLowerCase() ?? '';
-        final farmAddress = farm.farmAddress.toLowerCase();
-        return farmName.contains(query) || farmAddress.contains(query);
-      },
-    );
-  }
-
   void _filterLaborers() {
-    _filterItems<Laborer>(
-      searchController: _laborerSearchController,
-      sourceList: _allLaborers,
-      setFilteredList: (filtered) => _filteredLaborers = filtered,
-      filterFunction: (laborer, query) {
-        final searchableText =
-            '${laborer.firstName} ${laborer.lastName} ${laborer.phoneNumber ?? ''}'
-                .toLowerCase();
-        return searchableText.contains(query);
-      },
-    );
+    final query = _laborerSearchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredLaborers = List.from(_allLaborers);
+      } else {
+        _filteredLaborers = _allLaborers.where((laborer) {
+          final firstName = laborer.firstName.toLowerCase();
+          final lastName = laborer.lastName.toLowerCase();
+          final phoneNumber = laborer.phoneNumber?.toLowerCase() ?? '';
+          return firstName.contains(query) ||
+              lastName.contains(query) ||
+              phoneNumber.contains(query);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _getCurrentLocation() async {
@@ -321,8 +312,28 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                                 child: TextField(
                                   controller: _laborerSearchController,
                                   onChanged: (value) {
+                                    // Filter laborers based on search query
+                                    final query = value.toLowerCase();
                                     setDialogState(() {
-                                      // This triggers the StatefulBuilder to rebuild
+                                      if (query.isEmpty) {
+                                        _filteredLaborers =
+                                            List.from(_allLaborers);
+                                      } else {
+                                        _filteredLaborers =
+                                            _allLaborers.where((laborer) {
+                                          final firstName =
+                                              laborer.firstName.toLowerCase();
+                                          final lastName =
+                                              laborer.lastName.toLowerCase();
+                                          final phoneNumber = laborer
+                                                  .phoneNumber
+                                                  ?.toLowerCase() ??
+                                              '';
+                                          return firstName.contains(query) ||
+                                              lastName.contains(query) ||
+                                              phoneNumber.contains(query);
+                                        }).toList();
+                                      }
                                     });
                                   },
                                   decoration: InputDecoration(
@@ -957,6 +968,10 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
                                 padding: const EdgeInsets.all(8.0),
                                 child: TextField(
                                   controller: _farmSearchController,
+                                  onChanged: (value) {
+                                    // Filter is automatically triggered by the listener
+                                    // added in initState
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Search farms...',
                                     hintStyle: TextStyle(

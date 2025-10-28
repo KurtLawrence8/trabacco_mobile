@@ -128,6 +128,10 @@ class _SchedulePageState extends State<SchedulePage> {
     }
   }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> d8d2949 (fixed merge conflict)
   // Helper functions to get unit and budget from laborers array
   String? _getScheduleUnit(Schedule schedule) {
     if (schedule.laborers != null && schedule.laborers!.isNotEmpty) {
@@ -1071,6 +1075,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         child: ElevatedButton.icon(
                           onPressed: canComplete
                               ? () => _showConfirmationDialog(
+<<<<<<< HEAD
                                     context,
                                     'Complete Task',
                                     'Are you sure you want to complete "${s.activity}"?',
@@ -1078,6 +1083,15 @@ class _SchedulePageState extends State<SchedulePage> {
                                     const Color(0xFF4CAF50),
                                     () => onStatusChange?.call('Completed'),
                                   )
+=======
+                                context,
+                                'Complete Task',
+                                'Are you sure you want to complete "${s.activity}"?',
+                                'Complete',
+                                const Color(0xFF4CAF50),
+                                () => onStatusChange?.call('Completed'),
+                              )
+>>>>>>> d8d2949 (fixed merge conflict)
                               : null,
                           icon: const Icon(Icons.check_circle, size: 20),
                           label: const Text('Complete'),
@@ -1124,6 +1138,10 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                 ],
               ],
+<<<<<<< HEAD
+=======
+
+>>>>>>> d8d2949 (fixed merge conflict)
             ],
           ),
         ),

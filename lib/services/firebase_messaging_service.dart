@@ -26,16 +26,16 @@ class FirebaseMessagingService {
   static Future<void> firebaseMessagingBackgroundHandler(
       RemoteMessage message) async {
     await Firebase.initializeApp();
-    print('🔥 [FCM] Handling background message: ${message.messageId}');
+    print('🔥 [FCM] Background message received: ${message.messageId}');
+    print('🔥 [FCM] Title: ${message.notification?.title}');
+    print('🔥 [FCM] Body: ${message.notification?.body}');
+    print('🔥 [FCM] Data: ${message.data}');
 
-    // Show local notification for background messages
-    if (message.notification != null) {
-      await _showLocalNotification(
-        title: message.notification!.title ?? 'Schedule Reminder',
-        body: message.notification!.body ?? '',
-        payload: jsonEncode(message.data),
-      );
-    }
+    // For background messages, Firebase should automatically display the notification
+    // if the notification payload is present. We just need to ensure proper handling.
+    // The system will show the notification even if this handler doesn't do anything special.
+
+    print('🔥 [FCM] ✅ Background message handler completed');
   }
 
   /// Initialize Firebase messaging
