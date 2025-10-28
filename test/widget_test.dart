@@ -7,13 +7,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-<<<<<<< HEAD
-import '../lib/main.dart';
-=======
->>>>>>> d8d2949 (fixed merge conflict)
 
 void main() {
-  testWidgets('Basic app widget test - builds without errors', (WidgetTester tester) async {
+  testWidgets('Basic app widget test - builds without errors',
+      (WidgetTester tester) async {
     // Create a simple test app
     await tester.pumpWidget(
       const MaterialApp(
@@ -29,7 +26,8 @@ void main() {
     expect(find.text('Trabacco Mobile'), findsOneWidget);
   });
 
-  testWidgets('MyHomePage counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('MyHomePage counter increments smoke test',
+      (WidgetTester tester) async {
     // Test the MyHomePage counter widget (legacy component in main.dart)
     await tester.pumpWidget(
       const MaterialApp(
