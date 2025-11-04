@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
+import '../services/firebase_messaging_service.dart';
 import 'farm_worker_landing_screen.dart';
 import 'technician_landing_screen.dart';
 import 'coordinator_landing_screen.dart';
@@ -127,6 +128,16 @@ class _LoginScreenState extends State<LoginScreen> {
       print('📱 [LOGIN SCREEN] Saving remembered credentials...');
       await _saveRememberedCredentials();
       print('📱 [LOGIN SCREEN] ✅ Credentials saved');
+
+      // Force save FCM token after successful login (user may have changed)
+      print('📱 [LOGIN SCREEN] Force saving FCM token to backend (user may have changed)...');
+      try {
+        await FirebaseMessagingService.forceSaveFCMToken();
+        print('📱 [LOGIN SCREEN] ✅ FCM token force-saved successfully');
+      } catch (e) {
+        print('📱 [LOGIN SCREEN] ⚠️ Failed to force save FCM token: $e');
+        // Continue even if FCM token saving fails
+      }
 
       // Navigate to appropriate landing page based on role
       print('📱 [LOGIN SCREEN] Waiting 400ms before navigation...');

@@ -19,12 +19,12 @@ void main() async {
 
   // Suppress Flutter framework debug prints (including GestureDetector logs)
   debugPrint = (String? message, {int? wrapWidth}) {
-    // Only print Firebase logs, main logs, and local notification logs, suppress all other logs
+    // Only print Firebase logs, main logs, local notification logs, and login logs
     if (message != null &&
         (message.startsWith('[main]') ||
             message.startsWith('🔥') ||
-            message.startsWith('📱 [LOCAL]') ||
-            message.startsWith('📅 [SCHEDULE NOTIFICATIONS]'))) {
+            message.startsWith('📱') ||
+            message.startsWith('📅'))) {
       print(message);
     }
   };
@@ -45,11 +45,15 @@ void main() async {
 
   // Initialize Firebase messaging
   try {
+    print('[main] 🔥 Starting Firebase messaging initialization...');
     await FirebaseMessagingService.initialize();
     print('[main] ✅ Firebase messaging initialized');
   } catch (e) {
     print(
-        '[main] ⚠️ Firebase messaging initialization failed (device may not have Google Play Services)');
+        '[main] ❌ Firebase messaging initialization failed (device may not have Google Play Services)');
+    print('[main] Error: $e');
+    print('[main] Error type: ${e.runtimeType}');
+    print('[main] Stack trace: ${StackTrace.current}');
     print('[main] ℹ️ App will continue with local notifications only');
   }
 

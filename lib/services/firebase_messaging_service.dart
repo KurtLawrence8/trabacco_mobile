@@ -26,23 +26,93 @@ class FirebaseMessagingService {
   static Future<void> firebaseMessagingBackgroundHandler(
       RemoteMessage message) async {
     await Firebase.initializeApp();
-    print('🔥 [FCM] Background message received: ${message.messageId}');
-    print('🔥 [FCM] Title: ${message.notification?.title}');
-    print('🔥 [FCM] Body: ${message.notification?.body}');
-    print('🔥 [FCM] Data: ${message.data}');
+    print('🔥 [FCM BACKGROUND] Message received: ${message.messageId}');
+    print('🔥 [FCM BACKGROUND] Title: ${message.notification?.title}');
+    print('🔥 [FCM BACKGROUND] Body: ${message.notification?.body}');
+    print('🔥 [FCM BACKGROUND] Data: ${message.data}');
 
-    // For background messages, Firebase should automatically display the notification
-    // if the notification payload is present. We just need to ensure proper handling.
-    // The system will show the notification even if this handler doesn't do anything special.
+    // Show local notification even when app is in background/terminated
+    if (message.notification != null) {
+      await _showBackgroundLocalNotification(
+        title: message.notification!.title ?? 'Trabacco Notification',
+        body: message.notification!.body ?? '',
+        payload: jsonEncode(message.data),
+      );
+      print('🔥 [FCM BACKGROUND] ✅ Local notification displayed');
+    }
 
-    print('🔥 [FCM] ✅ Background message handler completed');
+    print('🔥 [FCM BACKGROUND] ✅ Handler completed');
+  }
+
+  /// Show local notification for background messages
+  static Future<void> _showBackgroundLocalNotification({
+    required String title,
+    required String body,
+    required String payload,
+  }) async {
+    try {
+      print('📱 [LOCAL BACKGROUND] Showing notification: $title');
+
+      final FlutterLocalNotificationsPlugin localNotifications =
+          FlutterLocalNotificationsPlugin();
+
+      // Initialize if not already initialized
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings();
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
+
+      await localNotifications.initialize(initSettings);
+
+      const androidDetails = AndroidNotificationDetails(
+        'trabacco_notifications',
+        'Trabacco Notifications',
+        channelDescription: 'All notifications from Trabacco system',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        playSound: true,
+        enableVibration: true,
+        showWhen: true,
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      final notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      await localNotifications.show(
+        notificationId,
+        title,
+        body,
+        details,
+        payload: payload,
+      );
+
+      print('📱 [LOCAL BACKGROUND] ✅ Notification shown successfully');
+    } catch (e) {
+      print('📱 [LOCAL BACKGROUND] ❌ Error showing notification: $e');
+    }
   }
 
   /// Initialize Firebase messaging
   static Future<void> initialize() async {
-    print('🔥 [FCM] Initializing Firebase messaging...');
+    print('🔥 [FCM] ========================================');
+    print('🔥 [FCM] FIREBASE MESSAGING INITIALIZATION START');
+    print('🔥 [FCM] ========================================');
 
     try {
+      print('🔥 [FCM] Step 1: Requesting notification permissions...');
       // Request permission for notifications
       final settings = await _messaging.requestPermission(
         alert: true,
@@ -54,7 +124,7 @@ class FirebaseMessagingService {
         sound: true,
       );
 
-      print('🔥 [FCM] Permission status: ${settings.authorizationStatus}');
+      print('🔥 [FCM] Step 1 DONE: Permission status: ${settings.authorizationStatus}');
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         print('🔥 [FCM] ✅ User granted permission');
@@ -72,15 +142,20 @@ class FirebaseMessagingService {
       // Get FCM token with error handling
       String? token;
       try {
+        print('🔥 [FCM] Attempting to get FCM token from Firebase...');
         token = await _messaging.getToken();
-        print('🔥 [FCM] FCM Token: $token');
-
+        print('🔥 [FCM] Firebase getToken() result: ${token != null ? "SUCCESS (${token.length} chars)" : "NULL"}');
+        
         if (token != null) {
+          print('🔥 [FCM] FCM Token preview: ${token.substring(0, 50)}...');
           await _saveFCMToken(token);
+        } else {
+          print('🔥 [FCM] ❌ Firebase returned null token - device may not support FCM');
         }
       } catch (tokenError) {
         print(
             '🔥 [FCM] ⚠️ Cannot get FCM token (Google Play Services may be missing): $tokenError');
+        print('🔥 [FCM] Error type: ${tokenError.runtimeType}');
         print('🔥 [FCM] ℹ️ App will continue with local notifications only');
         return; // Exit early if FCM is not available
       }
@@ -133,19 +208,35 @@ class FirebaseMessagingService {
 
     print('📱 [LOCAL] Local notifications initialized: $initialized');
 
-    // Create notification channel for Android
-    const androidChannel = AndroidNotificationChannel(
-      'schedule_reminders',
-      'Schedule Reminders',
-      description: 'Notifications for upcoming farmer schedules',
-      importance: Importance.high,
-    );
-
+    // Create notification channels for Android
     final androidImplementation =
         _localNotifications.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
-    await androidImplementation?.createNotificationChannel(androidChannel);
+    // Channel for schedule reminders
+    const scheduleChannel = AndroidNotificationChannel(
+      'schedule_reminders',
+      'Schedule Reminders',
+      description: 'Notifications for upcoming farmer schedules',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+
+    // Channel for all Trabacco notifications (reports, requests, etc.)
+    const trabaccoChannel = AndroidNotificationChannel(
+      'trabacco_notifications',
+      'Trabacco Notifications',
+      description: 'All notifications from Trabacco system',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+
+    await androidImplementation?.createNotificationChannel(scheduleChannel);
+    await androidImplementation?.createNotificationChannel(trabaccoChannel);
 
     // Request permission for Android 13+ (API level 33+)
     final bool? permissionGranted =
@@ -190,12 +281,15 @@ class FirebaseMessagingService {
       print('📱 [LOCAL] Attempting to show notification: $title');
 
       const androidDetails = AndroidNotificationDetails(
-        'schedule_reminders',
-        'Schedule Reminders',
-        channelDescription: 'Notifications for upcoming farmer schedules',
+        'trabacco_notifications',
+        'Trabacco Notifications',
+        channelDescription: 'All notifications from Trabacco system',
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
+        playSound: true,
+        enableVibration: true,
+        showWhen: true,
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -332,13 +426,21 @@ class FirebaseMessagingService {
   /// Save FCM token to backend
   static Future<void> _saveFCMToken(String token) async {
     try {
+      print('🔥 [FCM] _saveFCMToken called with token length: ${token.length}');
+      print('🔥 [FCM] Token preview: ${token.substring(0, 20)}...');
+      
       final prefs = await SharedPreferences.getInstance();
       final authToken = prefs.getString('auth_token');
 
+      print('🔥 [FCM] Auth token exists: ${authToken != null}');
+      
       if (authToken != null) {
         // Get user data using correct keys (from auth_service.dart)
         final userDataString = prefs.getString('user_data');
         final userRoleType = prefs.getString('user_role_type');
+
+        print('🔥 [FCM] User data exists: ${userDataString != null}');
+        print('🔥 [FCM] User role type: $userRoleType');
 
         if (userDataString != null && userRoleType != null) {
           final userData = jsonDecode(userDataString);
@@ -359,8 +461,10 @@ class FirebaseMessagingService {
 
       // Save token locally
       await prefs.setString('fcm_token', token);
+      print('🔥 [FCM] ✅ Token saved to local storage');
     } catch (e) {
-      print('🔥 [FCM] Error saving FCM token: $e');
+      print('🔥 [FCM] ❌ Error saving FCM token: $e');
+      print('🔥 [FCM] Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -409,31 +513,61 @@ class FirebaseMessagingService {
     }
   }
 
-  /// Get stored FCM token
+  /// Get stored FCM token (checks if changed before saving)
   static Future<String?> getFCMToken() async {
     try {
+      print('🔥 [FCM] getFCMToken() called - attempting to get token from Firebase...');
       final token = await _messaging.getToken();
+      print('🔥 [FCM] Firebase returned token: ${token != null ? "YES (${token.length} chars)" : "NULL"}');
+      
       final prefs = await SharedPreferences.getInstance();
       final storedToken = prefs.getString('fcm_token');
+      print('🔥 [FCM] Stored token in prefs: ${storedToken != null ? "YES" : "NULL"}');
 
       if (token != storedToken && token != null) {
+        print('🔥 [FCM] Token changed or new, saving to backend...');
         await _saveFCMToken(token);
+      } else if (token == null) {
+        print('🔥 [FCM] ⚠️ Firebase returned null token');
+      } else {
+        print('🔥 [FCM] Token unchanged, skipping save');
       }
 
       return token;
     } catch (e) {
       print(
           '🔥 [FCM] ⚠️ Cannot get FCM token (Google Play Services issue): $e');
+      print('🔥 [FCM] Error type: ${e.runtimeType}');
       print('🔥 [FCM] ℹ️ Returning cached token if available');
 
       // Try to get cached token
       try {
         final prefs = await SharedPreferences.getInstance();
-        return prefs.getString('fcm_token');
+        final cachedToken = prefs.getString('fcm_token');
+        print('🔥 [FCM] Cached token: ${cachedToken != null ? "YES" : "NULL"}');
+        return cachedToken;
       } catch (cacheError) {
-        print('🔥 [FCM] No cached token available');
+        print('🔥 [FCM] No cached token available: $cacheError');
         return null;
       }
+    }
+  }
+
+  /// Force save FCM token to backend (used after login to update user association)
+  static Future<void> forceSaveFCMToken() async {
+    try {
+      print('🔥 [FCM] forceSaveFCMToken() called - forcing save regardless of token change...');
+      final token = await _messaging.getToken();
+      
+      if (token != null) {
+        print('🔥 [FCM] Force saving token to backend (user may have changed)...');
+        await _saveFCMToken(token);
+      } else {
+        print('🔥 [FCM] ⚠️ Cannot force save - Firebase returned null token');
+      }
+    } catch (e) {
+      print('🔥 [FCM] ❌ Error in forceSaveFCMToken: $e');
+      print('🔥 [FCM] Error type: ${e.runtimeType}');
     }
   }
 

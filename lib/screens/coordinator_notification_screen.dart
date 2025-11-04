@@ -32,11 +32,8 @@ class _CoordinatorNotificationScreenState
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      print('🔔 [AC NOTIFICATION SCREEN] Loading notifications...');
       print(
-          '🔔 [AC NOTIFICATION SCREEN] Coordinator ID: ${widget.coordinatorId}');
-      print(
-          '🔔 [AC NOTIFICATION SCREEN] Token: ${widget.token.substring(0, 20)}...');
+          '🔔 [AC SCREEN] Loading notifications for Coordinator ID: ${widget.coordinatorId}');
 
       final notifications =
           await notification_service.NotificationService.getNotifications(
@@ -44,20 +41,7 @@ class _CoordinatorNotificationScreenState
         coordinatorId: widget.coordinatorId,
       );
 
-      print(
-          '🔔 [AC NOTIFICATION SCREEN] Received ${notifications.length} notifications');
-
-      // Log each notification
-      for (var i = 0; i < notifications.length; i++) {
-        final n = notifications[i];
-        print('🔔 [AC NOTIFICATION SCREEN] Notification $i:');
-        print('  - ID: ${n.id}');
-        print('  - Type: ${n.type}');
-        print('  - RecipientType: ${n.recipientType}');
-        print('  - RecipientId: ${n.recipientId}');
-        print('  - Message: ${n.message}');
-        print('  - Read: ${n.readAt != null}');
-      }
+      print('🔔 [AC SCREEN] ✅ Received ${notifications.length} notifications');
 
       final unreadCount =
           await notification_service.NotificationService.getUnreadCount(
@@ -65,7 +49,7 @@ class _CoordinatorNotificationScreenState
         coordinatorId: widget.coordinatorId,
       );
 
-      print('🔔 [AC NOTIFICATION SCREEN] Unread count: $unreadCount');
+      print('🔔 [AC SCREEN] ✅ Unread: $unreadCount');
 
       if (!mounted) return;
       setState(() {

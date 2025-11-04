@@ -27,8 +27,7 @@ class _CoordinatorPendingReportsScreenState
   Future<void> _fetchReports() async {
     setState(() => _loading = true);
     try {
-      final reports =
-          await CoordinatorService.getPendingReports(widget.token);
+      final reports = await CoordinatorService.getPendingReports(widget.token);
       setState(() {
         _reports = reports;
         _loading = false;
@@ -69,7 +68,10 @@ class _CoordinatorPendingReportsScreenState
     final technicianName =
         '${technician?['first_name'] ?? ''} ${technician?['last_name'] ?? ''}'
             .trim();
-    final farmName = farm?['name'] ?? farm?['farm_address'] ?? farm?['address'] ?? 'Unknown Farm';
+    final farmName = farm?['name'] ??
+        farm?['farm_address'] ??
+        farm?['address'] ??
+        'Unknown Farm';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -133,6 +135,10 @@ class _CoordinatorPendingReportsScreenState
                     Icons.info,
                     Colors.red,
                   ),
+                // Images section
+                if (report['image_urls'] != null &&
+                    (report['image_urls'] as List).isNotEmpty)
+                  _buildImagesSection(report['image_urls'] as List),
               ],
             ),
           ),
@@ -217,6 +223,147 @@ class _CoordinatorPendingReportsScreenState
             ),
             const SizedBox(height: 8),
             Text(content, style: const TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagesSection(List imageUrls) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.image, color: Colors.blue, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Images (${imageUrls.length})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: imageUrls.length,
+                itemBuilder: (context, index) {
+                  final imageUrl = imageUrls[index];
+                  return GestureDetector(
+                    onTap: () => _showImageViewer(imageUrls, index),
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                                size: 40,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showImageViewer(List imageUrls, int initialIndex) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        child: Stack(
+          children: [
+            PageView.builder(
+              itemCount: imageUrls.length,
+              controller: PageController(initialPage: initialIndex),
+              itemBuilder: (context, index) {
+                return InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Center(
+                    child: Image.network(
+                      imageUrls[index],
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.white,
+                            size: 64,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              top: 16,
+              right: 16,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            Positioned(
+              bottom: 16,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  '${initialIndex + 1} / ${imageUrls.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -323,11 +470,11 @@ class _CoordinatorPendingReportsScreenState
       print('📝 [AC MOBILE] Starting accomplishment report approval...');
       print('📝 [AC MOBILE] Report ID: $reportId');
       print('📝 [AC MOBILE] Note: $note');
-      
+
       await CoordinatorService.approveReport(widget.token, reportId, note);
-      
+
       print('✅ [AC MOBILE] Accomplishment report approval successful!');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -353,11 +500,11 @@ class _CoordinatorPendingReportsScreenState
       print('📝 [AC MOBILE] Starting accomplishment report rejection...');
       print('📝 [AC MOBILE] Report ID: $reportId');
       print('📝 [AC MOBILE] Note: $note');
-      
+
       await CoordinatorService.rejectReport(widget.token, reportId, note);
-      
+
       print('✅ [AC MOBILE] Accomplishment report rejection successful!');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -446,7 +593,10 @@ class _CoordinatorPendingReportsScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 4),
-                            Text(farm?['name'] ?? farm?['farm_address'] ?? farm?['address'] ?? 'Unknown Farm'),
+                            Text(farm?['name'] ??
+                                farm?['farm_address'] ??
+                                farm?['address'] ??
+                                'Unknown Farm'),
                             const SizedBox(height: 4),
                             Text(
                               _formatDate(report['timestamp']),
@@ -466,4 +616,3 @@ class _CoordinatorPendingReportsScreenState
     );
   }
 }
-
