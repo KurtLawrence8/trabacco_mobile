@@ -289,9 +289,9 @@ class FirebaseMessagingService {
         print(
             '🔥 [FCM] User type: $finalRoleType, ID: $userId, Name: $userName');
 
-        // Only navigate for technicians
-        if (finalRoleType == 'technician') {
-          // Create technician object
+        // Navigate for technicians and coordinators
+        if (finalRoleType == 'technician' || finalRoleType == 'area_coordinator') {
+          // Create technician object (can be used for both roles)
           final technician = Technician(
             id: userId,
             firstName: userName.split(' ').first,
@@ -318,7 +318,7 @@ class FirebaseMessagingService {
           }
         } else {
           print(
-              '🔥 [FCM] User is not a technician ($finalRoleType), skipping navigation');
+              '🔥 [FCM] User role type is $finalRoleType, skipping notification navigation');
         }
       } else {
         print(

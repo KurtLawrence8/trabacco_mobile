@@ -6,6 +6,7 @@ import '../services/harvest_service.dart';
 import '../services/farm_service.dart';
 import '../services/laborer_service.dart';
 import '../services/auth_service.dart';
+import '../services/coordinator_service.dart';
 import '../models/farm.dart';
 import '../models/laborer.dart';
 import 'login_screen.dart';
@@ -53,9 +54,15 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
   final FocusNode _mortalityFocusNode = FocusNode();
   final FocusNode _initialKgFocusNode = FocusNode();
 
+  // Area Coordinator selection
+  int? _selectedCoordinatorId;
+  List<Map<String, dynamic>> _coordinators = [];
+  bool _loadingCoordinators = false;
+
   @override
   void initState() {
     super.initState();
+    _loadCoordinators();
     _farmSearchController.addListener(_filterFarms);
     _laborerSearchController.addListener(_filterLaborers);
     _mortalityController.addListener(_saveDraft);
@@ -63,6 +70,32 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     _loadDraft();
     _loadFarms();
     _loadLaborers();
+  }
+
+  Future<void> _loadCoordinators() async {
+    if (widget.token == null) return;
+
+    setState(() {
+      _loadingCoordinators = true;
+    });
+
+    try {
+      final coordinators =
+          await CoordinatorService.getActiveCoordinators(widget.token!);
+      if (mounted) {
+        setState(() {
+          _coordinators = coordinators;
+          _loadingCoordinators = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading coordinators: $e');
+      if (mounted) {
+        setState(() {
+          _loadingCoordinators = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadFarms() async {
@@ -476,6 +509,7 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     try {
       final harvestData = {
         'farm_id': _selectedFarm!.id,
+        'coordinator_id': _selectedCoordinatorId, // Added coordinator selection
         'mortality': int.parse(_mortalityController.text),
         'initial_kg': double.parse(_initialKgController.text),
         'laborer_ids': _selectedLaborers.map((l) => l.id).toList(),
@@ -1141,6 +1175,81 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Area Coordinator Selection
+                    const Text(
+                      'Area Coordinator',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _loadingCoordinators
+                        ? Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: const Color(0xFFE0E0E0)),
+                            ),
+                            child: const Row(
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                SizedBox(width: 12),
+                                Text('Loading coordinators...'),
+                              ],
+                            ),
+                          )
+                        : DropdownButtonFormField<int>(
+                            value: _selectedCoordinatorId,
+                            decoration: InputDecoration(
+                              hintText: 'Select Area Coordinator',
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFE0E0E0)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF4CAF50), width: 2),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                            items: _coordinators.map((coordinator) {
+                              final fullName =
+                                  '${coordinator['last_name']}, ${coordinator['first_name']}${coordinator['middle_name'] != null ? ' ${coordinator['middle_name']}' : ''}';
+                              return DropdownMenuItem<int>(
+                                value: coordinator['id'] as int,
+                                child: Text(fullName),
+                              );
+                            }).toList(),
+                            onChanged: (int? newValue) {
+                              setState(() {
+                                _selectedCoordinatorId = newValue;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Please select an Area Coordinator';
+                              }
+                              return null;
+                            },
+                          ),
+                    const SizedBox(height: 24),
+
                     Semantics(
                       label: 'Select farm dropdown',
                       hint: 'Choose a farm from the available list',

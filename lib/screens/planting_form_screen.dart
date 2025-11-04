@@ -6,6 +6,7 @@ import '../services/planting_service.dart';
 import '../services/farm_service.dart';
 import '../services/laborer_service.dart';
 import '../services/auth_service.dart';
+import '../services/coordinator_service.dart';
 import '../models/farm.dart';
 import '../models/laborer.dart';
 import 'login_screen.dart';
@@ -50,16 +51,47 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
   bool _isFarmDropdownExpanded = false;
   final FocusNode _farmDropdownFocusNode = FocusNode();
   final FocusNode _plantsPlantedFocusNode = FocusNode();
+  
+  // Area Coordinator selection
+  int? _selectedCoordinatorId;
+  List<Map<String, dynamic>> _coordinators = [];
+  bool _loadingCoordinators = false;
 
   @override
   void initState() {
     super.initState();
+    _loadCoordinators();
     _farmSearchController.addListener(_filterFarms);
     _laborerSearchController.addListener(_filterLaborers);
     _plantsPlantedController.addListener(_saveDraft);
     _loadDraft();
     _loadFarms();
     _loadLaborers();
+  }
+
+  Future<void> _loadCoordinators() async {
+    if (widget.token == null) return;
+    
+    setState(() {
+      _loadingCoordinators = true;
+    });
+
+    try {
+      final coordinators = await CoordinatorService.getActiveCoordinators(widget.token!);
+      if (mounted) {
+        setState(() {
+          _coordinators = coordinators;
+          _loadingCoordinators = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading coordinators: $e');
+      if (mounted) {
+        setState(() {
+          _loadingCoordinators = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadFarms() async {
@@ -611,6 +643,14 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
 
   Future<void> _submitPlantingReport() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    if (_selectedCoordinatorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an Area Coordinator')),
+      );
+      return;
+    }
+    
     if (_selectedFarm == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a farm')),
@@ -627,6 +667,7 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     try {
       final plantingData = {
         'farm_id': _selectedFarm!.id,
+        'coordinator_id': _selectedCoordinatorId, // Added coordinator selection
         'plants_planted': int.parse(_plantsPlantedController.text),
         'laborer_ids': _selectedLaborers.map((l) => l.id).toList(),
       };
@@ -711,6 +752,88 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Area Coordinator Selection
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Area Coordinator',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE0E0E0),
+                              width: 1.0,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          child: _loadingCoordinators
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : DropdownButtonHideUnderline(
+                                  child: DropdownButton<int>(
+                                    isExpanded: true,
+                                    value: _selectedCoordinatorId,
+                                    hint: Text(
+                                      'Select Area Coordinator',
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    items: _coordinators.map((coordinator) {
+                                      return DropdownMenuItem<int>(
+                                        value: coordinator['id'],
+                                        child: Text(
+                                          '${coordinator['first_name']} ${coordinator['last_name']}',
+                                          style: const TextStyle(
+                                            color: Color(0xFF2C3E50),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedCoordinatorId = value;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: Colors.grey[600],
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    
                     // Farm Selection
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

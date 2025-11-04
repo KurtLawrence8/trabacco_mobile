@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/equipment_service.dart';
+import '../services/coordinator_service.dart';
 import 'login_screen.dart';
 
 class RequestScreen extends StatefulWidget {
@@ -45,9 +46,15 @@ class _RequestScreenState extends State<RequestScreen> {
   bool _isSupplyDropdownExpanded = false;
   bool _isEquipmentDropdownExpanded = false;
 
+  // Area Coordinator selection
+  int? _selectedCoordinatorId;
+  List<Map<String, dynamic>> _coordinators = [];
+  bool _loadingCoordinators = false;
+
   @override
   void initState() {
     super.initState();
+    _loadCoordinators();
     _supplySearchController.addListener(_filterSupplies);
     _equipmentSearchController.addListener(_filterEquipment);
     _loadFormDraft();
@@ -114,6 +121,30 @@ class _RequestScreenState extends State<RequestScreen> {
             .toList();
       }
     });
+  }
+
+  Future<void> _loadCoordinators() async {
+    setState(() {
+      _loadingCoordinators = true;
+    });
+
+    try {
+      final coordinators =
+          await CoordinatorService.getActiveCoordinators(widget.token);
+      if (mounted) {
+        setState(() {
+          _coordinators = coordinators;
+          _loadingCoordinators = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading coordinators: $e');
+      if (mounted) {
+        setState(() {
+          _loadingCoordinators = false;
+        });
+      }
+    }
   }
 
   void _fetchSupplies() async {
@@ -228,8 +259,10 @@ class _RequestScreenState extends State<RequestScreen> {
             _returnDateController.text.isNotEmpty &&
             _reasonController.text.isNotEmpty;
       }
-      _isSubmitEnabled =
-          _isDescriptionEnabled && _requestType.isNotEmpty && hasRequiredFields;
+      _isSubmitEnabled = _isDescriptionEnabled &&
+          _requestType.isNotEmpty &&
+          hasRequiredFields &&
+          _selectedCoordinatorId != null;
     });
   }
 
@@ -240,6 +273,7 @@ class _RequestScreenState extends State<RequestScreen> {
     final requestData = {
       'farm_worker_id': widget.farmWorker.id,
       'technician_id': widget.farmWorker.technicianId,
+      'coordinator_id': _selectedCoordinatorId, // Added coordinator selection
       'request_type': _requestType == 'Farm supply'
           ? 'Supply'
           : _requestType == 'Cash advance'
@@ -404,6 +438,81 @@ class _RequestScreenState extends State<RequestScreen> {
                     // Form Progress Indicator
                     _buildFormProgress(),
                     const SizedBox(height: 16),
+
+                    // Area Coordinator Selection
+                    const Text(
+                      'Area Coordinator',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _loadingCoordinators
+                        ? Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: const Color(0xFFE0E0E0)),
+                            ),
+                            child: const Row(
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                SizedBox(width: 12),
+                                Text('Loading coordinators...'),
+                              ],
+                            ),
+                          )
+                        : DropdownButtonFormField<int>(
+                            value: _selectedCoordinatorId,
+                            decoration: InputDecoration(
+                              hintText: 'Select Area Coordinator',
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFE0E0E0)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF4CAF50), width: 2),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                            items: _coordinators.map((coordinator) {
+                              final fullName =
+                                  '${coordinator['last_name']}, ${coordinator['first_name']}${coordinator['middle_name'] != null ? ' ${coordinator['middle_name']}' : ''}';
+                              return DropdownMenuItem<int>(
+                                value: coordinator['id'] as int,
+                                child: Text(fullName),
+                              );
+                            }).toList(),
+                            onChanged: (int? newValue) {
+                              setState(() {
+                                _selectedCoordinatorId = newValue;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Please select an Area Coordinator';
+                              }
+                              return null;
+                            },
+                          ),
+                    const SizedBox(height: 20),
 
                     // Request Type Field
                     const Text(

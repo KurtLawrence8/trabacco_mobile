@@ -106,6 +106,11 @@ class RequestModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? adminNote;
+  // Coordinator approval fields
+  final String? coordinatorStatus;
+  final int? coordinatorId;
+  final String? coordinatorNote;
+  final String? adminStatus;
 
   RequestModel({
     required this.id,
@@ -125,6 +130,10 @@ class RequestModel {
     required this.createdAt,
     this.updatedAt,
     this.adminNote,
+    this.coordinatorStatus,
+    this.coordinatorId,
+    this.coordinatorNote,
+    this.adminStatus,
   });
 
   factory RequestModel.fromJson(Map<String, dynamic> json) {
@@ -161,6 +170,11 @@ class RequestModel {
           ? DateTime.parse(json['updated_at'])
           : null,
       adminNote: json['admin_note'],
+      // Coordinator approval fields
+      coordinatorStatus: json['coordinator_status'],
+      coordinatorId: json['coordinator_id'],
+      coordinatorNote: json['coordinator_note'],
+      adminStatus: json['admin_status'],
     );
   }
 }

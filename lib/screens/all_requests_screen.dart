@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../widgets/coordinator_status_badge.dart';
 import 'farm_worker_detail_screen.dart';
 import 'technician_landing_screen.dart';
 
@@ -900,21 +901,11 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    request.status?.toUpperCase() ?? 'UNKNOWN',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: statusColor,
-                    ),
-                  ),
+                CoordinatorStatusBadge(
+                  coordinatorStatus: request.coordinatorStatus,
+                  adminStatus: request.adminStatus,
+                  overallStatus: request.status,
+                  compact: true,
                 ),
               ],
             ),
@@ -929,6 +920,54 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            // Show coordinator note if rejected
+            if (request.coordinatorStatus?.toLowerCase() == 'rejected' &&
+                request.coordinatorNote != null &&
+                request.coordinatorNote!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFECACA)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Color(0xFFEF4444),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Coordinator Feedback:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFEF4444),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            request.coordinatorNote!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF991B1B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
             const SizedBox(height: 12),

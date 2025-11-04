@@ -10,6 +10,7 @@ import '../services/farm_service.dart';
 import '../services/report_service.dart';
 import '../services/tobacco_variety_service.dart';
 import '../services/planting_service.dart';
+import '../services/coordinator_service.dart';
 import '../models/farm.dart';
 import '../models/tobacco_variety.dart';
 import 'harvest_form_screen.dart';
@@ -1128,10 +1129,99 @@ class _ReportFormModalState extends State<ReportFormModal> {
   final TobaccoVarietyService _tobaccoVarietyService = TobaccoVarietyService();
   final PlantingService _plantingService = PlantingService();
 
+  // Area Coordinator selection
+  int? _selectedCoordinatorId;
+  List<Map<String, dynamic>> _coordinators = [];
+  bool _loadingCoordinators = false;
+
   Widget _buildPlantingForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Area Coordinator Selection
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.person_outline, color: Colors.black, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Area Coordinator',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                Text(
+                  ' *',
+                  style: TextStyle(color: Colors.red, fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _loadingCoordinators
+                ? Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFDEE2E6)),
+                    ),
+                    child: const Row(
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 12),
+                        Text('Loading coordinators...'),
+                      ],
+                    ),
+                  )
+                : DropdownButtonFormField<int>(
+                    value: _selectedCoordinatorId,
+                    decoration: InputDecoration(
+                      hintText: 'Select Area Coordinator',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF27AE60), width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    items: _coordinators.map((coordinator) {
+                      final fullName =
+                          '${coordinator['last_name']}, ${coordinator['first_name']}${coordinator['middle_name'] != null ? ' ${coordinator['middle_name']}' : ''}';
+                      return DropdownMenuItem<int>(
+                        value: coordinator['id'] as int,
+                        child: Text(fullName),
+                      );
+                    }).toList(),
+                    onChanged: (int? newValue) {
+                      setState(() {
+                        _selectedCoordinatorId = newValue;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select an Area Coordinator';
+                      }
+                      return null;
+                    },
+                  ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
         // Tobacco Variety Selection
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1350,8 +1440,35 @@ class _ReportFormModalState extends State<ReportFormModal> {
   @override
   void initState() {
     super.initState();
+    _loadCoordinators();
     if (widget.reportType == 'planting') {
       _loadTobaccoVarieties();
+    }
+  }
+
+  Future<void> _loadCoordinators() async {
+    if (widget.token == null) return;
+
+    setState(() {
+      _loadingCoordinators = true;
+    });
+
+    try {
+      final coordinators =
+          await CoordinatorService.getActiveCoordinators(widget.token!);
+      if (mounted) {
+        setState(() {
+          _coordinators = coordinators;
+          _loadingCoordinators = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading coordinators: $e');
+      if (mounted) {
+        setState(() {
+          _loadingCoordinators = false;
+        });
+      }
     }
   }
 
@@ -1532,6 +1649,95 @@ class _ReportFormModalState extends State<ReportFormModal> {
                     if (widget.reportType == 'planting') ...[
                       _buildPlantingForm(),
                     ] else ...[
+                      // Area Coordinator Selection (Regular Report)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.person_outline,
+                                  color: Colors.black, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Area Coordinator',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                              Text(
+                                ' *',
+                                style:
+                                    TextStyle(color: Colors.red, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          _loadingCoordinators
+                              ? Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: const Color(0xFFDEE2E6)),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text('Loading coordinators...'),
+                                    ],
+                                  ),
+                                )
+                              : DropdownButtonFormField<int>(
+                                  value: _selectedCoordinatorId,
+                                  decoration: InputDecoration(
+                                    hintText: 'Select Area Coordinator',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFFDEE2E6)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFF27AE60), width: 2),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.all(16),
+                                  ),
+                                  items: _coordinators.map((coordinator) {
+                                    final fullName =
+                                        '${coordinator['last_name']}, ${coordinator['first_name']}${coordinator['middle_name'] != null ? ' ${coordinator['middle_name']}' : ''}';
+                                    return DropdownMenuItem<int>(
+                                      value: coordinator['id'] as int,
+                                      child: Text(fullName),
+                                    );
+                                  }).toList(),
+                                  onChanged: (int? newValue) {
+                                    setState(() {
+                                      _selectedCoordinatorId = newValue;
+                                    });
+                                  },
+                                  validator: (value) {
+                                    if (value == null) {
+                                      return 'Please select an Area Coordinator';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
                       // Accomplishments field
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1871,6 +2077,8 @@ class _ReportFormModalState extends State<ReportFormModal> {
           'farm_id': widget.detectedFarm?.id ?? 1,
           'tobacco_variety_id': _selectedVariety?.id ?? 1,
           'technician_id': widget.technicianId ?? 1,
+          'coordinator_id':
+              _selectedCoordinatorId, // Added coordinator selection
           'farm_worker_id': widget.detectedFarm?.farmWorkers.isNotEmpty == true
               ? widget.detectedFarm!.farmWorkers.first.id
               : null,
@@ -1912,6 +2120,8 @@ class _ReportFormModalState extends State<ReportFormModal> {
         final report = {
           'technician_id': widget.technicianId ?? 1,
           'farm_id': widget.detectedFarm?.id ?? 1,
+          'coordinator_id':
+              _selectedCoordinatorId, // Added coordinator selection
           'accomplishments': _accomplishmentsController.text,
           'issues_observed': _issuesController.text,
           'disease_detected': _diseaseDetected,

@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'screens/technician_landing_screen.dart';
 import 'screens/farm_worker_landing_screen.dart';
+import 'screens/coordinator_landing_screen.dart';
 import 'services/firebase_messaging_service.dart';
 import 'services/auth_service.dart';
 import 'models/user_model.dart';
@@ -203,12 +204,22 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Widget _getLandingScreen(String roleType, String token, User user) {
+    print('[main] 🎯 Getting landing screen for role: $roleType');
+
     if (roleType == 'technician') {
+      print('[main] ➡️ Routing to TechnicianLandingScreen');
       return TechnicianLandingScreen(
         token: token,
         technicianId: user.id,
       );
+    } else if (roleType == 'area_coordinator') {
+      print('[main] ➡️ Routing to CoordinatorLandingScreen');
+      return CoordinatorLandingScreen(
+        token: token,
+        coordinatorId: user.id,
+      );
     } else {
+      print('[main] ➡️ Routing to FarmWorkerLandingScreen (default)');
       return FarmWorkerLandingScreen(
         token: token,
       );

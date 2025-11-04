@@ -104,9 +104,9 @@ class NotificationService {
     };
   }
 
-  // Get notifications for the authenticated user (technician or farm worker)
+  // Get notifications for the authenticated user (technician, farm worker, or coordinator)
   static Future<List<Notification>> getNotifications(String token,
-      {int? technicianId, int? farmWorkerId}) async {
+      {int? technicianId, int? farmWorkerId, int? coordinatorId}) async {
     try {
       final url = '$_baseUrl/notifications';
       print('🔔 [MOBILE] NotificationService: Starting notification fetch...');
@@ -148,7 +148,7 @@ class NotificationService {
         print(
             '🔔 [MOBILE] Total notifications before filtering: ${notifications.length}');
         print(
-            '🔔 [MOBILE] Filtering for technician ID: $technicianId, Farmer ID: $farmWorkerId');
+            '🔔 [MOBILE] Filtering for technician ID: $technicianId, Farmer ID: $farmWorkerId, Coordinator ID: $coordinatorId');
 
         // Debug: Show all notification types
         for (var notification in notifications) {
@@ -157,35 +157,38 @@ class NotificationService {
         }
 
         // Filter notifications for the specific user if ID is provided
-        if (technicianId != null || farmWorkerId != null) {
+        if (technicianId != null ||
+            farmWorkerId != null ||
+            coordinatorId != null) {
           List<Notification> filteredNotifications = [];
 
           for (var notification in notifications) {
-            // print('🔔 [MOBILE] Checking notification ${notification.id}:');
-            // print('  - recipientType: "${notification.recipientType}"');
-            // print('  - recipientId: ${notification.recipientId}');
-            // print('  - userId: ${notification.userId}');
-            // print('  - technicianId: $technicianId, farmWorkerId: $farmWorkerId');
-
             // Parse data field to extract additional IDs
             final notificationData = _parseNotificationData(notification);
             int? dataFarmWorkerId =
                 _safeToInt(notificationData?['farm_worker_id']);
             int? dataTechnicianId =
                 _safeToInt(notificationData?['technician_id']);
-
-            // print('  - data.farm_worker_id: $dataFarmWorkerId');
-            // print('  - data.technician_id: $dataTechnicianId');
+            int? dataCoordinatorId =
+                _safeToInt(notificationData?['coordinator_id']);
 
             bool shouldInclude = false;
-            final currentUserId = technicianId ?? farmWorkerId;
+            final currentUserId = technicianId ?? farmWorkerId ?? coordinatorId;
 
+            // Check if it's for this specific coordinator
+            if (notification.recipientType.toLowerCase() ==
+                    'area_coordinator' ||
+                notification.recipientType.toLowerCase() == 'areacoordinator') {
+              if (coordinatorId != null &&
+                  notification.recipientId == coordinatorId) {
+                shouldInclude = true;
+              }
+            }
             // Check if it's for this specific technician
-            if (notification.recipientType.toLowerCase() == 'technician' &&
+            else if (notification.recipientType.toLowerCase() == 'technician' &&
                 technicianId != null &&
                 notification.recipientId == technicianId) {
               shouldInclude = true;
-              // print('  ✅ Included: Direct technician notification');
             }
             // Check if it's for this specific farm worker
             else if (notification.recipientType.toLowerCase() ==
@@ -193,29 +196,27 @@ class NotificationService {
                 farmWorkerId != null &&
                 notification.recipientId == farmWorkerId) {
               shouldInclude = true;
-              // print('  ✅ Included: Direct Farmer notification');
             }
             // Check if it's a broadcast notification
             else if (notification.recipientType.toLowerCase() == 'all') {
               shouldInclude = true;
-              // print('  ✅ Included: Broadcast notification');
             }
             // Check if it's related to this user's actions (userId matches current user)
             else if (notification.userId == currentUserId) {
               shouldInclude = true;
-              // print('  ✅ Included: User\'s own action notification');
+            }
+            // Check if the data field contains this coordinator's ID
+            else if (coordinatorId != null &&
+                dataCoordinatorId == coordinatorId) {
+              shouldInclude = true;
             }
             // Check if the data field contains this farm worker's ID
             else if (farmWorkerId != null && dataFarmWorkerId == farmWorkerId) {
               shouldInclude = true;
-              // print('  ✅ Included: Notification data contains Farmer ID');
             }
             // Check if the data field contains this technician's ID
             else if (technicianId != null && dataTechnicianId == technicianId) {
               shouldInclude = true;
-              // print('  ✅ Included: Notification data contains technician ID');
-            } else {
-              // print('  ❌ Excluded: Not for this user');
             }
 
             if (shouldInclude) {
@@ -224,8 +225,8 @@ class NotificationService {
           }
 
           notifications = filteredNotifications;
-          // print(
-          //     '🔔 [MOBILE] Filtered to ${notifications.length} notifications for user (technician: $technicianId, farmWorker: $farmWorkerId)');
+          print(
+              '🔔 [MOBILE] Filtered to ${notifications.length} notifications for user (technician: $technicianId, farmWorker: $farmWorkerId, coordinator: $coordinatorId)');
         }
 
         // Sort notifications: schedule_reminder notifications first, then by timestamp (newest first)
@@ -273,15 +274,17 @@ class NotificationService {
 
   // Get unread notification count
   static Future<int> getUnreadCount(String token,
-      {int? technicianId, int? farmWorkerId}) async {
+      {int? technicianId, int? farmWorkerId, int? coordinatorId}) async {
     try {
       // Get all notifications and filter them, then count unread ones
       final notifications = await getNotifications(token,
-          technicianId: technicianId, farmWorkerId: farmWorkerId);
+          technicianId: technicianId,
+          farmWorkerId: farmWorkerId,
+          coordinatorId: coordinatorId);
       final unreadCount = notifications.where((n) => n.readAt == null).length;
 
       print(
-          '🔔 [MOBILE] Unread count for user (technician: $technicianId, farmWorker: $farmWorkerId): $unreadCount');
+          '🔔 [MOBILE] Unread count for user (technician: $technicianId, farmWorker: $farmWorkerId, coordinator: $coordinatorId): $unreadCount');
       return unreadCount;
     } catch (e) {
       print('🔔 [MOBILE] EXCEPTION: Error fetching unread count: $e');
@@ -333,11 +336,13 @@ class NotificationService {
 
   // Get only schedule notifications for the authenticated user
   static Future<List<Notification>> getScheduleNotifications(String token,
-      {int? technicianId, int? farmWorkerId}) async {
+      {int? technicianId, int? farmWorkerId, int? coordinatorId}) async {
     try {
       // Get all notifications first
       final allNotifications = await getNotifications(token,
-          technicianId: technicianId, farmWorkerId: farmWorkerId);
+          technicianId: technicianId,
+          farmWorkerId: farmWorkerId,
+          coordinatorId: coordinatorId);
 
       // Filter to only schedule_reminder notifications
       return allNotifications

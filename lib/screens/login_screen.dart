@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 import 'farm_worker_landing_screen.dart';
 import 'technician_landing_screen.dart';
+import 'coordinator_landing_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -138,10 +139,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => _roleType == 'technician'
-              ? TechnicianLandingScreen(
-                  token: user.token ?? '', technicianId: user.id)
-              : FarmWorkerLandingScreen(token: user.token ?? ''),
+          builder: (context) {
+            if (_roleType == 'technician') {
+              return TechnicianLandingScreen(
+                  token: user.token ?? '', technicianId: user.id);
+            } else if (_roleType == 'area_coordinator') {
+              return CoordinatorLandingScreen(
+                  token: user.token ?? '', coordinatorId: user.id);
+            } else {
+              return FarmWorkerLandingScreen(token: user.token ?? '');
+            }
+          },
         ),
       );
 
@@ -478,7 +486,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                               child: Text(
                                                 _roleType == 'technician'
                                                     ? 'Technician'
-                                                    : 'Farmer',
+                                                    : _roleType == 'area_coordinator'
+                                                        ? 'Area Coordinator'
+                                                        : 'Farmer',
                                                 style: TextStyle(
                                                   color:
                                                       const Color(0xFF2C3E50),
@@ -545,6 +555,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                               color: Colors.grey[200],
                                               thickness: 1,
                                             ),
+                                            // Area Coordinator Option
+                                            _buildRoleDropdownOption(
+                                              label: 'Area Coordinator',
+                                              value: 'area_coordinator',
+                                              isSelected:
+                                                  _roleType == 'area_coordinator',
+                                              onTap: () {
+                                                // Clear input when switching to different role
+                                                if (_roleType !=
+                                                    'area_coordinator') {
+                                                  _loginController.clear();
+                                                }
+                                                setState(() {
+                                                  _roleType = 'area_coordinator';
+                                                  _isRoleDropdownExpanded =
+                                                      false;
+                                                });
+                                              },
+                                            ),
+                                            Divider(
+                                              height: 1,
+                                              color: Colors.grey[200],
+                                              thickness: 1,
+                                            ),
                                             // Farmer Option
                                             _buildRoleDropdownOption(
                                               label: 'Farmer',
@@ -573,7 +607,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const SizedBox(height: 8),
                                 // Email/Phone Field
                                 Text(
-                                  _roleType == 'technician'
+                                  _roleType == 'technician' || _roleType == 'area_coordinator'
                                       ? 'Email'
                                       : 'Phone Number',
                                   style: const TextStyle(
@@ -597,11 +631,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     },
                                     child: TextFormField(
                                       controller: _loginController,
-                                      keyboardType: _roleType == 'technician'
+                                      keyboardType: (_roleType == 'technician' || _roleType == 'area_coordinator')
                                           ? TextInputType.emailAddress
                                           : TextInputType.phone,
                                       decoration: InputDecoration(
-                                        hintText: (_roleType == 'technician')
+                                        hintText: (_roleType == 'technician' || _roleType == 'area_coordinator')
                                             ? "Enter your email address"
                                             : "Enter phone number",
                                         hintStyle: const TextStyle(
@@ -635,7 +669,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       validator: (v) {
                                         if (v == null || v.trim().isEmpty) {
-                                          return _roleType == 'technician'
+                                          return (_roleType == 'technician' || _roleType == 'area_coordinator')
                                               ? "Please enter your email address."
                                               : "Please enter your phone number.";
                                         }
