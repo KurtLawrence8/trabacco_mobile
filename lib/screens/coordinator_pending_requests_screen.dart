@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/coordinator_service.dart';
 import 'package:intl/intl.dart';
 
 class CoordinatorPendingRequestsScreen extends StatefulWidget {
   final String token;
+  final VoidCallback? onBack;
 
-  const CoordinatorPendingRequestsScreen({Key? key, required this.token})
-      : super(key: key);
+  const CoordinatorPendingRequestsScreen({
+    Key? key,
+    required this.token,
+    this.onBack,
+  }) : super(key: key);
 
   @override
   State<CoordinatorPendingRequestsScreen> createState() =>
@@ -85,208 +90,202 @@ class _CoordinatorPendingRequestsScreenState
             .trim();
 
     final requestType = request['request_type'] ?? 'Unknown';
-    Color typeColor = Colors.blue;
-    IconData typeIcon = Icons.request_page;
-
-    switch (requestType) {
-      case 'Supply':
-        typeColor = Colors.green;
-        typeIcon = Icons.inventory;
-        break;
-      case 'Cash Advance':
-        typeColor = Colors.orange;
-        typeIcon = Icons.attach_money;
-        break;
-      case 'Equipment':
-        typeColor = Colors.purple;
-        typeIcon = Icons.construction;
-        break;
-    }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF5F5F5), // Light grey background like Google settings
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       child: Column(
         children: [
           // Handle bar
           Container(
             width: 40,
             height: 4,
-            margin: const EdgeInsets.only(bottom: 20),
+            margin: const EdgeInsets.only(top: 12, bottom: 20),
             decoration: BoxDecoration(
               color: Colors.grey[300],
               borderRadius: BorderRadius.circular(2),
             ),
           ),
 
-          // Title with type badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(typeIcon, color: typeColor),
-              const SizedBox(width: 8),
-              Text(
-                '$requestType Request',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: typeColor,
-                    ),
-              ),
-            ],
+          // Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Text(
+              '$requestType Request',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[900],
+                  ),
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
 
           // Scrollable content
           Expanded(
             child: ListView(
               controller: scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [
-                _buildInfoCard('Technician', technicianName, Icons.person),
-                _buildInfoCard(
-                    'Farm Worker', farmWorkerName, Icons.agriculture),
-                _buildInfoCard(
+                _buildSingleItemCard(
+                  'Technician',
+                  technicianName,
+                  Icons.person_outline,
+                ),
+                _buildSingleItemCard(
+                  'Farm Worker',
+                  farmWorkerName,
+                  Icons.person_outline,
+                ),
+                _buildSingleItemCard(
                   'Date',
                   _formatDate(request['timestamp']),
-                  Icons.calendar_today,
+                  Icons.calendar_today_outlined,
                 ),
-                const SizedBox(height: 16),
 
                 // Request-specific details
                 if (requestType == 'Supply' && supply != null) ...[
-                  _buildSectionCard(
-                    'Supply Details',
+                  _buildSingleItemCard(
+                    'Supply',
                     supply['product_name'] ?? 'Unknown Product',
-                    Icons.inventory,
-                    typeColor,
+                    Icons.inventory_2_outlined,
                   ),
-                  _buildSectionCard(
+                  _buildSingleItemCard(
                     'Quantity',
                     '${request['quantity'] ?? 0} units',
-                    Icons.numbers,
-                    typeColor,
+                    Icons.numbers_outlined,
                   ),
                 ],
                 if (requestType == 'Cash Advance') ...[
-                  _buildSectionCard(
+                  _buildSingleItemCard(
                     'Amount',
                     '₱${_formatCurrency(request['amount'])}',
-                    Icons.attach_money,
-                    typeColor,
+                    Icons.credit_card_outlined,
                   ),
                 ],
                 if (requestType == 'Equipment' && equipment != null) ...[
-                  _buildSectionCard(
+                  _buildSingleItemCard(
                     'Equipment',
                     equipment['equipment_name'] ?? 'Unknown Equipment',
-                    Icons.construction,
-                    typeColor,
+                    Icons.construction_outlined,
                   ),
-                  _buildSectionCard(
+                  _buildSingleItemCard(
                     'Duration',
                     '${request['borrow_duration_days'] ?? 0} days',
-                    Icons.access_time,
-                    typeColor,
+                    Icons.access_time_outlined,
                   ),
                   if (request['expected_return_date'] != null)
-                    _buildSectionCard(
+                    _buildSingleItemCard(
                       'Expected Return',
                       _formatDate(request['expected_return_date']),
-                      Icons.event_available,
-                      typeColor,
+                      Icons.event_available_outlined,
                     ),
                 ],
 
-                _buildSectionCard(
-                  'Description',
-                  request['description'] ?? 'No description provided',
-                  Icons.description,
-                  Colors.grey,
-                ),
+                if (request['description'] != null &&
+                    request['description'].toString().isNotEmpty)
+                  _buildSingleItemCard(
+                    'Description',
+                    request['description'].toString(),
+                    Icons.note_outlined,
+                  ),
               ],
             ),
           ),
 
-          const SizedBox(height: 16),
-
           // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showRejectDialog(request);
-                  },
-                  icon: const Icon(Icons.close, color: Colors.red),
-                  label: const Text('Reject'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border:
+                  Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showRejectDialog(request);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[800],
+                      side: BorderSide(color: Colors.grey[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Reject'),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showApproveDialog(request);
-                  },
-                  icon: const Icon(Icons.check),
-                  label: const Text('Approve'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showApproveDialog(request);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Approve'),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoCard(String label, String value, IconData icon) {
+  Widget _buildSingleItemCard(String label, String value, IconData icon) {
     return Card(
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide.none,
+      ),
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blue),
-        title: Text(label, style: const TextStyle(fontSize: 12)),
-        subtitle:
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-      ),
-    );
-  }
-
-  Widget _buildSectionCard(
-      String title, String content, IconData icon, Color color) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(content, style: const TextStyle(fontSize: 14)),
-          ],
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: Icon(
+          icon,
+          color: Colors.grey[800],
+          size: 24,
+          weight: 600, // Semi-bold icon
         ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500, // Semi-bold
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[900],
+              fontWeight: FontWeight.w500, // Semi-bold
+              height: 1.4,
+            ),
+          ),
+        ),
+        isThreeLine: false,
       ),
     );
   }
@@ -295,45 +294,204 @@ class _CoordinatorPendingRequestsScreenState
     final noteController = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Approve Request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Are you sure you want to approve this request?'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: noteController,
-              decoration: const InputDecoration(
-                labelText: 'Coordinator Notes',
-                hintText: 'Add your review notes...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
+      barrierColor: Colors.black54,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: IntrinsicHeight(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_circle_outline,
+                          color: Colors.green,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Approve Request',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        color: Colors.grey[600],
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Are you sure you want to approve this request?',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[800],
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // Label above input
+                          Text(
+                            'Coordinator Notes',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: noteController,
+                            decoration: InputDecoration(
+                              hintText: 'Add your review notes...',
+                              hintStyle: TextStyle(color: Colors.grey[400]),
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                    color: Colors.green, width: 2),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            maxLines: 3,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Actions
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: Colors.grey[200]!),
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey[800],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (noteController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Please add review notes')),
+                            );
+                            return;
+                          }
+                          Navigator.pop(context);
+                          await _approveRequest(
+                              request['id'], noteController.text);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Approve',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (noteController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please add review notes')),
-                );
-                return;
-              }
-              Navigator.pop(context);
-              await _approveRequest(request['id'], noteController.text);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Approve'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -342,46 +500,206 @@ class _CoordinatorPendingRequestsScreenState
     final noteController = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reject Request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Please provide a reason for rejection:'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: noteController,
-              decoration: const InputDecoration(
-                labelText: 'Rejection Reason',
-                hintText: 'Explain why this request needs revision...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
+      barrierColor: Colors.black54,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: IntrinsicHeight(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.cancel_outlined,
+                          color: Colors.red,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Reject Request',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        color: Colors.grey[600],
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Please provide a reason for rejection:',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[800],
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // Label above input
+                          Text(
+                            'Rejection Reason',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: noteController,
+                            decoration: InputDecoration(
+                              hintText:
+                                  'Explain why this request needs revision...',
+                              hintStyle: TextStyle(color: Colors.grey[400]),
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                    color: Colors.red, width: 2),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            maxLines: 3,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Actions
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: Colors.grey[200]!),
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey[800],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (noteController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Please provide a rejection reason')),
+                            );
+                            return;
+                          }
+                          Navigator.pop(context);
+                          await _rejectRequest(
+                              request['id'], noteController.text);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Reject',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (noteController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Please provide a rejection reason')),
-                );
-                return;
-              }
-              Navigator.pop(context);
-              await _rejectRequest(request['id'], noteController.text);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Reject'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -391,11 +709,11 @@ class _CoordinatorPendingRequestsScreenState
       print('📝 [AC MOBILE] Starting request approval...');
       print('📝 [AC MOBILE] Request ID: $requestId');
       print('📝 [AC MOBILE] Note: $note');
-      
+
       await CoordinatorService.approveRequest(widget.token, requestId, note);
-      
+
       print('✅ [AC MOBILE] Request approval successful!');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -421,11 +739,11 @@ class _CoordinatorPendingRequestsScreenState
       print('📝 [AC MOBILE] Starting request rejection...');
       print('📝 [AC MOBILE] Request ID: $requestId');
       print('📝 [AC MOBILE] Note: $note');
-      
+
       await CoordinatorService.rejectRequest(widget.token, requestId, note);
-      
+
       print('✅ [AC MOBILE] Request rejection successful!');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -449,8 +767,10 @@ class _CoordinatorPendingRequestsScreenState
   String _formatDate(dynamic date) {
     if (date == null) return 'N/A';
     try {
-      final dateTime = DateTime.parse(date.toString()).toLocal();
-      return DateFormat('MMM dd, yyyy hh:mm a').format(dateTime);
+      // Convert to Philippine time (UTC+8)
+      final utcDateTime = DateTime.parse(date.toString()).toUtc();
+      final phDateTime = utcDateTime.add(const Duration(hours: 8));
+      return DateFormat('MMM dd, yyyy hh:mm a').format(phDateTime);
     } catch (e) {
       return date.toString();
     }
@@ -462,12 +782,49 @@ class _CoordinatorPendingRequestsScreenState
     return NumberFormat('#,##0.00').format(number);
   }
 
+  String _formatSubmissionDate(dynamic date) {
+    if (date == null) return '';
+    try {
+      // Convert to Philippine time (UTC+8)
+      final utcDateTime = DateTime.parse(date.toString()).toUtc();
+      final phDateTime = utcDateTime.add(const Duration(hours: 8));
+
+      // Get current Philippine time
+      final nowUtc = DateTime.now().toUtc();
+      final nowPh = nowUtc.add(const Duration(hours: 8));
+      final difference = nowPh.difference(phDateTime);
+
+      // Format time in 12-hour format
+      final timeFormat = DateFormat('h:mm a').format(phDateTime);
+
+      if (difference.inDays == 0) {
+        if (difference.inHours == 0) {
+          if (difference.inMinutes == 0) {
+            return 'Just now';
+          }
+          return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago at $timeFormat';
+        }
+        return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago at $timeFormat';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday at $timeFormat';
+      } else if (difference.inDays < 7) {
+        return '${DateFormat('MMM dd').format(phDateTime)} at $timeFormat';
+      } else if (phDateTime.year == nowPh.year) {
+        return '${DateFormat('MMM dd').format(phDateTime)} at $timeFormat';
+      } else {
+        return '${DateFormat('MMM dd, yyyy').format(phDateTime)} at $timeFormat';
+      }
+    } catch (e) {
+      return '';
+    }
+  }
+
   IconData _getRequestIcon(String type) {
     switch (type) {
       case 'Supply':
         return Icons.inventory;
       case 'Cash Advance':
-        return Icons.attach_money;
+        return Icons.credit_card;
       case 'Equipment':
         return Icons.construction;
       default:
@@ -475,130 +832,213 @@ class _CoordinatorPendingRequestsScreenState
     }
   }
 
-  Color _getRequestColor(String type) {
-    switch (type) {
-      case 'Supply':
-        return Colors.green;
-      case 'Cash Advance':
-        return Colors.orange;
-      case 'Equipment':
-        return Colors.purple;
-      default:
-        return Colors.blue;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Filter chips
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                'All',
-                'Supply',
-                'Cash Advance',
-                'Equipment'
-              ].map((type) {
-                final isSelected = _filterType == type;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(type),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() => _filterType = type);
-                    },
-                  ),
-                );
-              }).toList(),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Pending Requests',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.green,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!();
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ),
+      body: Column(
+        children: [
+          // Filter chips
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children:
+                    ['All', 'Supply', 'Cash Advance', 'Equipment'].map((type) {
+                  final isSelected = _filterType == type;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(type),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() => _filterType = type);
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
-        ),
 
-        // Request list
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _fetchRequests,
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredRequests.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inbox,
-                                size: 64, color: Colors.grey[400]),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No Pending Requests',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filteredRequests.length,
-                        itemBuilder: (context, index) {
-                          final request = _filteredRequests[index];
-                          final requestType = request['request_type'] ?? 'Unknown';
-                          final technician =
-                              request['technician'] as Map<String, dynamic>?;
-                          final technicianName =
-                              '${technician?['first_name'] ?? ''} ${technician?['last_name'] ?? ''}'
-                                  .trim();
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
-                              leading: CircleAvatar(
-                                backgroundColor: _getRequestColor(requestType)
-                                    .withOpacity(0.1),
-                                child: Icon(
-                                  _getRequestIcon(requestType),
-                                  color: _getRequestColor(requestType),
+          // Request list
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _fetchRequests,
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredRequests.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.inbox,
+                                  size: 64, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No Pending Requests',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              title: Text(
-                                technicianName,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Text(requestType),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatDate(request['timestamp']),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filteredRequests.length,
+                          itemBuilder: (context, index) {
+                            final request = _filteredRequests[index];
+                            final requestType =
+                                request['request_type'] ?? 'Unknown';
+                            final technician =
+                                request['technician'] as Map<String, dynamic>?;
+                            final technicianName =
+                                '${technician?['first_name'] ?? ''} ${technician?['last_name'] ?? ''}'
+                                    .trim();
+                            final submittedDate =
+                                request['created_at'] ?? request['timestamp'];
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Submission date outside card (Facebook notification style)
+                                if (submittedDate != null &&
+                                    _formatSubmissionDate(submittedDate)
+                                        .isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 4,
+                                      bottom: 4,
+                                    ),
+                                    child: Text(
+                                      _formatSubmissionDate(submittedDate),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => _showRequestDetails(request),
-                            ),
-                          );
-                        },
-                      ),
+                                // Card
+                                Card(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  color: Colors.grey[100],
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: InkWell(
+                                    onTap: () => _showRequestDetails(request),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Icon on the left
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[200],
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              _getRequestIcon(requestType),
+                                              color: Colors.grey[700],
+                                              size: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          // Content in the middle
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // Request Type
+                                                Text(
+                                                  requestType,
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Colors.grey[800],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                // Technician name
+                                                Text(
+                                                  'Technician: $technicianName',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    color: Colors.grey[800],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                // Date
+                                                Text(
+                                                  _formatDate(
+                                                      request['timestamp']),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          // Arrow on the right
+                                          const Icon(
+                                            Icons.chevron_right,
+                                            color: Colors.black54,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
-

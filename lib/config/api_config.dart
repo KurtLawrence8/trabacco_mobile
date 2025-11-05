@@ -6,12 +6,12 @@ class ApiConfig {
   // This setup automatically detects the environment and uses the appropriate URL:
   // - Web: localhost:8000/api
   // - Android Emulator: 10.0.2.2:8000/api (10.0.2.2 is the emulator's way to access host machine's localhost)
-  // - Physical Device: 192.168.100.21:8000/api (your computer's IP address)
+  // - Physical Device: localhost:8000/api (localhost for development)
 
   static const String _localHost = 'localhost';
   static const String _emulatorHost = '10.0.2.2'; // Android emulator host
   static const String _physicalDeviceHost =
-      '192.168.100.21'; // Your computer's IP address for development
+      'localhost'; // Localhost for development
   static const String _productionHost =
       'navajowhite-chinchilla-897972.hostingersite.com'; // PRODUCTION: Hostinger backend URL
   static const String _port = '8000';

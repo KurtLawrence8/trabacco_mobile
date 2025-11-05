@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/notification_service.dart' as notification_service;
 
 class CoordinatorNotificationScreen extends StatefulWidget {
@@ -204,27 +205,38 @@ class _CoordinatorNotificationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: Colors.blue,
+        title: const Text(
+          'Notifications',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.green,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
         actions: [
           if (_unreadCount > 0)
             IconButton(
-              icon: const Icon(Icons.mark_email_read),
+              icon: const Icon(Icons.mark_email_read, color: Colors.white),
               onPressed: _markAllAsRead,
               tooltip: 'Mark all as read',
             ),
         ],
       ),
-      backgroundColor: Colors.white,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _notifications.isEmpty

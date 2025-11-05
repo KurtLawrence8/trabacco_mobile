@@ -139,67 +139,28 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Future<void> _checkAuthStatus() async {
+    // Always show login screen first on app start
+    // Clear any stored auth data to ensure fresh login
+    print('[main] 🚪 App starting - always showing login screen first...');
+
     try {
-      print('[main] 🔍 Checking authentication status...');
-
       final authService = AuthService();
-      final user = await authService.getCurrentUser();
-      final token = await authService.getToken();
-      final roleType = await authService.getUserRoleType();
 
-      print('[main] 📊 Auth Check Results:');
-      print('[main]   - User exists: ${user != null}');
-      print('[main]   - Token exists: ${token != null}');
-      print('[main]   - Role type: $roleType');
-
-      if (user != null && token != null && roleType != null) {
-        print('[main] 🔐 All auth data found, validating token...');
-
-        // Validate token is still valid
-        final isValid = await authService.isTokenValid();
-        print('[main] 🎯 Token validation result: $isValid');
-
-        if (isValid) {
-          print('[main] ✅ Token is valid, auto-login successful');
-        } else {
-          print(
-              '[main] ⚠️ Token validation failed, but attempting auto-login anyway...');
-          print(
-              '[main] 💡 This might be due to network issues or server temporarily down');
-
-          // For now, let's be more lenient and allow auto-login if we have
-          // stored user data, even if token validation fails
-          // This prevents users from being logged out due to temporary network issues
-        }
-
-        // Proceed with auto-login if we have all the required data
-        print('[main] ✅ Auto-login proceeding, redirecting to dashboard...');
-
-        // Refresh FCM token when auto-login happens
-        try {
-          await FirebaseMessagingService.initialize();
-          print('[main] ✅ FCM token refreshed for auto-login');
-        } catch (e) {
-          print('[main] ⚠️ FCM refresh failed during auto-login: $e');
-        }
-
-        // Navigate to appropriate dashboard
-        setState(() {
-          _targetWidget = _getLandingScreen(roleType, token, user);
-          _isLoading = false;
-        });
-        return;
-      } else {
-        print('[main] ❌ Missing auth data:');
-        print('[main]   - User: ${user != null}');
-        print('[main]   - Token: ${token != null}');
-        print('[main]   - Role: ${roleType != null}');
+      // Clear any stored auth data on app start
+      print('[main] 🧹 Clearing stored auth data for fresh login...');
+      try {
+        await authService.logout();
+        print('[main] ✅ Auth data cleared successfully');
+      } catch (e) {
+        print('[main] ⚠️ Error clearing auth data: $e');
+        // Continue anyway - we'll show login screen
       }
     } catch (e) {
-      print('[main] ❌ Auth check error: $e');
+      print('[main] ❌ Error during auth cleanup: $e');
+      // Continue anyway - we'll show login screen
     }
 
-    // If we get here, user needs to login
+    // Always redirect to login screen on app start
     print('[main] 🚪 Redirecting to login screen...');
     setState(() {
       _targetWidget = const LoginScreen();
