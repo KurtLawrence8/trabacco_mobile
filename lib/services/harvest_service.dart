@@ -1,21 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 import '../config/api_config.dart';
+import '../utils/image_compressor.dart';
 
 class HarvestService {
   Future<List<Map<String, dynamic>>> getYieldEstimates(String token) async {
     try {
       final url = '${ApiConfig.baseUrl}/yield-estimates/by-technician';
-      print('Fetching yield estimates from: $url');
 
       final response = await http.get(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -25,7 +24,6 @@ class HarvestService {
             'Failed to load yield estimates: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Exception in getYieldEstimates: $e');
       throw Exception('Failed to load yield estimates: $e');
     }
   }
@@ -35,15 +33,12 @@ class HarvestService {
     try {
       final url =
           '${ApiConfig.baseUrl}/yield-estimates/$yieldEstimateId/harvest-status';
-      print('Checking harvest status from: $url');
 
       final response = await http.get(
         Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -52,7 +47,6 @@ class HarvestService {
             'Failed to check harvest status: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Exception in checkHarvestStatus: $e');
       throw Exception('Failed to check harvest status: $e');
     }
   }
@@ -61,9 +55,6 @@ class HarvestService {
       Map<String, dynamic> harvestData, String token,
       [File? photo]) async {
     try {
-      print('Submitting harvest to: ${ApiConfig.baseUrl}/farm-yield-records');
-      print('Headers: ${ApiConfig.getHeaders(token: token)}');
-      print('Harvest data: $harvestData');
 
       var request = http.MultipartRequest(
         'POST',
@@ -78,7 +69,7 @@ class HarvestService {
           // Handle arrays (like laborer_ids)
           if (value is List) {
             for (int i = 0; i < value.length; i++) {
-              request.fields['${key}[$i]'] = value[i].toString();
+              request.fields['$key[$i]'] = value[i].toString();
             }
           } else {
             request.fields[key] = value.toString();
@@ -87,17 +78,23 @@ class HarvestService {
       });
 
       // Add photo if provided
-      if (photo != null) {
+      if (photo != null && await photo.exists()) {
+        final rawBytes = await photo.readAsBytes();
+        final compressedBytes = await ImageCompressor.compressFile(rawBytes);
+        final baseName = path.basename(photo.path);
+        final fileName = path.setExtension(baseName, '.jpg');
         request.files.add(
-          await http.MultipartFile.fromPath('photos[]', photo.path),
+          http.MultipartFile.fromBytes(
+            'photos[]',
+            compressedBytes,
+            filename: fileName,
+          ),
         );
       }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       if (response.statusCode == 201) {
         return json.decode(response.body);
@@ -105,11 +102,9 @@ class HarvestService {
         final errorBody = json.decode(response.body);
         final errorMessage = errorBody['message'] ??
             'Failed to submit harvest report (${response.statusCode})';
-        print('Error response: $errorMessage');
         throw Exception(errorMessage);
       }
     } catch (e) {
-      print('Exception caught: $e');
       if (e is FormatException) {
         throw Exception('Invalid response format from server');
       }
@@ -117,3 +112,4 @@ class HarvestService {
     }
   }
 }
+

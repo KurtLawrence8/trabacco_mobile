@@ -8,10 +8,10 @@ class ApiConfig {
   // - Android Emulator: 10.0.2.2:8000/api (10.0.2.2 is the emulator's way to access host machine's localhost)
   // - Physical Device: localhost:8000/api (localhost for development)
 
-  static const String _localHost = 'localhost';
+  static const String _localHost = '192.168.100.21';
   static const String _emulatorHost = '10.0.2.2'; // Android emulator host
   static const String _physicalDeviceHost =
-      'localhost'; // Localhost for development
+      '192.168.100.21'; // Local network IP for development
   static const String _productionHost =
       'navajowhite-chinchilla-897972.hostingersite.com'; // PRODUCTION: Hostinger backend URL
   static const String _port = '8000';
@@ -30,7 +30,6 @@ class ApiConfig {
       }
       return false;
     } catch (e) {
-      print('[API CONFIG] Error detecting emulator: $e');
       return false;
     }
   }
@@ -67,19 +66,7 @@ class ApiConfig {
 
     final url = 'http://$host:$_port$_apiPath';
 
-    // print('[API CONFIG] =====================');
-    // print(
-    //     '[API CONFIG] Platform: ${kIsWeb ? 'Web' : (!kIsWeb && Platform.isAndroid) ? 'Android' : 'iOS/Other'}');
-    // print('[API CONFIG] Is Emulator: $isEmulator');
-    // print('[API CONFIG] Selected Host: $host');
-    // print('[API CONFIG] Generated URL: $url');
-    // print('[API CONFIG] Available URLs:');
-    // print('[API CONFIG]   - Web: $_localHost:$_port$_apiPath');
-    // print('[API CONFIG]   - Emulator: $_emulatorHost:$_port$_apiPath');
-    // print(
-    //     '[API CONFIG]   - Physical Device: $_physicalDeviceHost:$_port$_apiPath');
-    // print('[API CONFIG] =====================');
-
+    //     //     //     //     //     //     //     //     //     //
     return url;
   }
 
@@ -122,9 +109,7 @@ class ApiConfig {
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
-    // print('[ApiConfig] [getHeaders] Token provided: ${token != null}');
-    // print('[ApiConfig] [getHeaders] Headers: $headers');
-
+    //     //
     return headers;
   }
 

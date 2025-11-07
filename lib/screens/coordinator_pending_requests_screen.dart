@@ -706,13 +706,9 @@ class _CoordinatorPendingRequestsScreenState
 
   Future<void> _approveRequest(int requestId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting request approval...');
-      print('📝 [AC MOBILE] Request ID: $requestId');
-      print('📝 [AC MOBILE] Note: $note');
 
       await CoordinatorService.approveRequest(widget.token, requestId, note);
 
-      print('✅ [AC MOBILE] Request approval successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -724,8 +720,6 @@ class _CoordinatorPendingRequestsScreenState
         _fetchRequests();
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error approving request: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to approve request: $e')),
@@ -736,13 +730,9 @@ class _CoordinatorPendingRequestsScreenState
 
   Future<void> _rejectRequest(int requestId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting request rejection...');
-      print('📝 [AC MOBILE] Request ID: $requestId');
-      print('📝 [AC MOBILE] Note: $note');
 
       await CoordinatorService.rejectRequest(widget.token, requestId, note);
 
-      print('✅ [AC MOBILE] Request rejection successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -754,8 +744,6 @@ class _CoordinatorPendingRequestsScreenState
         _fetchRequests();
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error rejecting request: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to reject request: $e')),
@@ -1042,3 +1030,4 @@ class _CoordinatorPendingRequestsScreenState
     );
   }
 }
+

@@ -48,9 +48,7 @@ class OfflineStorageService {
       existingReports.add(reportData);
       await prefs.setString(_pendingReportsKey, json.encode(existingReports));
       
-      print('Report saved offline: ${reportData['_offline_id']}');
     } catch (e) {
-      print('Error saving report offline: $e');
       throw Exception('Failed to save report offline');
     }
   }
@@ -69,9 +67,7 @@ class OfflineStorageService {
       existingRequests.add(requestData);
       await prefs.setString(_pendingRequestsKey, json.encode(existingRequests));
       
-      print('Request saved offline: ${requestData['_offline_id']}');
     } catch (e) {
-      print('Error saving request offline: $e');
       throw Exception('Failed to save request offline');
     }
   }
@@ -95,9 +91,7 @@ class OfflineStorageService {
       existingUpdates.add(profileUpdate);
       await prefs.setString(_pendingProfileUpdatesKey, json.encode(existingUpdates));
       
-      print('Profile update saved offline: ${profileUpdate['_offline_id']}');
     } catch (e) {
-      print('Error saving profile update offline: $e');
       throw Exception('Failed to save profile update offline');
     }
   }
@@ -120,9 +114,7 @@ class OfflineStorageService {
       existingUpdates.add(scheduleUpdate);
       await prefs.setString(_pendingScheduleUpdatesKey, json.encode(existingUpdates));
       
-      print('Schedule update saved offline: ${scheduleUpdate['_offline_id']}');
     } catch (e) {
-      print('Error saving schedule update offline: $e');
       throw Exception('Failed to save schedule update offline');
     }
   }
@@ -138,7 +130,6 @@ class OfflineStorageService {
       }
       return [];
     } catch (e) {
-      print('Error getting pending reports: $e');
       return [];
     }
   }
@@ -154,7 +145,6 @@ class OfflineStorageService {
       }
       return [];
     } catch (e) {
-      print('Error getting pending requests: $e');
       return [];
     }
   }
@@ -170,7 +160,6 @@ class OfflineStorageService {
       }
       return [];
     } catch (e) {
-      print('Error getting pending profile updates: $e');
       return [];
     }
   }
@@ -186,7 +175,6 @@ class OfflineStorageService {
       }
       return [];
     } catch (e) {
-      print('Error getting pending schedule updates: $e');
       return [];
     }
   }
@@ -202,7 +190,6 @@ class OfflineStorageService {
     };
 
     if (!await isOnline()) {
-      print('No internet connection - skipping sync');
       return results;
     }
 
@@ -222,9 +209,7 @@ class OfflineStorageService {
       // Update last sync timestamp
       await _updateLastSyncTimestamp();
       
-      print('Sync completed: $results');
     } catch (e) {
-      print('Error during sync: $e');
       results['errors'] = (results['errors'] ?? 0) + 1;
     }
 
@@ -253,12 +238,9 @@ class OfflineStorageService {
         
         if (response.statusCode == 201) {
           syncedCount++;
-          print('Report synced: ${report['_offline_id']}');
         } else {
-          print('Failed to sync report: ${response.statusCode}');
         }
       } catch (e) {
-        print('Error syncing report ${report['_offline_id']}: $e');
       }
     }
     
@@ -292,12 +274,9 @@ class OfflineStorageService {
         
         if (response.statusCode == 201) {
           syncedCount++;
-          print('Request synced: ${request['_offline_id']}');
         } else {
-          print('Failed to sync request: ${response.statusCode}');
         }
       } catch (e) {
-        print('Error syncing request ${request['_offline_id']}: $e');
       }
     }
     
@@ -336,12 +315,9 @@ class OfflineStorageService {
         
         if (response.statusCode == 200) {
           syncedCount++;
-          print('Profile update synced: ${update['_offline_id']}');
         } else {
-          print('Failed to sync profile update: ${response.statusCode}');
         }
       } catch (e) {
-        print('Error syncing profile update ${update['_offline_id']}: $e');
       }
     }
     
@@ -372,12 +348,9 @@ class OfflineStorageService {
         
         if (response.statusCode >= 200 && response.statusCode < 300) {
           syncedCount++;
-          print('Schedule update synced: ${update['_offline_id']}');
         } else {
-          print('Failed to sync schedule update: ${response.statusCode}');
         }
       } catch (e) {
-        print('Error syncing schedule update ${update['_offline_id']}: $e');
       }
     }
     
@@ -469,3 +442,4 @@ class OfflineStorageService {
     await prefs.remove(_lastSyncKey);
   }
 }
+

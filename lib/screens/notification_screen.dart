@@ -30,20 +30,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _loadNotifications() async {
-    // print('🔔 [MOBILE SCREEN] Starting _loadNotifications...');
-    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      // print(
-      //     '🔔 [MOBILE SCREEN] Loading notifications for technician ${widget.technician.id}');
-      // print(
-      //     '🔔 [MOBILE SCREEN] Technician name: ${widget.technician.firstName} ${widget.technician.lastName}');
-      // print(
-      //     '🔔 [MOBILE SCREEN] Using token: ${widget.token.substring(0, 20)}...');
-      // print('🔔 [MOBILE SCREEN] Token length: ${widget.token.length}');
-
-      // print('🔔 [MOBILE SCREEN] Calling getNotifications...');
-
       // Get notifications based on toggle - schedule only by default, all if toggled
       final notifications = _showAllNotifications
           ? await notification_service.NotificationService.getNotifications(
@@ -60,28 +48,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
               technicianId: widget.technician.id)
           : notifications.where((n) => n.readAt == null).length;
 
-      // print(
-      //     '🔔 [MOBILE SCREEN] SUCCESS: Fetched ${notifications.length} notifications');
-      // print('🔔 [MOBILE SCREEN] SUCCESS: Unread count: $unreadCount');
-
-      // Log each notification for debugging
-      // for (int i = 0; i < notifications.length; i++) {
-      //   final notification = notifications[i];
-      //   print(
-      //       '🔔 [MOBILE SCREEN] Notification $i: ID=${notification.id}, Type=${notification.type}, Message=${notification.message}');
-      // }
-
       if (!mounted) return;
       setState(() {
         _notifications = notifications;
         _unreadCount = unreadCount;
         _isLoading = false;
       });
-
-      // print('🔔 [MOBILE SCREEN] State updated successfully');
     } catch (e) {
-      // print('🔔 [MOBILE SCREEN] ERROR: Error loading notifications: $e');
-      // print('🔔 [MOBILE SCREEN] ERROR: Stack trace: ${StackTrace.current}');
       if (!mounted) return;
       setState(() => _isLoading = false);
     }
@@ -414,7 +387,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ),
       );
     } catch (e) {
-      print('Error building schedule notification details: $e');
       return const SizedBox.shrink();
     }
   }

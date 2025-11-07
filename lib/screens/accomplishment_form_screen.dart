@@ -112,7 +112,6 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error loading coordinators: $e');
       if (mounted) {
         setState(() {
           _loadingCoordinators = false;
@@ -131,7 +130,6 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
         });
       }
     } catch (e) {
-      print('Error loading farms: $e');
     }
   }
 
@@ -159,7 +157,6 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
           _isLoadingLaborers = false;
         });
       }
-      print('Error loading laborers: $e');
     }
   }
 
@@ -244,7 +241,6 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
           _isLocationLoading = false;
         });
       }
-      print('Error getting location: $e');
     }
   }
 
@@ -1973,3 +1969,4 @@ class _AccomplishmentFormScreenState extends State<AccomplishmentFormScreen> {
     );
   }
 }
+

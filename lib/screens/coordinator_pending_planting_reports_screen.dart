@@ -996,15 +996,10 @@ class _CoordinatorPendingPlantingReportsScreenState
 
   Future<void> _approvePlantingReport(int reportId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting planting report approval...');
-      print('📝 [AC MOBILE] Report ID: $reportId');
-      print('📝 [AC MOBILE] Note: $note');
-      print('📝 [AC MOBILE] Token: ${widget.token.substring(0, 20)}...');
 
       await CoordinatorService.approvePlantingReport(
           widget.token, reportId, note);
 
-      print('✅ [AC MOBILE] Planting report approval successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1016,8 +1011,6 @@ class _CoordinatorPendingPlantingReportsScreenState
         _fetchPlantingReports();
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error approving planting report: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to approve planting report: $e')),
@@ -1028,14 +1021,10 @@ class _CoordinatorPendingPlantingReportsScreenState
 
   Future<void> _rejectPlantingReport(int reportId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting planting report rejection...');
-      print('📝 [AC MOBILE] Report ID: $reportId');
-      print('📝 [AC MOBILE] Note: $note');
 
       await CoordinatorService.rejectPlantingReport(
           widget.token, reportId, note);
 
-      print('✅ [AC MOBILE] Planting report rejection successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1047,8 +1036,6 @@ class _CoordinatorPendingPlantingReportsScreenState
         _fetchPlantingReports();
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error rejecting planting report: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to reject planting report: $e')),
@@ -1387,3 +1374,4 @@ class _CoordinatorPendingPlantingReportsScreenState
     );
   }
 }
+

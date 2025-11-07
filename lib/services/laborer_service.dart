@@ -14,15 +14,12 @@ class LaborerService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('[LaborerService] Response data: $data');
 
         if (data['success'] == true) {
           final laborersJson = data['data'] as List;
-          print('[LaborerService] Found ${laborersJson.length} laborers');
 
           // Debug each laborer data
           for (int i = 0; i < laborersJson.length; i++) {
-            print('[LaborerService] Laborer $i: ${laborersJson[i]}');
           }
 
           return laborersJson.map((json) => Laborer.fromJson(json)).toList();
@@ -30,13 +27,9 @@ class LaborerService {
           throw Exception('Failed to fetch laborers: ${data['message']}');
         }
       } else {
-        print(
-            '[LaborerService] Error response: ${response.statusCode} - ${response.body}');
-        throw Exception('Failed to fetch laborers: ${response.statusCode}');
+                throw Exception('Failed to fetch laborers: ${response.statusCode}');
       }
     } catch (e) {
-      print('[LaborerService] Exception caught: $e');
-      print('[LaborerService] Exception type: ${e.runtimeType}');
       throw Exception('Error fetching laborers: $e');
     }
   }
@@ -169,3 +162,4 @@ class LaborerService {
     }
   }
 }
+

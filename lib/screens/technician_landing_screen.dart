@@ -106,7 +106,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   // FIREBASE MESSAGING INITIALIZATION
   Future<void> _initializeFirebaseMessaging() async {
     try {
-      print('🔥 [TECHNICIAN LANDING] Initializing Firebase messaging...');
 
       // Subscribe to schedule reminder notifications
       await FirebaseMessagingService.subscribeToScheduleNotifications();
@@ -114,16 +113,10 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
       // Get and update FCM token
       final fcmToken = await FirebaseMessagingService.getFCMToken();
       if (fcmToken != null) {
-        print(
-            '🔥 [TECHNICIAN LANDING] FCM Token obtained: ${fcmToken.substring(0, 20)}...');
-      }
+              }
 
-      print(
-          '🔥 [TECHNICIAN LANDING] ✅ Firebase messaging initialized successfully');
-    } catch (e) {
-      print(
-          '🔥 [TECHNICIAN LANDING] ❌ Error initializing Firebase messaging: $e');
-    }
+          } catch (e) {
+          }
   }
 
   // ====================================================
@@ -131,16 +124,12 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
   Future<void> _fetchNotifications() async {
     try {
       // Check and create schedule-based notifications first
-      print('🔔 [TECHNICIAN LANDING] Checking schedule notifications...');
-      print(
-          '🔔 [TECHNICIAN LANDING] Token: ${widget.token.substring(0, 20)}..., Technician ID: ${widget.technicianId}');
-
+      
       await ScheduleNotificationService.checkAndCreateScheduleNotifications(
         widget.token,
         widget.technicianId,
       );
 
-      print('🔔 [TECHNICIAN LANDING] ✅ Schedule notification check completed');
 
       // Then get the updated notification count
       final unreadCount =
@@ -154,7 +143,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching notifications: $e');
     }
   }
 
@@ -173,7 +161,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching technician data: $e');
       if (mounted) {
         setState(() => _loadingTechnician = false);
       }
@@ -200,7 +187,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         _fetchActiveEquipment(),
       ]);
     } catch (e) {
-      print('Error fetching dashboard metrics: $e');
     }
   }
 
@@ -223,7 +209,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching total farm area: $e');
       // Set to 0 if error occurs
       if (mounted) {
         setState(() {
@@ -257,7 +242,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
           totalPendingRequests += pendingCount;
         } catch (e) {
-          print('Error fetching requests for farmer ${farmWorker.id}: $e');
           // Continue with other farmers even if one fails
         }
       }
@@ -268,7 +252,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching pending requests: $e');
       // Set to 0 if error occurs
       if (mounted) {
         setState(() {
@@ -309,9 +292,7 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
           totalActiveEquipment += activeEquipmentCount;
         } catch (e) {
-          print(
-              'Error fetching active equipment for farmer ${farmWorker.id}: $e');
-          // Continue with other farmers even if one fails
+                    // Continue with other farmers even if one fails
         }
       }
 
@@ -321,7 +302,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching active equipment: $e');
       // Set to 0 if error occurs
       if (mounted) {
         setState(() {
@@ -370,7 +350,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
 
           allRequests.addAll(pendingRequests);
         } catch (e) {
-          print('Error fetching requests for farmer ${farmWorker.id}: $e');
           // Continue with other farmers even if one fails
         }
       }
@@ -386,7 +365,6 @@ class _TechnicianLandingScreenState extends State<TechnicianLandingScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching all requests: $e');
       if (mounted) {
         setState(() {
           _loadingRequests = false;
@@ -1621,7 +1599,6 @@ class FarmWorkerProvider with ChangeNotifier {
       try {
         notifyListeners();
       } catch (e) {
-        print('Error notifying listeners: $e');
       }
     }
   }
@@ -1641,7 +1618,6 @@ class FarmWorkerProvider with ChangeNotifier {
       // THIS WILL NOW ONLY RETURN FARM WORKERS ASSIGNED TO THIS TECHNICIAN
       _farmWorkers = await service.getAssignedFarmWorkers(token, technicianId);
     } catch (e) {
-      print('Error fetching farm workers: $e');
       _error = e.toString();
     } finally {
       if (!_disposed) {
@@ -2713,3 +2689,4 @@ class RequestSubmissionScreen extends StatelessWidget {
     );
   }
 }
+

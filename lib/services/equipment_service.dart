@@ -59,42 +59,30 @@ class EquipmentService {
         headers: ApiConfig.getHeaders(token: token),
       );
 
-      print('[EquipmentService] Response status: ${response.statusCode}');
-      print('[EquipmentService] Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('[EquipmentService] Decoded data: $data');
 
         if (data['success'] == true) {
           final equipmentJson = data['data'] as List;
-          print(
-              '[EquipmentService] Found ${equipmentJson.length} available equipment items');
-
+          
           final availableEquipment =
               equipmentJson.map((json) => Equipment.fromJson(json)).toList();
 
-          print(
-              '[EquipmentService] Parsed ${availableEquipment.length} equipment objects');
-          return availableEquipment;
+                    return availableEquipment;
         } else {
           final errorMsg = data['message'] ?? data['error'] ?? 'Unknown error';
-          print('[EquipmentService] API returned error: $errorMsg');
           throw Exception('Failed to fetch equipment: $errorMsg');
         }
       } else if (response.statusCode == 401) {
-        print('[EquipmentService] 401 Unauthorized - Token expired');
         // Clear stored token and user data
         await _clearAuthData();
         throw Exception(
             'AUTHENTICATION_EXPIRED: Session expired. Please login again.');
       } else {
-        print(
-            '[EquipmentService] Error response: ${response.statusCode} - ${response.body}');
-        throw Exception('Failed to fetch equipment: ${response.statusCode}');
+                throw Exception('Failed to fetch equipment: ${response.statusCode}');
       }
     } catch (e) {
-      print('[EquipmentService] Exception caught: $e');
       rethrow;
     }
   }
@@ -115,7 +103,6 @@ class EquipmentService {
           throw Exception('Failed to fetch equipment: ${data['message']}');
         }
       } else if (response.statusCode == 401) {
-        print('[EquipmentService] 401 Unauthorized - Token expired');
         await _clearAuthData();
         throw Exception(
             'AUTHENTICATION_EXPIRED: Session expired. Please login again.');
@@ -127,3 +114,4 @@ class EquipmentService {
     }
   }
 }
+

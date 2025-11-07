@@ -12,18 +12,13 @@ class TobaccoVarietyService {
       final url = ApiConfig.getUrl(_endpoint);
       final headers = ApiConfig.getHeaders(token: token);
 
-      print('🌱 [TobaccoVarietyService] Fetching tobacco varieties from: $url');
-      print('🌱 [TobaccoVarietyService] Headers: $headers');
 
       final response = await http.get(
         Uri.parse(url),
         headers: headers,
       );
 
-      print(
-          '🌱 [TobaccoVarietyService] Response status: ${response.statusCode}');
-      print('🌱 [TobaccoVarietyService] Response body: ${response.body}');
-
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         final List<dynamic> data = responseData['data'] ?? [];
@@ -33,7 +28,6 @@ class TobaccoVarietyService {
             'Failed to load tobacco varieties: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ [TobaccoVarietyService] Error fetching tobacco varieties: $e');
       throw Exception('Failed to fetch tobacco varieties: $e');
     }
   }
@@ -59,8 +53,8 @@ class TobaccoVarietyService {
             'Failed to load tobacco variety: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ [TobaccoVarietyService] Error fetching tobacco variety: $e');
       throw Exception('Failed to fetch tobacco variety: $e');
     }
   }
 }
+

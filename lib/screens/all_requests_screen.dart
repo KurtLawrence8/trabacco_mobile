@@ -76,7 +76,6 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
             // Get ALL requests (not just pending ones)
             allRequests.addAll(requests);
           } catch (e) {
-            print('Error fetching requests for farmer ${farmWorker.id}: $e');
           }
         }
       }
@@ -93,7 +92,6 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
         _applyFilters();
       }
     } catch (e) {
-      print('Error fetching all requests: $e');
       if (mounted) {
         setState(() {
           _loading = false;
@@ -1053,3 +1051,4 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
     }
   }
 }
+

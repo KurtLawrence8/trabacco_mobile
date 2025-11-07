@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
@@ -14,47 +16,41 @@ import 'models/user_model.dart';
 // Global navigator key for navigation from notifications
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() async {
+Future<void> _bootstrapApp() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Suppress Flutter framework debug prints (including GestureDetector logs)
-  debugPrint = (String? message, {int? wrapWidth}) {
-    // Only print Firebase logs, main logs, local notification logs, and login logs
-    if (message != null &&
-        (message.startsWith('[main]') ||
-            message.startsWith('🔥') ||
-            message.startsWith('📱') ||
-            message.startsWith('📅'))) {
-      print(message);
-    }
-  };
+  if (!kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null) {
+        // Preserve explicit tagged messages during development for troubleshooting
+      }
+    };
+  }
 
-  print('[main] Starting Trabacco Mobile App');
-  print('[main] App initialization started');
+  if (!kReleaseMode) {
+  }
 
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  print('[main] ✅ Firebase initialized');
 
-  // Set background message handler
+  if (!kReleaseMode) {
+  }
+
   FirebaseMessaging.onBackgroundMessage(
     FirebaseMessagingService.firebaseMessagingBackgroundHandler,
   );
 
-  // Initialize Firebase messaging
+  if (!kReleaseMode) {
+  }
+
   try {
-    print('[main] 🔥 Starting Firebase messaging initialization...');
     await FirebaseMessagingService.initialize();
-    print('[main] ✅ Firebase messaging initialized');
+    if (!kReleaseMode) {
+    }
   } catch (e) {
-    print(
-        '[main] ❌ Firebase messaging initialization failed (device may not have Google Play Services)');
-    print('[main] Error: $e');
-    print('[main] Error type: ${e.runtimeType}');
-    print('[main] Stack trace: ${StackTrace.current}');
-    print('[main] ℹ️ App will continue with local notifications only');
+    if (!kReleaseMode) {
+          }
   }
 
   runApp(
@@ -65,6 +61,28 @@ void main() async {
       child: const MyApp(),
     ),
   );
+}
+
+Future<void> main() async {
+  if (kReleaseMode) {
+    await runZonedGuarded(
+      () async {
+        await _bootstrapApp();
+      },
+      (error, stackTrace) {
+        FlutterError.reportError(
+          FlutterErrorDetails(exception: error, stack: stackTrace),
+        );
+      },
+      zoneSpecification: ZoneSpecification(
+        print: (self, parent, zone, message) {
+          // Silence print output in production builds
+        },
+      ),
+    );
+  } else {
+    await _bootstrapApp();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -141,50 +159,41 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Future<void> _checkAuthStatus() async {
     // Always show login screen first on app start
     // Clear any stored auth data to ensure fresh login
-    print('[main] 🚪 App starting - always showing login screen first...');
 
     try {
       final authService = AuthService();
 
       // Clear any stored auth data on app start
-      print('[main] 🧹 Clearing stored auth data for fresh login...');
       try {
         await authService.logout();
-        print('[main] ✅ Auth data cleared successfully');
       } catch (e) {
-        print('[main] ⚠️ Error clearing auth data: $e');
         // Continue anyway - we'll show login screen
       }
     } catch (e) {
-      print('[main] ❌ Error during auth cleanup: $e');
       // Continue anyway - we'll show login screen
     }
 
     // Always redirect to login screen on app start
-    print('[main] 🚪 Redirecting to login screen...');
     setState(() {
       _targetWidget = const LoginScreen();
       _isLoading = false;
     });
   }
 
+  // ignore: unused_element
   Widget _getLandingScreen(String roleType, String token, User user) {
-    print('[main] 🎯 Getting landing screen for role: $roleType');
 
     if (roleType == 'technician') {
-      print('[main] ➡️ Routing to TechnicianLandingScreen');
       return TechnicianLandingScreen(
         token: token,
         technicianId: user.id,
       );
     } else if (roleType == 'area_coordinator') {
-      print('[main] ➡️ Routing to CoordinatorLandingScreen');
       return CoordinatorLandingScreen(
         token: token,
         coordinatorId: user.id,
       );
     } else {
-      print('[main] ➡️ Routing to FarmWorkerLandingScreen (default)');
       return FarmWorkerLandingScreen(
         token: token,
       );
@@ -290,3 +299,4 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+

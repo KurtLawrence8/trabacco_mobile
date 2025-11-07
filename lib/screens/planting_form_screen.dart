@@ -85,7 +85,6 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error loading coordinators: $e');
       if (mounted) {
         setState(() {
           _loadingCoordinators = false;
@@ -125,7 +124,6 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
         _restoreDraftAfterDataLoad();
       }
     } catch (e) {
-      print('Error loading farms: $e');
       if (mounted) {
         setState(() {
           _farmErrorMessage = 'Failed to load farms. Tap to retry.';
@@ -172,7 +170,6 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
         _restoreDraftAfterDataLoad();
       }
     } catch (e) {
-      print('Error loading laborers: $e');
       if (mounted) {
         setState(() {
           _laborerErrorMessage = 'Failed to load laborers. Tap to retry.';
@@ -2012,3 +2009,4 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     super.dispose();
   }
 }
+

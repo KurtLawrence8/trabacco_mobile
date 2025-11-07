@@ -39,25 +39,16 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   void initState() {
     super.initState();
-    print('[SchedulePage] [initState] Initializing SchedulePage');
-    print('[SchedulePage] [initState] User type: ${widget.userType}');
-    print('[SchedulePage] [initState] Farmer ID: ${widget.farmWorkerId}');
-    print('[SchedulePage] [initState] Farmer name: ${widget.farmWorkerName}');
-    print('[SchedulePage] [initState] Token: ${widget.token}');
 
     _focusedDay = DateTime.now();
     _selectedDay = _focusedDay;
     _searchController.addListener(_onSearchChanged);
 
     if (widget.farmWorkerId != 0) {
-      print(
-          '[SchedulePage] [initState] Fetching schedules for Farmer ID: ${widget.farmWorkerId}');
-      _futureSchedules = _service.fetchSchedulesForFarmWorker(
+            _futureSchedules = _service.fetchSchedulesForFarmWorker(
           widget.farmWorkerId, widget.token);
     } else {
-      print(
-          '[SchedulePage] [initState] No Farmer ID provided, skipping schedule fetch');
-    }
+          }
   }
 
   @override
@@ -104,9 +95,7 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   void _updateStatus(Schedule schedule, String status) async {
-    print(
-        '[SchedulePage] [_updateStatus] Updating schedule ID: ${schedule.id} to status: $status');
-
+    
     try {
       await _service.updateScheduleStatus(schedule.id, status, widget.token);
       if (!mounted) return;
@@ -114,13 +103,10 @@ class _SchedulePageState extends State<SchedulePage> {
         SnackBar(content: Text('Status updated to $status')),
       );
       setState(() {
-        print(
-            '[SchedulePage] [_updateStatus] Refreshing schedules after status update');
-        _futureSchedules = _service.fetchSchedulesForFarmWorker(
+                _futureSchedules = _service.fetchSchedulesForFarmWorker(
             widget.farmWorkerId, widget.token);
       });
     } catch (e) {
-      print('[SchedulePage] [_updateStatus] ERROR updating status: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update status: $e')),
@@ -196,9 +182,6 @@ class _SchedulePageState extends State<SchedulePage> {
     try {
       // GET TODAY'S DATE
       final todayDate = DateTime.now();
-      print('[SchedulePage] [build] Building SchedulePage UI');
-      print('[SchedulePage] [build] Farmer ID: ${widget.farmWorkerId}');
-      print('[SchedulePage] [build] Today\'s date: $todayDate');
 
       return GestureDetector(
         onTap: () {
@@ -214,23 +197,11 @@ class _SchedulePageState extends State<SchedulePage> {
                 : FutureBuilder<List<Schedule>>(
                     future: _futureSchedules,
                     builder: (context, snapshot) {
-                      print(
-                          '[SchedulePage] [build] FutureBuilder state: ${snapshot.connectionState}');
-                      print(
-                          '[SchedulePage] [build] FutureBuilder has error: ${snapshot.hasError}');
-                      if (snapshot.hasError) {
-                        print(
-                            '[SchedulePage] [build] FutureBuilder error: ${snapshot.error}');
-                        print(
-                            '[SchedulePage] [build] FutureBuilder error stack trace: ${snapshot.stackTrace}');
-                      }
-                      print(
-                          '[SchedulePage] [build] FutureBuilder has data: ${snapshot.hasData}');
-
+                                                                  if (snapshot.hasError) {
+                                                                      }
+                      
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        print(
-                            '[SchedulePage] [build] Showing loading indicator');
-                        return SizedBox(
+                                                return SizedBox(
                           height: MediaQuery.of(context).size.height * 0.7,
                           child: const Center(
                             child: Column(
@@ -255,13 +226,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         );
                       }
                       if (snapshot.hasError) {
-                        print(
-                            '[SchedulePage] [build] Showing error: ${snapshot.error}');
-                        print(
-                            '[SchedulePage] [build] Error type: ${snapshot.error.runtimeType}');
-                        print(
-                            '[SchedulePage] [build] Error stack trace: ${snapshot.stackTrace}');
-
+                                                                        
                         // Display detailed error information
                         return SizedBox(
                           height: MediaQuery.of(context).size.height * 0.7,
@@ -315,45 +280,29 @@ class _SchedulePageState extends State<SchedulePage> {
                       }
 
                       final schedules = snapshot.data ?? [];
-                      print(
-                          '[SchedulePage] [build] Received ${schedules.length} schedules');
-
+                      
                       // Filter out schedules with invalid data
                       final validSchedules = schedules
                           .where((s) => s.activity.isNotEmpty && s.date != null)
                           .toList();
-                      print(
-                          '[SchedulePage] [build] Valid schedules: ${validSchedules.length}');
-
+                      
                       // Show empty state if no valid schedules - NO CALENDAR
                       if (validSchedules.isEmpty) {
-                        print(
-                            '[SchedulePage] [build] No valid schedules, showing empty state');
-                        return SizedBox(
+                                                return SizedBox(
                           height: MediaQuery.of(context).size.height * 0.7,
                           child: _buildEmptyState('No schedule yet assigned'),
                         );
                       }
 
                       if (validSchedules.isNotEmpty) {
-                        print(
-                            '[SchedulePage] [build] First valid schedule: ${validSchedules.first}');
-                        print(
-                            '[SchedulePage] [build] First valid schedule ID: ${validSchedules.first.id} (type: ${validSchedules.first.id.runtimeType})');
-                        print(
-                            '[SchedulePage] [build] First valid schedule Farmer ID: ${validSchedules.first.farmWorkerId} (type: ${validSchedules.first.farmWorkerId.runtimeType})');
-                      }
+                                                                                              }
 
                       // Group valid schedules by their calendar date
                       final Map<DateTime, List<Schedule>> dateToSchedules = {};
                       try {
                         for (final s in validSchedules) {
-                          print(
-                              '[SchedulePage] [build] Processing schedule ID: ${s.id} (type: ${s.id.runtimeType})');
-                          if (s.date == null) {
-                            print(
-                                '[SchedulePage] [build] Skipping schedule with null date: ${s.id}');
-                            continue;
+                                                    if (s.date == null) {
+                                                        continue;
                           }
                           final key = DateTime(
                               s.date!.year, s.date!.month, s.date!.day);
@@ -361,24 +310,16 @@ class _SchedulePageState extends State<SchedulePage> {
                           dateToSchedules[key]!.add(s);
                         }
 
-                        print(
-                            '[SchedulePage] [build] Grouped schedules into ${dateToSchedules.length} dates');
-
+                        
                         // Double check: if no dates have schedules, show empty state
                         if (dateToSchedules.isEmpty) {
-                          print(
-                              '[SchedulePage] [build] No grouped schedules, showing empty state');
-                          return SizedBox(
+                                                    return SizedBox(
                             height: MediaQuery.of(context).size.height * 0.7,
                             child: _buildEmptyState('No schedule yet assigned'),
                           );
                         }
                       } catch (e) {
-                        print(
-                            '[SchedulePage] [build] ERROR grouping schedules: $e');
-                        print(
-                            '[SchedulePage] [build] Error type: ${e.runtimeType}');
-                        return Center(
+                                                                        return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -409,11 +350,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       final selectedSchedules =
                           dateToSchedules[selectedKey] ?? [];
 
-                      print(
-                          '[SchedulePage] [build] Selected date: $selectedKey');
-                      print(
-                          '[SchedulePage] [build] Schedules for selected date: ${selectedSchedules.length}');
-
+                                            
                       return Container(
                         color: Colors.white,
                         child: Column(
@@ -487,28 +424,20 @@ class _SchedulePageState extends State<SchedulePage> {
                                           day.year, day.month, day.day);
                                       final events = dateToSchedules[key] ?? [];
                                       if (events.isNotEmpty) {
-                                        print(
-                                            '[SchedulePage] [build] Calendar event loader: ${events.length} events for $key');
-                                      }
+                                                                              }
                                       return events;
                                     },
                                     onDaySelected: (selectedDay, focusedDay) {
-                                      print(
-                                          '[SchedulePage] [build] Day selected: $selectedDay');
-                                      setState(() {
+                                                                            setState(() {
                                         _selectedDay = selectedDay;
                                         _focusedDay = focusedDay;
                                       });
                                     },
                                     onPageChanged: (focusedDay) {
-                                      print(
-                                          '[SchedulePage] [build] Calendar page changed to: $focusedDay');
-                                      _focusedDay = focusedDay;
+                                                                            _focusedDay = focusedDay;
                                     },
                                     onFormatChanged: (format) {
-                                      print(
-                                          '[SchedulePage] [build] Calendar format changed to: $format');
-                                      setState(() {
+                                                                            setState(() {
                                         _calendarFormat = format;
                                       });
                                     },
@@ -734,17 +663,13 @@ class _SchedulePageState extends State<SchedulePage> {
                                     itemBuilder: (context, index) {
                                       try {
                                         final s = selectedSchedules[index];
-                                        print(
-                                            '[SchedulePage] [build] Building schedule card for index $index: ${s.id}');
-                                        return _buildScheduleCard(
+                                                                                return _buildScheduleCard(
                                           s,
                                           todayDate,
                                           (status) => _updateStatus(s, status),
                                         );
                                       } catch (e) {
-                                        print(
-                                            '[SchedulePage] [build] ERROR building schedule card at index $index: $e');
-                                        return Card(
+                                                                                return Card(
                                           color: Colors.red.shade50,
                                           child: ListTile(
                                             title: Text(
@@ -771,8 +696,6 @@ class _SchedulePageState extends State<SchedulePage> {
         ),
       );
     } catch (e, stackTrace) {
-      print('[SchedulePage] [build] EXCEPTION during build: $e');
-      print('[SchedulePage] [build] Stack trace: $stackTrace');
       return Scaffold(
         backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
@@ -814,9 +737,7 @@ class _SchedulePageState extends State<SchedulePage> {
   // HELPER METHOD TO BUILD A SCHEDULE CARD FOR EACH ACTIVITY
   Widget _buildScheduleCard(
       Schedule s, DateTime todayDate, void Function(String)? onStatusChange) {
-    print(
-        '[SchedulePage] [_buildScheduleCard] Building card for schedule ID: ${s.id}');
-
+    
     // DETERMINE IF THIS SCHEDULE IS FOR TODAY
     final isToday = s.date != null &&
         s.date!.year == todayDate.year &&
@@ -1388,3 +1309,4 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 }
+

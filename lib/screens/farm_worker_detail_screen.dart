@@ -32,7 +32,6 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
 
     // If it's already a full URL, return as is
     if (sanitizedPath.startsWith('http')) {
-      print('🌐 [DETAIL SCREEN] Already full URL (sanitized): $sanitizedPath');
       return sanitizedPath;
     }
 
@@ -50,9 +49,6 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
     }
 
     final fullUrl = '$baseUrl/$cleanPath';
-    print('🌐 [DETAIL SCREEN] Constructed URL: $fullUrl');
-    print('🌐 [DETAIL SCREEN] Original path: $imagePath');
-    print('🌐 [DETAIL SCREEN] Sanitized path: $sanitizedPath');
     return fullUrl;
   }
 
@@ -93,7 +89,6 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
       return '$month-$day-$year';
     } catch (e) {
       // If parsing fails, return the original string
-      print('Error parsing birth date: $birthDate, error: $e');
       return birthDate;
     }
   }
@@ -595,10 +590,7 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                 final farmId = farm['id'];
 
                 // Debug: Print farm data to understand the issue
-                print('🌾 [FARM DETAIL] Farm data: $farm');
-                print(
-                    '🌾 [FARM DETAIL] Farm ID type: ${farmId.runtimeType}, value: $farmId');
-
+                
                 // Ensure farmId is properly converted to int
                 int? focusFarmId;
                 if (farmId is int) {
@@ -609,12 +601,9 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                   focusFarmId = null;
                 }
 
-                print('🌾 [FARM DETAIL] Converted focusFarmId: $focusFarmId');
 
                 if (focusFarmId != null) {
-                  print(
-                      '🌾 [FARM DETAIL] Navigating to TechnicianFarmsScreen with focusFarmId: $focusFarmId');
-
+                  
                   try {
                     Navigator.push(
                       context,
@@ -625,7 +614,6 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                       ),
                     );
                   } catch (navError) {
-                    print('🌾 [FARM DETAIL] Navigation error: $navError');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error opening farm: $navError'),
@@ -635,7 +623,6 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                   }
                 } else {
                   // Show error if farm ID is invalid
-                  print('🌾 [FARM DETAIL] Invalid farm ID: $farmId');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Invalid farm ID: $farmId'),
@@ -644,7 +631,6 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
                   );
                 }
               } catch (e) {
-                print('🌾 [FARM DETAIL] Error navigating to farm: $e');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error opening farm: ${e.toString()}'),
@@ -703,3 +689,4 @@ class _FarmWorkerDetailScreenState extends State<FarmWorkerDetailScreen> {
     );
   }
 }
+

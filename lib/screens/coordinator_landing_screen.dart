@@ -83,7 +83,6 @@ class _CoordinatorLandingScreenState extends State<CoordinatorLandingScreen>
         });
       }
     } catch (e) {
-      print('Error fetching coordinator data: $e');
       if (mounted) {
         setState(() => _loadingCoordinator = false);
       }
@@ -128,7 +127,6 @@ class _CoordinatorLandingScreenState extends State<CoordinatorLandingScreen>
         });
       }
     } catch (e) {
-      print('Error fetching notifications: $e');
       // Silently fail for notifications
     }
   }
@@ -853,3 +851,4 @@ class _CoordinatorLandingScreenState extends State<CoordinatorLandingScreen>
     );
   }
 }
+

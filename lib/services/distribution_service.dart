@@ -7,8 +7,6 @@ class DistributionService {
   Future<List<SupplyDistribution>> fetchSupplyDistributionsForFarmWorker(int farmWorkerId, String token) async {
     try {
       final url = '${ApiConfig.getUrl(ApiConfig.supplyDistribution)}?farm_worker_id=$farmWorkerId';
-      print('[DistributionService] Fetching supply distributions from: $url');
-      print('[DistributionService] Farmer ID: $farmWorkerId');
       
       final response = await http.get(
         Uri.parse(url),
@@ -18,8 +16,6 @@ class DistributionService {
         },
       );
       
-      print('[DistributionService] Supply Distribution Response status: ${response.statusCode}');
-      print('[DistributionService] Supply Distribution Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
@@ -38,8 +34,6 @@ class DistributionService {
   Future<List<CashDistribution>> fetchCashDistributionsForFarmWorker(int farmWorkerId, String token) async {
     try {
       final url = '${ApiConfig.getUrl(ApiConfig.cashDistribution)}?farm_worker_id=$farmWorkerId';
-      print('[DistributionService] Fetching cash distributions from: $url');
-      print('[DistributionService] Farmer ID: $farmWorkerId');
       
       final response = await http.get(
         Uri.parse(url),
@@ -49,8 +43,6 @@ class DistributionService {
         },
       );
       
-      print('[DistributionService] Cash Distribution Response status: ${response.statusCode}');
-      print('[DistributionService] Cash Distribution Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final dynamic responseData = json.decode(response.body);
@@ -74,3 +66,4 @@ class DistributionService {
     }
   }
 }
+

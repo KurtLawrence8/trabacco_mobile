@@ -42,7 +42,6 @@ class Notification {
         return data;
       }
     } catch (e) {
-      print('🔔 [MOBILE] Error decoding JSON data: $e');
     }
     return null;
   }
@@ -78,7 +77,6 @@ class NotificationService {
         return notification.data as Map<String, dynamic>;
       }
     } catch (e) {
-      print('🔔 [MOBILE] Error parsing notification data: $e');
     }
     return null;
   }
@@ -109,11 +107,6 @@ class NotificationService {
       {int? technicianId, int? farmWorkerId, int? coordinatorId}) async {
     try {
       final url = '$_baseUrl/notifications';
-      // print('🔔 [MOBILE] NotificationService: Starting notification fetch...');
-      // print('🔔 [MOBILE] URL: $url');
-      // print('🔔 [MOBILE] Token length: ${token.length}');
-      // print('🔔 [MOBILE] Token preview: ${token.substring(0, 20)}...');
-
       final response = await http.get(
         Uri.parse(url),
         headers: {
@@ -123,28 +116,20 @@ class NotificationService {
         },
       );
 
-      // print('🔔 [MOBILE] Response status: ${response.statusCode}');
-      // print('🔔 [MOBILE] Response headers: ${response.headers}');
-      // print('🔔 [MOBILE] Response body length: ${response.body.length}');
-      // print('🔔 [MOBILE] Response body: ${response.body}');
-
       if (response.statusCode == 200) {
-        final List<dynamic> jsonList = jsonDecode(response.body);
+        final body = jsonDecode(response.body);
+        final List<dynamic> jsonList;
+
+        if (body is List) {
+          jsonList = body;
+        } else if (body is Map<String, dynamic> && body['data'] is List) {
+          jsonList = body['data'] as List<dynamic>;
+        } else {
+          throw Exception('Unexpected notification response format');
+        }
 
         List<Notification> notifications =
             jsonList.map((json) => Notification.fromJson(json)).toList();
-
-        print(
-            '🔔 [MOBILE] Total notifications: ${notifications.length}, Filtering for Coordinator ID: $coordinatorId');
-
-        // Debug: Show only area_coordinator notifications
-        // for (var notification in notifications) {
-        //   if (notification.recipientType.toLowerCase() == 'area_coordinator' ||
-        //       notification.recipientType.toLowerCase() == 'areacoordinator') {
-        //     print(
-        //         '🔔 [MOBILE] AC Notification: ID=${notification.id}, Type=${notification.type}, RecipientId=${notification.recipientId}');
-        //   }
-        // }
 
         // Filter notifications for the specific user if ID is provided
         if (technicianId != null ||
@@ -215,8 +200,6 @@ class NotificationService {
           }
 
           notifications = filteredNotifications;
-          print(
-              '🔔 [MOBILE] ✅ Filtered to ${notifications.length} notifications for coordinator: $coordinatorId');
         }
 
         // Sort notifications: schedule_reminder notifications first, then by timestamp (newest first)
@@ -241,23 +224,13 @@ class NotificationService {
 
         return notifications;
       } else if (response.statusCode == 401) {
-        // print(
-        //     '🔔 [MOBILE] ERROR: Unauthorized - Token may be invalid or expired');
-        // print('🔔 [MOBILE] ERROR: Response body: ${response.body}');
         return [];
       } else if (response.statusCode == 403) {
-        // print('🔔 [MOBILE] ERROR: Forbidden - Access denied');
-        // print('🔔 [MOBILE] ERROR: Response body: ${response.body}');
         return [];
       } else {
-        // print(
-        //     '🔔 [MOBILE] ERROR: Failed to fetch notifications with status ${response.statusCode}');
-        // print('🔔 [MOBILE] ERROR: Response body: ${response.body}');
         return [];
       }
     } catch (e) {
-      // print('🔔 [MOBILE] EXCEPTION: Error fetching notifications: $e');
-      // print('🔔 [MOBILE] EXCEPTION: Stack trace: ${StackTrace.current}');
       return [];
     }
   }
@@ -273,11 +246,8 @@ class NotificationService {
           coordinatorId: coordinatorId);
       final unreadCount = notifications.where((n) => n.readAt == null).length;
 
-      print(
-          '🔔 [MOBILE] Unread count for user (technician: $technicianId, farmWorker: $farmWorkerId, coordinator: $coordinatorId): $unreadCount');
       return unreadCount;
     } catch (e) {
-      print('🔔 [MOBILE] EXCEPTION: Error fetching unread count: $e');
       return 0;
     }
   }
@@ -295,7 +265,6 @@ class NotificationService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error marking notification as read: $e');
       return false;
     }
   }
@@ -313,7 +282,6 @@ class NotificationService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error marking all notifications as read: $e');
       return false;
     }
   }
@@ -339,7 +307,6 @@ class NotificationService {
           .where((notification) => notification.type == 'schedule_reminder')
           .toList();
     } catch (e) {
-      print('🔔 [MOBILE] Error fetching schedule notifications: $e');
       return [];
     }
   }
@@ -347,10 +314,6 @@ class NotificationService {
   // Test API connection
   static Future<Map<String, dynamic>> testConnection(String token) async {
     try {
-      print('🔔 [MOBILE] Testing API connection...');
-      print('🔔 [MOBILE] Base URL: $_baseUrl');
-      print('🔔 [MOBILE] Token length: ${token.length}');
-
       final response = await http.get(
         Uri.parse('$_baseUrl/notifications'),
         headers: {
@@ -360,9 +323,6 @@ class NotificationService {
         },
       );
 
-      print('🔔 [MOBILE] Test response status: ${response.statusCode}');
-      print('🔔 [MOBILE] Test response body: ${response.body}');
-
       return {
         'success': response.statusCode == 200,
         'statusCode': response.statusCode,
@@ -370,7 +330,6 @@ class NotificationService {
         'url': '$_baseUrl/notifications',
       };
     } catch (e) {
-      print('🔔 [MOBILE] Test connection error: $e');
       return {
         'success': false,
         'error': e.toString(),
@@ -379,3 +338,4 @@ class NotificationService {
     }
   }
 }
+

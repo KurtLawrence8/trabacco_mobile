@@ -39,7 +39,6 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching technician data: $e');
       if (mounted) {
         setState(() => _loadingTechnician = false);
       }
@@ -323,3 +322,4 @@ class _TechnicianReportScreenState extends State<TechnicianReportScreen> {
     );
   }
 }
+

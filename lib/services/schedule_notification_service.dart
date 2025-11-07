@@ -40,28 +40,20 @@ class ScheduleNotificationService {
   ) async {
     // Prevent multiple simultaneous checks
     if (_isChecking) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Check already in progress, skipping...');
-      return;
+            return;
     }
 
     _isChecking = true;
     try {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Starting comprehensive schedule notification check for technician $technicianId');
-
+      
       // Get all farm workers assigned to this technician
       final farmWorkerService = FarmWorkerService();
       final farmWorkers =
           await farmWorkerService.getAssignedFarmWorkers(token, technicianId);
 
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Found ${farmWorkers.length} farm workers for technician $technicianId');
-
+      
       if (farmWorkers.isEmpty) {
-        print(
-            '📅 [SCHEDULE NOTIFICATIONS] ⚠️ No farm workers found for technician $technicianId - skipping notification check');
-        return;
+                return;
       }
 
       // Get today's date for checking schedules
@@ -97,11 +89,8 @@ class ScheduleNotificationService {
       }
 
       // Send combined notifications
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Summary: ${todayNotifications.length} today\'s notifications, ${incompleteNotifications.length} incomplete notifications');
-
+      
       if (todayNotifications.isNotEmpty || incompleteNotifications.isNotEmpty) {
-        print('📅 [SCHEDULE NOTIFICATIONS] 🚀 Sending notifications...');
         await _sendCombinedNotifications(
           token,
           technicianId,
@@ -109,16 +98,10 @@ class ScheduleNotificationService {
           incompleteNotifications,
         );
       } else {
-        print(
-            '📅 [SCHEDULE NOTIFICATIONS] ❌ No notifications needed - no incomplete schedules found');
-      }
+              }
 
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Completed comprehensive schedule notification check');
-    } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to check schedule notifications: $e');
-    } finally {
+          } catch (e) {
+          } finally {
       _isChecking = false;
     }
   }
@@ -133,17 +116,13 @@ class ScheduleNotificationService {
     List<Map<String, dynamic>> notifications = [];
 
     try {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Checking today\'s schedules for farmer ${farmWorker.firstName} ${farmWorker.lastName} (ID: ${farmWorker.id})');
-
+      
       // Get schedules for this farm worker
       final scheduleService = ScheduleService();
       final schedules = await scheduleService.fetchSchedulesForFarmWorker(
           farmWorker.id, token);
 
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Found ${schedules.length} schedules for farmer ${farmWorker.id}');
-
+      
       // Check for today's schedules only
       for (final schedule in schedules) {
         if (schedule.date != null) {
@@ -151,16 +130,12 @@ class ScheduleNotificationService {
               schedule.date!.year, schedule.date!.month, schedule.date!.day);
           final daysFromNow = scheduleDate.difference(today).inDays;
 
-          print(
-              '📅 [SCHEDULE NOTIFICATIONS] Schedule ${schedule.id}: ${schedule.activity} on ${schedule.date} (days: $daysFromNow, status: ${schedule.status})');
-
+          
           // Only check for today's schedule and not completed
           if (daysFromNow == 0 &&
               schedule.status.toLowerCase() != 'completed' &&
               schedule.status.toLowerCase() != 'cancelled') {
-            print(
-                '📅 [SCHEDULE NOTIFICATIONS] ✅ Found today\'s schedule: ${schedule.activity}');
-            final notificationData = await _buildScheduleNotificationData(
+                        final notificationData = await _buildScheduleNotificationData(
               token,
               technicianId,
               farmWorker,
@@ -175,9 +150,7 @@ class ScheduleNotificationService {
         }
       }
     } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to check today\'s schedules for farmer ${farmWorker.id}: $e');
-    }
+          }
 
     return notifications;
   }
@@ -192,9 +165,7 @@ class ScheduleNotificationService {
     List<Map<String, dynamic>> notifications = [];
 
     try {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Checking incomplete activities for ${farmWorker.firstName} ${farmWorker.lastName} on ${checkDate.year}-${checkDate.month}-${checkDate.day}');
-
+      
       // Get schedules for this farm worker
       final scheduleService = ScheduleService();
       final schedules = await scheduleService.fetchSchedulesForFarmWorker(
@@ -210,14 +181,10 @@ class ScheduleNotificationService {
           if (scheduleDate.year == checkDate.year &&
               scheduleDate.month == checkDate.month &&
               scheduleDate.day == checkDate.day) {
-            print(
-                '📅 [SCHEDULE NOTIFICATIONS] Found schedule for ${checkDate.year}-${checkDate.month}-${checkDate.day}: ${schedule.activity} (status: ${schedule.status})');
-
+            
             if (schedule.status.toLowerCase() != 'completed' &&
                 schedule.status.toLowerCase() != 'cancelled') {
-              print(
-                  '📅 [SCHEDULE NOTIFICATIONS] ✅ Found incomplete activity: ${schedule.activity}');
-
+              
               final notificationData =
                   await _buildIncompleteActivityNotificationData(
                 token,
@@ -231,16 +198,12 @@ class ScheduleNotificationService {
                 notifications.add(notificationData);
               }
             } else {
-              print(
-                  '📅 [SCHEDULE NOTIFICATIONS] ⏭️ Skipping completed/cancelled activity: ${schedule.activity}');
-            }
+                          }
           }
         }
       }
     } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to check incomplete activities for farmer ${farmWorker.id}: $e');
-    }
+          }
 
     return notifications;
   }
@@ -312,9 +275,7 @@ class ScheduleNotificationService {
 
       return null;
     } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to build schedule notification data: $e');
-      return null;
+            return null;
     }
   }
 
@@ -385,9 +346,7 @@ class ScheduleNotificationService {
 
       return null;
     } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to build incomplete activity notification data: $e');
-      return null;
+            return null;
     }
   }
 
@@ -424,9 +383,7 @@ class ScheduleNotificationService {
           combinedData,
         );
 
-        print(
-            '📅 [SCHEDULE NOTIFICATIONS] ✅ Sent combined notification: ${todayNotifications.length} today\'s schedules + ${incompleteNotifications.length} incomplete activities');
-      }
+              }
       // Send today's notifications only
       else if (todayNotifications.isNotEmpty) {
         for (final notification in todayNotifications) {
@@ -438,9 +395,7 @@ class ScheduleNotificationService {
             notification['data'],
           );
         }
-        print(
-            '📅 [SCHEDULE NOTIFICATIONS] ✅ Sent ${todayNotifications.length} today\'s schedule notifications');
-      }
+              }
       // Send incomplete activity notifications only
       else if (incompleteNotifications.isNotEmpty) {
         for (final notification in incompleteNotifications) {
@@ -452,13 +407,9 @@ class ScheduleNotificationService {
             notification['data'],
           );
         }
-        print(
-            '📅 [SCHEDULE NOTIFICATIONS] ✅ Sent ${incompleteNotifications.length} incomplete activity notifications');
-      }
+              }
     } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to send combined notifications: $e');
-    }
+          }
   }
 
   /// Build combined message for notifications
@@ -507,11 +458,7 @@ class ScheduleNotificationService {
         'data': data,
       };
 
-      print('📅 [SCHEDULE NOTIFICATIONS] Sending notification to backend:');
-      print('📅 [SCHEDULE NOTIFICATIONS] URL: $_baseUrl/notifications');
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Request body: ${json.encode(requestBody)}');
-
+      
       // Send notification to backend for storage
       final response = await http.post(
         Uri.parse('$_baseUrl/notifications'),
@@ -523,20 +470,12 @@ class ScheduleNotificationService {
         body: json.encode(requestBody),
       );
 
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Backend response status: ${response.statusCode}');
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Backend response body: ${response.body}');
-
+            
       // Always show local notification regardless of backend response
       await _sendLocalNotificationFallback(title, message, data);
-      print('📱 [LOCAL] ✅ Immediate local notification shown');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        print(
-            '📅 [SCHEDULE NOTIFICATIONS] ✅ Successfully sent notification to backend');
-        print('📅 [SCHEDULE NOTIFICATIONS] Notification stored in database');
-
+        
         // Now send Firebase push notification
         await _sendFirebasePushNotification(
           title: title,
@@ -546,23 +485,14 @@ class ScheduleNotificationService {
           token: token,
         );
       } else {
-        print(
-            '📅 [SCHEDULE NOTIFICATIONS] ❌ Failed to send notification to backend. Status: ${response.statusCode}, Body: ${response.body}');
-        print(
-            '📱 [LOCAL] ✅ Local notification still shown despite backend error');
-      }
+                      }
     } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to send notification to backend: $e');
-
+      
       // Still try to show local notification even if backend fails
       try {
         await _sendLocalNotificationFallback(title, message, data);
-        print('📱 [LOCAL] ✅ Emergency local notification shown after error');
       } catch (localError) {
-        print(
-            '📱 [LOCAL] ❌ Failed to show emergency notification: $localError');
-      }
+              }
     }
   }
 
@@ -575,7 +505,6 @@ class ScheduleNotificationService {
     required String token,
   }) async {
     try {
-      print('🔥 [FCM] Sending push notification for schedule reminder...');
 
       // Send push notification via backend API
       final response = await http.post(
@@ -600,17 +529,12 @@ class ScheduleNotificationService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('🔥 [FCM] ✅ Push notification sent successfully');
       } else {
-        print(
-            '🔥 [FCM] ❌ Failed to send push notification: ${response.statusCode}');
-        print('🔥 [FCM] Response: ${response.body}');
-
+        
         // Fallback: try sending locally if backend fails
         await _sendLocalNotificationFallback(title, body, data);
       }
     } catch (e) {
-      print('🔥 [FCM] ❌ Error sending push notification: $e');
 
       // Fallback: try sending locally if backend fails
       await _sendLocalNotificationFallback(title, body, data);
@@ -630,9 +554,7 @@ class ScheduleNotificationService {
         body: body,
         payload: jsonEncode(data),
       );
-      print('📱 [LOCAL] ✅ Fallback local notification shown successfully');
     } catch (e) {
-      print('📱 [LOCAL] ❌ Error showing fallback notification: $e');
     }
   }
 
@@ -642,11 +564,9 @@ class ScheduleNotificationService {
     int technicianId,
   ) async {
     try {
-      // print(
-      //     '📅 [SCHEDULE NOTIFICATIONS] Running scheduled check for technician $technicianId');
       await checkAndCreateScheduleNotifications(token, technicianId);
     } catch (e) {
-      // print('📅 [SCHEDULE NOTIFICATIONS] ERROR: Scheduled check failed: $e');
+      // Swallow errors here to avoid crashing background tasks
     }
   }
 
@@ -673,17 +593,13 @@ class ScheduleNotificationService {
         return false;
       }).toList();
     } catch (e) {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] ERROR: Failed to get upcoming schedule notifications: $e');
-      return [];
+            return [];
     }
   }
 
   /// Start scheduled notification checking at specific times
   static void startScheduledNotifications(String token, int technicianId) {
-    print(
-        '📅 [SCHEDULE NOTIFICATIONS] Starting scheduled notifications for technician $technicianId');
-
+    
     // Cancel existing timer if any
     _notificationTimer?.cancel();
 
@@ -696,8 +612,7 @@ class ScheduleNotificationService {
 
   /// Stop scheduled notifications
   static void stopScheduledNotifications() {
-    // print('📅 [SCHEDULE NOTIFICATIONS] Stopping scheduled notifications');
-    _notificationTimer?.cancel();
+    //     _notificationTimer?.cancel();
     _notificationTimer = null;
   }
 
@@ -758,15 +673,9 @@ class ScheduleNotificationService {
         nextNotificationTime ?? DateTime.now().add(Duration(hours: 1));
     final timeUntilNext = notificationTime.difference(now);
 
-    print(
-        '📅 [SCHEDULE NOTIFICATIONS] Next notification check scheduled in ${timeUntilNext.inHours}h ${timeUntilNext.inMinutes % 60}m');
-    print(
-        '📅 [SCHEDULE NOTIFICATIONS] Next check at: ${notificationTime.hour.toString().padLeft(2, '0')}:${notificationTime.minute.toString().padLeft(2, '0')}');
-
+        
     _notificationTimer = Timer(timeUntilNext, () {
-      print(
-          '📅 [SCHEDULE NOTIFICATIONS] Running scheduled notification check at ${notificationTime.hour.toString().padLeft(2, '0')}:${notificationTime.minute.toString().padLeft(2, '0')}');
-      checkAndCreateScheduleNotifications(token, technicianId);
+            checkAndCreateScheduleNotifications(token, technicianId);
 
       // Schedule next check
       _scheduleNextNotificationCheck(token, technicianId);
@@ -813,3 +722,4 @@ class ScheduleNotificationService {
     });
   }
 }
+

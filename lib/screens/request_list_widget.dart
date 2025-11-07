@@ -20,10 +20,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
   @override
   void initState() {
     super.initState();
-    print(
-        'RequestListWidget: Initializing for Farmer ID: ${widget.farmWorkerId}');
-    print('RequestListWidget: Token length: ${widget.token.length}');
-    _requestsFuture = RequestService()
+        _requestsFuture = RequestService()
         .getRequestsForFarmWorker(widget.token, widget.farmWorkerId);
   }
 
@@ -47,12 +44,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
     return FutureBuilder<List<RequestModel>>(
       future: _requestsFuture,
       builder: (context, snapshot) {
-        print(
-            'RequestListWidget: Connection state: ${snapshot.connectionState}');
-        print('RequestListWidget: Has data: ${snapshot.hasData}');
-        print('RequestListWidget: Has error: ${snapshot.hasError}');
-        if (snapshot.hasError) {
-          print('RequestListWidget: Error: ${snapshot.error}');
+                if (snapshot.hasError) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -93,7 +85,6 @@ class _RequestListWidgetState extends State<RequestListWidget> {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          print('RequestListWidget: No data or empty list');
           return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -225,9 +216,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
     final isPending = status == 'pending' || status == '' || status.isEmpty;
 
     // Debug logging to see actual status values
-    print(
-        'Request ID: ${req.id}, Status: "${req.status}", isPending: $isPending');
-
+    
     // Get request type icon and color (matching technician landing screen)
     IconData typeIcon;
     Color typeColor;
@@ -505,13 +494,6 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     super.initState();
 
     // Debug original request data
-    print('=== EDIT REQUEST INIT DEBUG ===');
-    print('Request ID: ${widget.request.id}');
-    print('Request Type: ${widget.request.type}');
-    print('Original borrowDurationDays: ${widget.request.borrowDurationDays}');
-    print('Original expectedReturnDate: ${widget.request.expectedReturnDate}');
-    print('Original equipmentId: ${widget.request.equipmentId}');
-    print('==============================');
 
     _amountController =
         TextEditingController(text: widget.request.amount?.toString() ?? '');
@@ -536,7 +518,6 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         initialDate = '';
       }
     }
-    print('Initial date for controller: "$initialDate"');
     _returnDateController = TextEditingController(text: initialDate);
     _supplySearchController = TextEditingController();
     _equipmentSearchController = TextEditingController();
@@ -651,7 +632,6 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     // Always include description if it's not empty
     if (description.isNotEmpty) {
       updateData['description'] = description;
-      print('Adding description to update data: "$description"');
     }
 
     if (widget.request.type == 'cash_advance') {
@@ -675,12 +655,10 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       // Equipment ID is required - always send the current or original equipment ID
       if (_selectedEquipmentId != null) {
         updateData['equipment_id'] = _selectedEquipmentId;
-        print('Set equipment_id to update data: $_selectedEquipmentId');
       } else {
         // Use original equipment ID if not changed
         if (widget.request.equipmentId != null) {
           updateData['equipment_id'] = widget.request.equipmentId;
-          print('Using original equipment_id: ${widget.request.equipmentId}');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please select an equipment')),
@@ -692,21 +670,15 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       // Handle borrow duration - always send current value for equipment requests
       final durationText = _durationController.text.trim();
       final originalDuration = widget.request.borrowDurationDays;
-      print('Duration text from controller: "$durationText"');
-      print('Original borrowDurationDays: $originalDuration');
 
       int? durationToSend;
 
       if (durationText.isNotEmpty) {
         final duration = int.tryParse(durationText);
-        print('Parsed duration: $duration');
         if (duration != null && duration > 0) {
           durationToSend = duration;
-          print('Will send duration: $durationToSend');
         } else {
-          print(
-              'Duration text is not a valid positive integer: "$durationText"');
-          ScaffoldMessenger.of(context).showSnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please enter a valid duration')),
           );
           return;
@@ -715,7 +687,6 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         // If empty, use original duration if available
         if (originalDuration != null && originalDuration > 0) {
           durationToSend = originalDuration;
-          print('Duration field empty, using original: $durationToSend');
         } else {
           // For equipment requests, duration is required
           ScaffoldMessenger.of(context).showSnackBar(
@@ -727,14 +698,10 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
 
       // Always send duration for equipment requests
       updateData['borrow_duration_days'] = durationToSend;
-      print('Added borrow_duration_days to update data: $durationToSend');
 
       // Handle expected return date - always send current value for equipment requests
       final returnDateText = _returnDateController.text.trim();
-      print('Return date text from controller: "$returnDateText"');
-      print(
-          'Original expectedReturnDate: ${widget.request.expectedReturnDate}');
-
+      
       String? dateToSend;
 
       if (returnDateText.isNotEmpty) {
@@ -742,9 +709,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         try {
           final formattedDate = _formatDateForApi(returnDateText);
           dateToSend = formattedDate;
-          print('Formatted date for API: $formattedDate');
         } catch (e) {
-          print('Error formatting return date "$returnDateText": $e');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please enter a valid return date')),
           );
@@ -759,26 +724,19 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
             // If it's already in YYYY-MM-DD format, use it directly
             DateTime.parse(widget.request.expectedReturnDate!);
             dateToSend = widget.request.expectedReturnDate;
-            print(
-                'Using original expected_return_date (already API format): ${widget.request.expectedReturnDate}');
-          } catch (e) {
+                      } catch (e) {
             // If it's in a different format, try to parse and format it
-            print(
-                'Original date format needs conversion: ${widget.request.expectedReturnDate}');
-            // For now, just use it as-is since we can't be sure of the original format
+                        // For now, just use it as-is since we can't be sure of the original format
             dateToSend = widget.request.expectedReturnDate;
           }
         } else {
           // For equipment requests, return date can be optional if we have original
-          print(
-              'Warning: No return date provided and no original date available');
-        }
+                  }
       }
 
       // Always send return date for equipment requests
       if (dateToSend != null && dateToSend.isNotEmpty) {
         updateData['expected_return_date'] = dateToSend;
-        print('Added expected_return_date to update data: $dateToSend');
       }
     }
 
@@ -815,35 +773,14 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     }
 
     // Debug logging
-    print('=== MOBILE UPDATE DEBUG ===');
-    print('Request ID: ${widget.request.id}');
-    print('Request Status: "${widget.request.status}"');
-    print('Request Type: ${widget.request.type}');
-    print('Duration Controller Text: "${_durationController.text}"');
-    print('Return Date Controller Text: "${_returnDateController.text}"');
-    print('Reason Controller Text: "${_reasonController.text}"');
-    print('Selected Equipment ID: $_selectedEquipmentId');
-    print('Update Data: $updateData');
-    print('Update Data Keys: ${updateData.keys.toList()}');
-    print('=== CRITICAL FOR EQUIPMENT ===');
     if (widget.request.type == 'equipment') {
-      print(
-          'Equipment ID in update data: ${updateData.containsKey('equipment_id')}');
-      print(
-          'Duration in update data: ${updateData.containsKey('borrow_duration_days')}');
-      print(
-          'Return date in update data: ${updateData.containsKey('expected_return_date')}');
-      print(
-          'Description in update data: ${updateData.containsKey('description')}');
-    }
-    print('========================');
+                            }
 
     try {
       await RequestService()
           .updateRequest(widget.token, widget.request.id, updateData);
       if (!mounted) return;
 
-      print('=== UPDATE SUCCESS ===');
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -853,14 +790,9 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       );
 
       // Dispatch event to notify web app of request update
-      print('=== DISPATCHING REQUEST UPDATED EVENT ===');
       // Note: This is a Flutter app, so we can't directly dispatch web events
       // The web app will detect changes through its own refresh mechanisms
     } catch (e) {
-      print('=== MOBILE UPDATE ERROR ===');
-      print('Error: $e');
-      print('Error Type: ${e.runtimeType}');
-      print('========================');
 
       String errorMessage = 'Failed to update request';
       if (e.toString().contains('Failed to update request')) {
@@ -887,31 +819,24 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
 
   // Helper method to convert MM-DD-YYYY format to YYYY-MM-DD (for API)
   String _formatDateForApi(String dateString) {
-    print('Formatting date for API: "$dateString"');
     try {
       final trimmedString = dateString.trim();
       if (trimmedString.isEmpty) {
-        print('Empty date string provided');
         throw Exception('Empty date string');
       }
 
       final parts = trimmedString.split('-');
-      print('Date parts: $parts');
 
       if (parts.length == 3) {
         final month = parts[0].padLeft(2, '0');
         final day = parts[1].padLeft(2, '0');
         final year = parts[2];
         final result = '$year-$month-$day';
-        print('Formatted date: "$result"');
         return result;
       } else {
-        print(
-            'Invalid date format - expected MM-DD-YYYY, got: "$dateString" with ${parts.length} parts');
-        throw Exception('Invalid date format - expected MM-DD-YYYY');
+                throw Exception('Invalid date format - expected MM-DD-YYYY');
       }
     } catch (e) {
-      print('Error parsing date "$dateString": $e');
       throw e; // Re-throw to handle in calling code
     }
   }
@@ -1022,7 +947,6 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                                   try {
                                     return _buildCustomSupplyDropdown();
                                   } catch (e) {
-                                    print('Error building supply dropdown: $e');
                                     return Container(
                                       height: 56,
                                       decoration: BoxDecoration(
@@ -1107,9 +1031,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                                   try {
                                     return _buildCustomEquipmentDropdown();
                                   } catch (e) {
-                                    print(
-                                        'Error building equipment dropdown: $e');
-                                    return Container(
+                                                                        return Container(
                                       height: 56,
                                       decoration: BoxDecoration(
                                         color: Colors.red[50],
@@ -1783,3 +1705,4 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     );
   }
 }
+

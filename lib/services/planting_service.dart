@@ -14,8 +14,6 @@ class PlantingService {
       final url = ApiConfig.getUrl('$_endpoint/submit');
       final headers = ApiConfig.getHeaders(token: token);
 
-      print('🌱 [PlantingService] Submitting planting report to: $url');
-      print('🌱 [PlantingService] Data: ${json.encode(plantingData)}');
 
       final response = await http.post(
         Uri.parse(url),
@@ -23,8 +21,6 @@ class PlantingService {
         body: json.encode(plantingData),
       );
 
-      print('🌱 [PlantingService] Response status: ${response.statusCode}');
-      print('🌱 [PlantingService] Response body: ${response.body}');
 
       if (response.statusCode == 201) {
         return json.decode(response.body);
@@ -34,7 +30,6 @@ class PlantingService {
             'Failed to submit planting report: ${errorData['message'] ?? 'Unknown error'}');
       }
     } catch (e) {
-      print('❌ [PlantingService] Error submitting planting report: $e');
       throw Exception('Failed to submit planting report: $e');
     }
   }
@@ -60,14 +55,12 @@ class PlantingService {
 
       final headers = ApiConfig.getHeaders(token: token);
 
-      print('🌱 [PlantingService] Fetching planting reports from: $url');
 
       final response = await http.get(
         Uri.parse(url),
         headers: headers,
       );
 
-      print('🌱 [PlantingService] Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -77,8 +70,8 @@ class PlantingService {
             'Failed to load planting reports: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ [PlantingService] Error fetching planting reports: $e');
       throw Exception('Failed to fetch planting reports: $e');
     }
   }
 }
+

@@ -94,7 +94,6 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
           _errorMessage = errorMsg;
         });
       }
-      print('❌ [CAMERA] Camera initialization error: $e');
     }
   }
 
@@ -124,7 +123,6 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
       // If we have permission, automatically get location
       await _getCurrentLocation();
     } catch (e) {
-      print('Error checking location status: $e');
     }
   }
 
@@ -161,18 +159,13 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
       // Handle different types of location errors
       String errorMessage = 'Location unavailable';
       if (e.toString().contains('TimeoutException')) {
-        print(
-            '⏰ [LOCATION] Timeout getting current location - device may not have GPS or network location access');
-        errorMessage =
+                errorMessage =
             'Location timeout - please check GPS and network settings';
       } else if (e.toString().contains('PERMISSION_DENIED')) {
-        print('🚫 [LOCATION] Location permission denied');
         errorMessage = 'Location permission denied';
       } else if (e.toString().contains('SERVICE_DISABLED')) {
-        print('📴 [LOCATION] Location services disabled');
         errorMessage = 'Location services disabled';
       } else {
-        print('❌ [LOCATION] Error getting current location: $e');
       }
 
       // Don't show error to user if it's just a timeout - they can still use the app
@@ -259,14 +252,10 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
       // Handle different types of location errors with better user feedback
       String errorMessage = 'Failed to get location';
       if (e.toString().contains('TimeoutException')) {
-        print(
-            '⏰ [LOCATION] Timeout getting current location during permission request');
-        errorMessage = 'Location timeout - GPS may be weak or unavailable';
+                errorMessage = 'Location timeout - GPS may be weak or unavailable';
       } else if (e.toString().contains('PERMISSION_DENIED')) {
-        print('🚫 [LOCATION] Location permission denied');
         errorMessage = 'Location permission denied';
       } else {
-        print('❌ [LOCATION] Error getting location: $e');
       }
 
       if (mounted) {
@@ -321,7 +310,6 @@ class _CameraReportScreenState extends State<CameraReportScreen> {
         });
       }
     } catch (e) {
-      print('Error detecting farm: $e');
     }
   }
 
@@ -1463,7 +1451,6 @@ class _ReportFormModalState extends State<ReportFormModal> {
         });
       }
     } catch (e) {
-      print('❌ Error loading coordinators: $e');
       if (mounted) {
         setState(() {
           _loadingCoordinators = false;
@@ -1474,9 +1461,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
 
   Future<void> _loadTobaccoVarieties() async {
     try {
-      print(
-          '🌱 Loading tobacco varieties with token: ${widget.token != null ? "Present" : "Missing"}');
-      final varieties =
+            final varieties =
           await _tobaccoVarietyService.getTobaccoVarieties(widget.token);
       setState(() {
         _tobaccoVarieties = varieties;
@@ -1484,9 +1469,7 @@ class _ReportFormModalState extends State<ReportFormModal> {
           _selectedVariety = varieties.first;
         }
       });
-      print('🌱 Loaded ${varieties.length} tobacco varieties');
     } catch (e) {
-      print('❌ Error loading tobacco varieties: $e');
       // Show error to user
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2159,3 +2142,4 @@ class _ReportFormModalState extends State<ReportFormModal> {
     }
   }
 }
+

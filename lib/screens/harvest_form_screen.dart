@@ -89,7 +89,6 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error loading coordinators: $e');
       if (mounted) {
         setState(() {
           _loadingCoordinators = false;
@@ -129,7 +128,6 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
         _restoreDraftAfterDataLoad();
       }
     } catch (e) {
-      print('Error loading farms: $e');
       if (mounted) {
         setState(() {
           _farmErrorMessage = 'Failed to load farms. Tap to retry.';
@@ -176,7 +174,6 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
         _restoreDraftAfterDataLoad();
       }
     } catch (e) {
-      print('Error loading laborers: $e');
       if (mounted) {
         setState(() {
           _laborerErrorMessage = 'Failed to load laborers. Tap to retry.';
@@ -2005,3 +2002,4 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     );
   }
 }
+

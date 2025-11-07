@@ -78,7 +78,6 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching notifications: $e');
     }
   }
 
@@ -1473,3 +1472,4 @@ class _FarmWorkerLandingScreenState extends State<FarmWorkerLandingScreen> {
     }
   }
 }
+

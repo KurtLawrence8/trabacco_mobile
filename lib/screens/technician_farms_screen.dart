@@ -67,7 +67,6 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
         }
       } catch (e) {
         // Farm not found, do nothing
-        print('Farm with ID ${widget.focusFarmId} not found');
       }
     }
   }
@@ -620,7 +619,6 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
       final locationData = await _location.getLocation();
       return LatLng(locationData.latitude!, locationData.longitude!);
     } catch (e) {
-      print('Error getting location: $e');
       return null;
     }
   }
@@ -671,7 +669,6 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
       if (Navigator.canPop(context)) {
         Navigator.pop(context); // Close loading dialog if still open
       }
-      print('Error showing route: $e');
       _showErrorDialog('Error showing route: $e');
     }
   }
@@ -694,9 +691,7 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
     try {
       if (ApiConfig.googleMapsApiKey.isEmpty) {
         // Fallback to straight line if no API key is configured
-        print(
-            'Google Directions API key not configured. Using straight line route.');
-
+        
         // Show user-friendly message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -722,16 +717,12 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
           'departure_time=now&'
           'key=${ApiConfig.googleMapsApiKey}';
 
-      print(
-          'Calling Directions API URL: ${url.replaceAll(ApiConfig.googleMapsApiKey, 'API_KEY_HIDDEN')}');
-
+      
       final response = await http.get(Uri.parse(url));
-      print('API Response Status Code: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        print('Directions API Response Status: ${data['status']}');
 
         if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
           final route = data['routes'][0];
@@ -757,10 +748,8 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
               route['overview_polyline']['points'] != null) {
             final overviewPolyline =
                 route['overview_polyline']['points'] as String;
-            print('Polyline string length: ${overviewPolyline.length}');
 
             final routePoints = _decodePolyline(overviewPolyline);
-            print('Decoded route points: ${routePoints.length}');
 
             if (routePoints.isNotEmpty) {
               setState(() {
@@ -789,18 +778,13 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                 );
               }
             } else {
-              print('No route points decoded, falling back to straight line');
               _drawRoute(start, end);
             }
           } else {
-            print('No overview polyline found in response');
             _drawRoute(start, end);
           }
         } else {
-          print('API Response Error: ${data['status']}');
-          print(
-              'API Error Message: ${data['error_message'] ?? 'No error message'}');
-          // Fallback to straight line if API fails
+                    // Fallback to straight line if API fails
           _drawRoute(start, end);
         }
       } else {
@@ -808,7 +792,6 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
         _drawRoute(start, end);
       }
     } catch (e) {
-      print('Error getting road route: $e');
       // Fallback to straight line
       _drawRoute(start, end);
     }
@@ -942,7 +925,6 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
             'Could not open Google Maps. Please make sure Google Maps is installed.');
       }
     } catch (e) {
-      print('Error opening Google Maps: $e');
       _showErrorDialog('Error opening Google Maps: $e');
     }
   }
@@ -1633,7 +1615,6 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
                           },
                         );
                       } catch (e) {
-                        print('Google Maps error: $e');
                         // Show error message and fallback
                         return Column(
                           children: [
@@ -1674,3 +1655,4 @@ class _TechnicianFarmsScreenState extends State<TechnicianFarmsScreen> {
     );
   }
 }
+

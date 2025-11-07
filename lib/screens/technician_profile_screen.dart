@@ -116,15 +116,11 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
     setState(() => _loading = true);
     try {
       final token = await AuthService().getToken();
-      print('Token available: ${token != null}');
-      print('Technician ID: ${widget.technicianId}');
-      print('API Base URL: ${ApiConfig.baseUrl}');
 
       if (token != null) {
         // Test API connection first
         final isApiReachable =
             await _technicianService.testApiConnection(token);
-        print('API reachable: $isApiReachable');
 
         final technician = await _technicianService.getTechnicianProfile(
             token, widget.technicianId);
@@ -152,9 +148,6 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
         );
       }
     } catch (e) {
-      print('Error loading technician data: $e');
-      print('Error type: ${e.runtimeType}');
-      print('Error details: ${e.toString()}');
 
       // Fallback: Show sample data for development/testing
       if (!mounted) return;
@@ -708,3 +701,4 @@ class _TechnicianProfileScreenState extends State<TechnicianProfileScreen> {
     );
   }
 }
+

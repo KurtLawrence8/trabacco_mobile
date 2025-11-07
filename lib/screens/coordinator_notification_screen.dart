@@ -33,16 +33,13 @@ class _CoordinatorNotificationScreenState
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      print(
-          '🔔 [AC SCREEN] Loading notifications for Coordinator ID: ${widget.coordinatorId}');
-
+      
       final notifications =
           await notification_service.NotificationService.getNotifications(
         widget.token,
         coordinatorId: widget.coordinatorId,
       );
 
-      print('🔔 [AC SCREEN] ✅ Received ${notifications.length} notifications');
 
       final unreadCount =
           await notification_service.NotificationService.getUnreadCount(
@@ -50,7 +47,6 @@ class _CoordinatorNotificationScreenState
         coordinatorId: widget.coordinatorId,
       );
 
-      print('🔔 [AC SCREEN] ✅ Unread: $unreadCount');
 
       if (!mounted) return;
       setState(() {
@@ -59,7 +55,6 @@ class _CoordinatorNotificationScreenState
         _isLoading = false;
       });
     } catch (e) {
-      print('🔔 [AC NOTIFICATION SCREEN] Error: $e');
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -352,3 +347,4 @@ class _CoordinatorNotificationScreenState
     }
   }
 }
+

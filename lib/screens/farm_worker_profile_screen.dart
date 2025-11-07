@@ -43,23 +43,18 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
 
   // Test method to verify URL construction
   void _testUrlConstruction() {
-    print('🧪 [URL TEST] Testing URL construction...');
-    print('🧪 [URL TEST] Image Base URL: ${ApiConfig.imageBaseUrl}');
 
     // Test with your provided URL
     String testUrl =
         'https://navajowhite-chinchilla-897972.hostingersite.com/storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
-    print('🧪 [URL TEST] Full URL test: ${_getImageUrl(testUrl)}');
 
     // Test with relative path
     String testPath =
         'profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
-    print('🧪 [URL TEST] Relative path test: ${_getImageUrl(testPath)}');
 
     // Test with storage path
     String testStoragePath =
         'storage/profile_pictures/PSD9axEdnjBXtEhEUSq3JcVfjoy5zSxJF3NlhLrS.jpg';
-    print('🧪 [URL TEST] Storage path test: ${_getImageUrl(testStoragePath)}');
   }
 
   // Helper method to construct full image URL
@@ -75,7 +70,6 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
 
     // If it's already a full URL, return as is
     if (sanitizedPath.startsWith('http')) {
-      print('🌐 [IMAGE URL] Already full URL (sanitized): $sanitizedPath');
       return sanitizedPath;
     }
 
@@ -93,9 +87,6 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
     }
 
     final fullUrl = '$baseUrl/$cleanPath';
-    print('🌐 [IMAGE URL] Constructed URL: $fullUrl');
-    print('🌐 [IMAGE URL] Original path: $imagePath');
-    print('🌐 [IMAGE URL] Sanitized path: $sanitizedPath');
     return fullUrl;
   }
 
@@ -125,15 +116,11 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
     }
     try {
       final token = await AuthService().getToken();
-      print('Token available: ${token != null}');
-      print('Farmer ID: ${widget.farmWorkerId}');
-      print('API Base URL: ${ApiConfig.baseUrl}');
 
       if (token != null) {
         // Test API connection first
         final isApiReachable =
             await _farmWorkerService.testApiConnection(token);
-        print('API reachable: $isApiReachable');
 
         final farmWorker = await _farmWorkerService.getFarmWorkerProfile(
             token, widget.farmWorkerId);
@@ -153,18 +140,10 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
         }
 
         // Debug: Print image URLs
-        print(
-            '🖼️ [PROFILE] Profile Picture URL: ${farmWorker.profilePicture}');
-        print('🖼️ [PROFILE] ID Picture URL: ${farmWorker.idPicture}');
-        print('🖼️ [PROFILE] Image Base URL: ${ApiConfig.imageBaseUrl}');
-        if (farmWorker.profilePicture != null) {
-          print(
-              '🖼️ [PROFILE] Full Profile Picture URL: ${_getImageUrl(farmWorker.profilePicture)}');
-        }
+                if (farmWorker.profilePicture != null) {
+                  }
         if (farmWorker.idPicture != null) {
-          print(
-              '🖼️ [PROFILE] Full ID Picture URL: ${_getImageUrl(farmWorker.idPicture)}');
-        }
+                  }
       } else {
         if (mounted) {
           setState(() => _loading = false);
@@ -176,9 +155,6 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
         }
       }
     } catch (e) {
-      print('Error loading Farmer data: $e');
-      print('Error type: ${e.runtimeType}');
-      print('Error details: ${e.toString()}');
 
       // Check if widget is still mounted before calling setState
       if (mounted) {
@@ -731,3 +707,4 @@ class _FarmWorkerProfileScreenState extends State<FarmWorkerProfileScreen> {
     );
   }
 }
+

@@ -26,10 +26,6 @@ class FirebaseMessagingService {
   static Future<void> firebaseMessagingBackgroundHandler(
       RemoteMessage message) async {
     await Firebase.initializeApp();
-    print('🔥 [FCM BACKGROUND] Message received: ${message.messageId}');
-    print('🔥 [FCM BACKGROUND] Title: ${message.notification?.title}');
-    print('🔥 [FCM BACKGROUND] Body: ${message.notification?.body}');
-    print('🔥 [FCM BACKGROUND] Data: ${message.data}');
 
     // Show local notification even when app is in background/terminated
     if (message.notification != null) {
@@ -38,10 +34,8 @@ class FirebaseMessagingService {
         body: message.notification!.body ?? '',
         payload: jsonEncode(message.data),
       );
-      print('🔥 [FCM BACKGROUND] ✅ Local notification displayed');
     }
 
-    print('🔥 [FCM BACKGROUND] ✅ Handler completed');
   }
 
   /// Show local notification for background messages
@@ -51,7 +45,6 @@ class FirebaseMessagingService {
     required String payload,
   }) async {
     try {
-      print('📱 [LOCAL BACKGROUND] Showing notification: $title');
 
       final FlutterLocalNotificationsPlugin localNotifications =
           FlutterLocalNotificationsPlugin();
@@ -99,20 +92,14 @@ class FirebaseMessagingService {
         payload: payload,
       );
 
-      print('📱 [LOCAL BACKGROUND] ✅ Notification shown successfully');
     } catch (e) {
-      print('📱 [LOCAL BACKGROUND] ❌ Error showing notification: $e');
     }
   }
 
   /// Initialize Firebase messaging
   static Future<void> initialize() async {
-    print('🔥 [FCM] ========================================');
-    print('🔥 [FCM] FIREBASE MESSAGING INITIALIZATION START');
-    print('🔥 [FCM] ========================================');
 
     try {
-      print('🔥 [FCM] Step 1: Requesting notification permissions...');
       // Request permission for notifications
       final settings = await _messaging.requestPermission(
         alert: true,
@@ -124,15 +111,11 @@ class FirebaseMessagingService {
         sound: true,
       );
 
-      print('🔥 [FCM] Step 1 DONE: Permission status: ${settings.authorizationStatus}');
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        print('🔥 [FCM] ✅ User granted permission');
       } else if (settings.authorizationStatus ==
           AuthorizationStatus.provisional) {
-        print('🔥 [FCM] ✅ User granted provisional permission');
       } else {
-        print('🔥 [FCM] ❌ User declined or has not accepted permission');
         return;
       }
 
@@ -142,27 +125,18 @@ class FirebaseMessagingService {
       // Get FCM token with error handling
       String? token;
       try {
-        print('🔥 [FCM] Attempting to get FCM token from Firebase...');
         token = await _messaging.getToken();
-        print('🔥 [FCM] Firebase getToken() result: ${token != null ? "SUCCESS (${token.length} chars)" : "NULL"}');
         
         if (token != null) {
-          print('🔥 [FCM] FCM Token preview: ${token.substring(0, 50)}...');
           await _saveFCMToken(token);
         } else {
-          print('🔥 [FCM] ❌ Firebase returned null token - device may not support FCM');
         }
       } catch (tokenError) {
-        print(
-            '🔥 [FCM] ⚠️ Cannot get FCM token (Google Play Services may be missing): $tokenError');
-        print('🔥 [FCM] Error type: ${tokenError.runtimeType}');
-        print('🔥 [FCM] ℹ️ App will continue with local notifications only');
-        return; // Exit early if FCM is not available
+                return; // Exit early if FCM is not available
       }
 
       // Listen for token refresh
       _messaging.onTokenRefresh.listen((newToken) {
-        print('🔥 [FCM] Token refreshed: $newToken');
         _saveFCMToken(newToken);
       });
 
@@ -178,15 +152,12 @@ class FirebaseMessagingService {
         _handleMessageOpenedApp(initialMessage);
       }
 
-      print('🔥 [FCM] ✅ Firebase messaging initialized successfully');
     } catch (e) {
-      print('🔥 [FCM] ❌ Error initializing Firebase messaging: $e');
     }
   }
 
   /// Initialize local notifications plugin
   static Future<void> _initializeLocalNotifications() async {
-    print('📱 [LOCAL] Initializing local notifications...');
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -206,7 +177,6 @@ class FirebaseMessagingService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    print('📱 [LOCAL] Local notifications initialized: $initialized');
 
     // Create notification channels for Android
     final androidImplementation =
@@ -241,17 +211,11 @@ class FirebaseMessagingService {
     // Request permission for Android 13+ (API level 33+)
     final bool? permissionGranted =
         await androidImplementation?.requestNotificationsPermission();
-    print('📱 [LOCAL] Notification permission granted: $permissionGranted');
 
-    print('📱 [LOCAL] ✅ Local notifications setup completed');
   }
 
   /// Handle foreground messages
   static Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    print('🔥 [FCM] Received foreground message: ${message.messageId}');
-    print('🔥 [FCM] Title: ${message.notification?.title}');
-    print('🔥 [FCM] Body: ${message.notification?.body}');
-    print('🔥 [FCM] Data: ${message.data}');
 
     if (message.notification != null) {
       await _showLocalNotification(
@@ -264,8 +228,6 @@ class FirebaseMessagingService {
 
   /// Handle message when app is opened from notification
   static void _handleMessageOpenedApp(RemoteMessage message) {
-    print('🔥 [FCM] App opened from message: ${message.messageId}');
-    print('🔥 [FCM] Data: ${message.data}');
 
     // Navigate to notifications screen or handle based on data
     // This will be handled by the main app navigation
@@ -278,7 +240,6 @@ class FirebaseMessagingService {
     required String payload,
   }) async {
     try {
-      print('📱 [LOCAL] Attempting to show notification: $title');
 
       const androidDetails = AndroidNotificationDetails(
         'trabacco_notifications',
@@ -304,7 +265,6 @@ class FirebaseMessagingService {
       );
 
       final notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      print('📱 [LOCAL] Showing notification with ID: $notificationId');
 
       await _localNotifications.show(
         notificationId,
@@ -314,16 +274,13 @@ class FirebaseMessagingService {
         payload: payload,
       );
 
-      print('📱 [LOCAL] ✅ Notification shown successfully');
     } catch (e) {
-      print('📱 [LOCAL] ❌ Error showing notification: $e');
       rethrow;
     }
   }
 
   /// Handle notification tap
   static void _onNotificationTapped(NotificationResponse response) async {
-    print('🔥 [FCM] Notification tapped: ${response.payload}');
 
     // Navigate to notification screen
     await _navigateToNotificationScreen();
@@ -332,7 +289,6 @@ class FirebaseMessagingService {
   /// Navigate to notification screen when notification is tapped
   static Future<void> _navigateToNotificationScreen() async {
     try {
-      print('🔥 [FCM] Attempting to navigate to notification screen...');
 
       // Get user data from SharedPreferences using correct keys
       final prefs = await SharedPreferences.getInstance();
@@ -342,18 +298,11 @@ class FirebaseMessagingService {
           prefs.getString('remembered_role') ??
           'technician'; // Fallback to technician
 
-      print('🔥 [FCM] Debug: authToken exists: ${authToken != null}');
-      print('🔥 [FCM] Debug: userDataString exists: ${userDataString != null}');
-      print('🔥 [FCM] Debug: roleType: $roleType');
 
       // Debug: check all available keys in SharedPreferences
       final allKeys = prefs.getKeys();
-      print('🔥 [FCM] Debug: Available SharedPreferences keys: $allKeys');
 
       if (authToken == null || userDataString == null) {
-        print('🔥 [FCM] ❌ Missing auth token or user data');
-        print('🔥 [FCM] Debug: authToken value: $authToken');
-        print('🔥 [FCM] Debug: userDataString value: $userDataString');
 
         // Try waiting a bit and retry in case the app is still initializing
         await Future.delayed(const Duration(seconds: 2));
@@ -361,9 +310,7 @@ class FirebaseMessagingService {
         final retryUserDataString = prefs.getString('user_data');
 
         if (retryAuthToken == null || retryUserDataString == null) {
-          print(
-              '🔥 [FCM] ❌ Still missing auth data after retry - navigation aborted');
-          return;
+                    return;
         }
       }
 
@@ -380,9 +327,7 @@ class FirebaseMessagingService {
         final userName = userData['name'] ?? 'Unknown User';
         final userEmail = userData['email'] ?? '';
 
-        print(
-            '🔥 [FCM] User type: $finalRoleType, ID: $userId, Name: $userName');
-
+        
         // Navigate for technicians and coordinators
         if (finalRoleType == 'technician' || finalRoleType == 'area_coordinator') {
           // Create technician object (can be used for both roles)
@@ -406,65 +351,45 @@ class FirebaseMessagingService {
                 ),
               ),
             );
-            print('🔥 [FCM] ✅ Successfully navigated to notification screen');
           } else {
-            print('🔥 [FCM] ❌ Navigator context is null');
           }
         } else {
-          print(
-              '🔥 [FCM] User role type is $finalRoleType, skipping notification navigation');
-        }
+                  }
       } else {
-        print(
-            '🔥 [FCM] ❌ Still missing auth token or user data after all attempts');
-      }
+              }
     } catch (e) {
-      print('🔥 [FCM] ❌ Error navigating to notification screen: $e');
     }
   }
 
   /// Save FCM token to backend
   static Future<void> _saveFCMToken(String token) async {
     try {
-      print('🔥 [FCM] _saveFCMToken called with token length: ${token.length}');
-      print('🔥 [FCM] Token preview: ${token.substring(0, 20)}...');
       
       final prefs = await SharedPreferences.getInstance();
       final authToken = prefs.getString('auth_token');
 
-      print('🔥 [FCM] Auth token exists: ${authToken != null}');
       
       if (authToken != null) {
         // Get user data using correct keys (from auth_service.dart)
         final userDataString = prefs.getString('user_data');
         final userRoleType = prefs.getString('user_role_type');
 
-        print('🔥 [FCM] User data exists: ${userDataString != null}');
-        print('🔥 [FCM] User role type: $userRoleType');
 
         if (userDataString != null && userRoleType != null) {
           final userData = jsonDecode(userDataString);
           final userId = userData['id'];
 
-          print(
-              '🔥 [FCM] Saving FCM token for user: ID=$userId, Type=$userRoleType');
-
+          
           // Send token to backend
           await _sendTokenToBackend(token, authToken, userRoleType, userId);
         } else {
-          print(
-              '🔥 [FCM] ❌ Missing user data or role type: userDataString=${userDataString != null}, userRoleType=$userRoleType');
-        }
+                  }
       } else {
-        print('🔥 [FCM] ❌ Missing auth token, cannot save FCM token');
       }
 
       // Save token locally
       await prefs.setString('fcm_token', token);
-      print('🔥 [FCM] ✅ Token saved to local storage');
     } catch (e) {
-      print('🔥 [FCM] ❌ Error saving FCM token: $e');
-      print('🔥 [FCM] Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -484,10 +409,6 @@ class FirebaseMessagingService {
         'platform': 'mobile',
       };
 
-      print('🔥 [FCM] Sending FCM token to backend:');
-      print('🔥 [FCM] URL: $url');
-      print('🔥 [FCM] User: $userType (ID: $userId)');
-      print('🔥 [FCM] Token preview: ${token.substring(0, 20)}...');
 
       final response = await http.post(
         Uri.parse(url),
@@ -499,55 +420,37 @@ class FirebaseMessagingService {
         body: jsonEncode(requestBody),
       );
 
-      print('🔥 [FCM] Backend response status: ${response.statusCode}');
-      print('🔥 [FCM] Backend response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('🔥 [FCM] ✅ Token sent to backend successfully');
       } else {
-        print(
-            '🔥 [FCM] ❌ Failed to send token to backend: ${response.statusCode} - ${response.body}');
-      }
+              }
     } catch (e) {
-      print('🔥 [FCM] ❌ Error sending token to backend: $e');
     }
   }
 
   /// Get stored FCM token (checks if changed before saving)
   static Future<String?> getFCMToken() async {
     try {
-      print('🔥 [FCM] getFCMToken() called - attempting to get token from Firebase...');
       final token = await _messaging.getToken();
-      print('🔥 [FCM] Firebase returned token: ${token != null ? "YES (${token.length} chars)" : "NULL"}');
       
       final prefs = await SharedPreferences.getInstance();
       final storedToken = prefs.getString('fcm_token');
-      print('🔥 [FCM] Stored token in prefs: ${storedToken != null ? "YES" : "NULL"}');
 
       if (token != storedToken && token != null) {
-        print('🔥 [FCM] Token changed or new, saving to backend...');
         await _saveFCMToken(token);
       } else if (token == null) {
-        print('🔥 [FCM] ⚠️ Firebase returned null token');
       } else {
-        print('🔥 [FCM] Token unchanged, skipping save');
       }
 
       return token;
     } catch (e) {
-      print(
-          '🔥 [FCM] ⚠️ Cannot get FCM token (Google Play Services issue): $e');
-      print('🔥 [FCM] Error type: ${e.runtimeType}');
-      print('🔥 [FCM] ℹ️ Returning cached token if available');
-
+      
       // Try to get cached token
       try {
         final prefs = await SharedPreferences.getInstance();
         final cachedToken = prefs.getString('fcm_token');
-        print('🔥 [FCM] Cached token: ${cachedToken != null ? "YES" : "NULL"}');
         return cachedToken;
       } catch (cacheError) {
-        print('🔥 [FCM] No cached token available: $cacheError');
         return null;
       }
     }
@@ -556,18 +459,13 @@ class FirebaseMessagingService {
   /// Force save FCM token to backend (used after login to update user association)
   static Future<void> forceSaveFCMToken() async {
     try {
-      print('🔥 [FCM] forceSaveFCMToken() called - forcing save regardless of token change...');
       final token = await _messaging.getToken();
       
       if (token != null) {
-        print('🔥 [FCM] Force saving token to backend (user may have changed)...');
         await _saveFCMToken(token);
       } else {
-        print('🔥 [FCM] ⚠️ Cannot force save - Firebase returned null token');
       }
     } catch (e) {
-      print('🔥 [FCM] ❌ Error in forceSaveFCMToken: $e');
-      print('🔥 [FCM] Error type: ${e.runtimeType}');
     }
   }
 
@@ -575,9 +473,7 @@ class FirebaseMessagingService {
   static Future<void> subscribeToScheduleNotifications() async {
     try {
       await _messaging.subscribeToTopic('schedule_reminders');
-      print('🔥 [FCM] ✅ Subscribed to schedule_reminders topic');
     } catch (e) {
-      print('🔥 [FCM] ❌ Error subscribing to topic: $e');
     }
   }
 
@@ -585,9 +481,7 @@ class FirebaseMessagingService {
   static Future<void> unsubscribeFromScheduleNotifications() async {
     try {
       await _messaging.unsubscribeFromTopic('schedule_reminders');
-      print('🔥 [FCM] ✅ Unsubscribed from schedule_reminders topic');
     } catch (e) {
-      print('🔥 [FCM] ❌ Error unsubscribing from topic: $e');
     }
   }
 
@@ -604,3 +498,4 @@ class FirebaseMessagingService {
     );
   }
 }
+

@@ -823,13 +823,9 @@ class _CoordinatorPendingReportsScreenState
 
   Future<void> _approveReport(int reportId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting accomplishment report approval...');
-      print('📝 [AC MOBILE] Report ID: $reportId');
-      print('📝 [AC MOBILE] Note: $note');
 
       await CoordinatorService.approveReport(widget.token, reportId, note);
 
-      print('✅ [AC MOBILE] Accomplishment report approval successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -841,8 +837,6 @@ class _CoordinatorPendingReportsScreenState
         _fetchReports(); // Refresh list
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error approving accomplishment report: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to approve report: $e')),
@@ -853,13 +847,9 @@ class _CoordinatorPendingReportsScreenState
 
   Future<void> _rejectReport(int reportId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting accomplishment report rejection...');
-      print('📝 [AC MOBILE] Report ID: $reportId');
-      print('📝 [AC MOBILE] Note: $note');
 
       await CoordinatorService.rejectReport(widget.token, reportId, note);
 
-      print('✅ [AC MOBILE] Accomplishment report rejection successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -871,8 +861,6 @@ class _CoordinatorPendingReportsScreenState
         _fetchReports(); // Refresh list
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error rejecting accomplishment report: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to reject report: $e')),
@@ -1114,3 +1102,4 @@ class _CoordinatorPendingReportsScreenState
     );
   }
 }
+

@@ -155,9 +155,6 @@ class CoordinatorService {
   ) async {
     try {
       final url = '${ApiConfig.baseUrl}/coordinator/reports/$reportId/approve';
-      print('🌐 [SERVICE] Calling approve accomplishment report API...');
-      print('🌐 [SERVICE] URL: $url');
-      print('🌐 [SERVICE] Report ID: $reportId');
 
       final response = await http.post(
         Uri.parse(url),
@@ -167,18 +164,13 @@ class CoordinatorService {
         }),
       );
 
-      print('🌐 [SERVICE] Response status: ${response.statusCode}');
-      print('🌐 [SERVICE] Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
-        print('❌ [SERVICE] API Error: ${error['message']}');
         throw Exception(error['message'] ?? 'Failed to approve report');
       }
 
-      print('✅ [SERVICE] Accomplishment report approved successfully!');
     } catch (e) {
-      print('❌ [SERVICE] Exception in approveReport: $e');
       throw Exception('Failed to approve report: ${e.toString()}');
     }
   }
@@ -191,9 +183,6 @@ class CoordinatorService {
   ) async {
     try {
       final url = '${ApiConfig.baseUrl}/coordinator/reports/$reportId/reject';
-      print('🌐 [SERVICE] Calling reject accomplishment report API...');
-      print('🌐 [SERVICE] URL: $url');
-      print('🌐 [SERVICE] Report ID: $reportId');
 
       final response = await http.post(
         Uri.parse(url),
@@ -203,18 +192,13 @@ class CoordinatorService {
         }),
       );
 
-      print('🌐 [SERVICE] Response status: ${response.statusCode}');
-      print('🌐 [SERVICE] Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
-        print('❌ [SERVICE] API Error: ${error['message']}');
         throw Exception(error['message'] ?? 'Failed to reject report');
       }
 
-      print('✅ [SERVICE] Accomplishment report rejected successfully!');
     } catch (e) {
-      print('❌ [SERVICE] Exception in rejectReport: $e');
       throw Exception('Failed to reject report: ${e.toString()}');
     }
   }
@@ -228,9 +212,6 @@ class CoordinatorService {
     try {
       final url =
           '${ApiConfig.baseUrl}/coordinator/requests/$requestId/approve';
-      print('🌐 [SERVICE] Calling approve request API...');
-      print('🌐 [SERVICE] URL: $url');
-      print('🌐 [SERVICE] Request ID: $requestId');
 
       final response = await http.post(
         Uri.parse(url),
@@ -240,18 +221,13 @@ class CoordinatorService {
         }),
       );
 
-      print('🌐 [SERVICE] Response status: ${response.statusCode}');
-      print('🌐 [SERVICE] Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
-        print('❌ [SERVICE] API Error: ${error['message']}');
         throw Exception(error['message'] ?? 'Failed to approve request');
       }
 
-      print('✅ [SERVICE] Request approved successfully!');
     } catch (e) {
-      print('❌ [SERVICE] Exception in approveRequest: $e');
       throw Exception('Failed to approve request: ${e.toString()}');
     }
   }
@@ -264,9 +240,6 @@ class CoordinatorService {
   ) async {
     try {
       final url = '${ApiConfig.baseUrl}/coordinator/requests/$requestId/reject';
-      print('🌐 [SERVICE] Calling reject request API...');
-      print('🌐 [SERVICE] URL: $url');
-      print('🌐 [SERVICE] Request ID: $requestId');
 
       final response = await http.post(
         Uri.parse(url),
@@ -276,18 +249,13 @@ class CoordinatorService {
         }),
       );
 
-      print('🌐 [SERVICE] Response status: ${response.statusCode}');
-      print('🌐 [SERVICE] Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
-        print('❌ [SERVICE] API Error: ${error['message']}');
         throw Exception(error['message'] ?? 'Failed to reject request');
       }
 
-      print('✅ [SERVICE] Request rejected successfully!');
     } catch (e) {
-      print('❌ [SERVICE] Exception in rejectRequest: $e');
       throw Exception('Failed to reject request: ${e.toString()}');
     }
   }
@@ -301,10 +269,6 @@ class CoordinatorService {
     try {
       final url =
           '${ApiConfig.baseUrl}/coordinator/planting-reports/$reportId/approve';
-      print('🌐 [SERVICE] Calling approve planting report API...');
-      print('🌐 [SERVICE] URL: $url');
-      print('🌐 [SERVICE] Report ID: $reportId');
-      print('🌐 [SERVICE] Note: $coordinatorNote');
 
       final response = await http.post(
         Uri.parse(url),
@@ -314,19 +278,14 @@ class CoordinatorService {
         }),
       );
 
-      print('🌐 [SERVICE] Response status: ${response.statusCode}');
-      print('🌐 [SERVICE] Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
-        print('❌ [SERVICE] API Error: ${error['message']}');
         throw Exception(
             error['message'] ?? 'Failed to approve planting report');
       }
 
-      print('✅ [SERVICE] Planting report approved successfully!');
     } catch (e) {
-      print('❌ [SERVICE] Exception in approvePlantingReport: $e');
       throw Exception('Failed to approve planting report: ${e.toString()}');
     }
   }
@@ -365,9 +324,6 @@ class CoordinatorService {
     try {
       final url =
           '${ApiConfig.baseUrl}/coordinator/harvest-reports/$reportId/approve';
-      print('🌐 [SERVICE] Calling approve harvest report API...');
-      print('🌐 [SERVICE] URL: $url');
-      print('🌐 [SERVICE] Report ID: $reportId');
 
       final response = await http.post(
         Uri.parse(url),
@@ -377,18 +333,13 @@ class CoordinatorService {
         }),
       );
 
-      print('🌐 [SERVICE] Response status: ${response.statusCode}');
-      print('🌐 [SERVICE] Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
-        print('❌ [SERVICE] API Error: ${error['message']}');
         throw Exception(error['message'] ?? 'Failed to approve harvest report');
       }
 
-      print('✅ [SERVICE] Harvest report approved successfully!');
     } catch (e) {
-      print('❌ [SERVICE] Exception in approveHarvestReport: $e');
       throw Exception('Failed to approve harvest report: ${e.toString()}');
     }
   }
@@ -402,9 +353,6 @@ class CoordinatorService {
     try {
       final url =
           '${ApiConfig.baseUrl}/coordinator/harvest-reports/$reportId/reject';
-      print('🌐 [SERVICE] Calling reject harvest report API...');
-      print('🌐 [SERVICE] URL: $url');
-      print('🌐 [SERVICE] Report ID: $reportId');
 
       final response = await http.post(
         Uri.parse(url),
@@ -414,19 +362,15 @@ class CoordinatorService {
         }),
       );
 
-      print('🌐 [SERVICE] Response status: ${response.statusCode}');
-      print('🌐 [SERVICE] Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         final error = json.decode(response.body);
-        print('❌ [SERVICE] API Error: ${error['message']}');
         throw Exception(error['message'] ?? 'Failed to reject harvest report');
       }
 
-      print('✅ [SERVICE] Harvest report rejected successfully!');
     } catch (e) {
-      print('❌ [SERVICE] Exception in rejectHarvestReport: $e');
       throw Exception('Failed to reject harvest report: ${e.toString()}');
     }
   }
 }
+

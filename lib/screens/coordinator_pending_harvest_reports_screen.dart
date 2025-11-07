@@ -52,10 +52,6 @@ class _CoordinatorPendingHarvestReportsScreenState
 
   Future<void> _approveHarvestReport(int reportId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting harvest report approval...');
-      print('📝 [AC MOBILE] Report ID: $reportId');
-      print('📝 [AC MOBILE] Note: $note');
-      print('📝 [AC MOBILE] Token: ${widget.token.substring(0, 20)}...');
 
       await CoordinatorService.approveHarvestReport(
         widget.token,
@@ -63,7 +59,6 @@ class _CoordinatorPendingHarvestReportsScreenState
         note,
       );
 
-      print('✅ [AC MOBILE] Harvest report approval successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -75,8 +70,6 @@ class _CoordinatorPendingHarvestReportsScreenState
         _fetchPendingHarvestReports();
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error approving harvest report: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to approve harvest report: $e')),
@@ -87,9 +80,6 @@ class _CoordinatorPendingHarvestReportsScreenState
 
   Future<void> _rejectHarvestReport(int reportId, String note) async {
     try {
-      print('📝 [AC MOBILE] Starting harvest report rejection...');
-      print('📝 [AC MOBILE] Report ID: $reportId');
-      print('📝 [AC MOBILE] Note: $note');
 
       await CoordinatorService.rejectHarvestReport(
         widget.token,
@@ -97,7 +87,6 @@ class _CoordinatorPendingHarvestReportsScreenState
         note,
       );
 
-      print('✅ [AC MOBILE] Harvest report rejection successful!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,8 +98,6 @@ class _CoordinatorPendingHarvestReportsScreenState
         _fetchPendingHarvestReports();
       }
     } catch (e) {
-      print('❌ [AC MOBILE] Error rejecting harvest report: $e');
-      print('❌ [AC MOBILE] Error type: ${e.runtimeType}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to reject harvest report: $e')),
@@ -1254,3 +1241,4 @@ class _CoordinatorPendingHarvestReportsScreenState
     }
   }
 }
+

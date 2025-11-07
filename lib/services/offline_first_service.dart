@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import '../utils/image_compressor.dart';
 import '../config/api_config.dart';
 import 'offline_storage_service.dart';
 
@@ -25,7 +26,6 @@ class OfflineFirstService {
           return await _createReportOnline(reportData, token,
               images: images, imageBytes: imageBytes);
         } catch (e) {
-          print('Online report creation failed, saving offline: $e');
           // Fall back to offline storage
           await _offlineStorage.saveReportOffline(reportData);
           return {
@@ -65,7 +65,6 @@ class OfflineFirstService {
           await _createRequestOnline(token, requestData);
           return;
         } catch (e) {
-          print('Online request creation failed, saving offline: $e');
           // Fall back to offline storage
           await _offlineStorage.saveRequestOffline(requestData);
           return;
@@ -94,7 +93,6 @@ class OfflineFirstService {
           return await _updateProfileOnline(
               userType, userId, updateData, token);
         } catch (e) {
-          print('Online profile update failed, saving offline: $e');
           // Fall back to offline storage
           await _offlineStorage.saveProfileUpdateOffline(
               userType, userId, updateData);
@@ -134,7 +132,6 @@ class OfflineFirstService {
           await _updateScheduleStatusOnline(scheduleId, status, token);
           return;
         } catch (e) {
-          print('Online schedule update failed, saving offline: $e');
           // Fall back to offline storage
           await _offlineStorage.saveScheduleUpdateOffline(scheduleId, status);
           return;
@@ -176,9 +173,6 @@ class OfflineFirstService {
     List<File>? images,
     List<Uint8List>? imageBytes,
   }) async {
-    print('Sending report to: ${ApiConfig.baseUrl}/reports');
-    print('Headers: ${ApiConfig.getHeaders(token: token)}');
-    print('Report data: $reportData');
 
     var request = http.MultipartRequest(
       'POST',
@@ -195,7 +189,7 @@ class OfflineFirstService {
         // Handle arrays (like farm_worker_ids, laborer_ids)
         if (value is List) {
           for (int i = 0; i < value.length; i++) {
-            request.fields['${key}[$i]'] = value[i].toString();
+            request.fields['$key[$i]'] = value[i].toString();
           }
         } else {
           request.fields[key] = value.toString();
@@ -207,10 +201,11 @@ class OfflineFirstService {
     if (kIsWeb && imageBytes != null && imageBytes.isNotEmpty) {
       // For web, use image bytes
       for (int i = 0; i < imageBytes.length; i++) {
+        final compressed = await ImageCompressor.compressBytes(imageBytes[i]);
         request.files.add(
           http.MultipartFile.fromBytes(
             'images[$i]',
-            imageBytes[i],
+            compressed,
             filename: 'image_$i.jpg',
           ),
         );
@@ -220,11 +215,14 @@ class OfflineFirstService {
       for (int i = 0; i < images.length; i++) {
         final image = images[i];
         if (await image.exists()) {
-          final fileName = path.basename(image.path);
+          final rawBytes = await image.readAsBytes();
+          final compressedBytes = await ImageCompressor.compressFile(rawBytes);
+          final originalName = path.basename(image.path);
+          final fileName = path.setExtension(originalName, '.jpg');
           request.files.add(
-            await http.MultipartFile.fromPath(
+            http.MultipartFile.fromBytes(
               'images[$i]',
-              image.path,
+              compressedBytes,
               filename: fileName,
             ),
           );
@@ -235,8 +233,6 @@ class OfflineFirstService {
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
 
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     if (response.statusCode == 201) {
       return json.decode(response.body);
@@ -244,7 +240,6 @@ class OfflineFirstService {
       final errorBody = json.decode(response.body);
       final errorMessage = errorBody['message'] ??
           'Failed to create report (${response.statusCode})';
-      print('Error response: $errorMessage');
       throw Exception(errorMessage);
     }
   }
@@ -253,16 +248,12 @@ class OfflineFirstService {
       String token, Map<String, dynamic> requestData) async {
     final url = ApiConfig.getUrl('/requests');
 
-    print('[OfflineFirstService] _createRequestOnline called');
-    print('[OfflineFirstService] Token: ${token.substring(0, 10)}...');
-    print('[OfflineFirstService] Request data received: $requestData');
 
     // Check if data is already in new format (has 'request_type' field)
     Map<String, dynamic> payload;
     if (requestData.containsKey('request_type')) {
       // New format from request_screen.dart - use as is
       payload = requestData;
-      print('[OfflineFirstService] Using new format payload');
     } else {
       // Old format - transform it
       final now = DateTime.now().toIso8601String();
@@ -280,44 +271,33 @@ class OfflineFirstService {
         if (requestData['quantity'] != null)
           'quantity': requestData['quantity'],
       };
-      print('[OfflineFirstService] Using old format payload (transformed)');
     }
 
-    print('[OfflineFirstService] Final payload being sent: $payload');
-    print(
-        '[OfflineFirstService] Headers: ${ApiConfig.getHeaders(token: token)}');
-
+    
     final response = await http.post(Uri.parse(url),
         headers: ApiConfig.getHeaders(token: token),
         body: json.encode(payload));
 
-    print('[OfflineFirstService] Response status: ${response.statusCode}');
-    print('[OfflineFirstService] Response body: ${response.body}');
 
     if (response.statusCode == 201) {
       // Request created successfully
-      print('[OfflineFirstService] Request created successfully!');
       return;
     } else if (response.statusCode == 409) {
       // Daily limit exceeded
       final errorData = json.decode(response.body);
       final errorMsg =
           errorData['message'] ?? 'Daily limit exceeded for this request type';
-      print('[OfflineFirstService] Error 409: $errorMsg');
       throw Exception(errorMsg);
     } else if (response.statusCode == 422) {
       // Validation error
       final errorData = json.decode(response.body);
       final errorMsg =
           errorData['message'] ?? errorData['error'] ?? 'Invalid request data';
-      print('[OfflineFirstService] Error 422: $errorMsg');
-      print('[OfflineFirstService] Error details: $errorData');
       throw Exception(errorMsg);
     } else {
       // Other errors
       final errorMsg =
           json.decode(response.body)['message'] ?? 'Failed to create request';
-      print('[OfflineFirstService] Error ${response.statusCode}: $errorMsg');
       throw Exception(errorMsg);
     }
   }
@@ -343,7 +323,6 @@ class OfflineFirstService {
       }
     });
 
-    print('Update data (cleaned): $cleanedData');
 
     final response = await http.patch(
       Uri.parse('${ApiConfig.baseUrl}$endpoint'),
@@ -351,8 +330,6 @@ class OfflineFirstService {
       body: json.encode(cleanedData),
     );
 
-    print('Update response status: ${response.statusCode}');
-    print('Update response body: ${response.body}');
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -385,3 +362,4 @@ class OfflineFirstService {
     }
   }
 }
+

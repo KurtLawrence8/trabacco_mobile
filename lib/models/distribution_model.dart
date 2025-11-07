@@ -18,7 +18,6 @@ class SupplyDistribution {
       try {
         return DateTime.parse(value);
       } catch (e) {
-        print('Error parsing date: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -110,7 +109,6 @@ class CashDistribution {
       try {
         return DateTime.parse(value);
       } catch (e) {
-        print('Error parsing date: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -195,7 +193,6 @@ class FarmWorkerFarm {
       try {
         return DateTime.parse(value);
       } catch (e) {
-        print('Error parsing date: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -263,7 +260,6 @@ class Farm {
       try {
         return DateTime.parse(value);
       } catch (e) {
-        print('Error parsing date: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -333,7 +329,6 @@ class Inventory {
       try {
         return DateTime.parse(value);
       } catch (e) {
-        print('Error parsing date: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -443,7 +438,6 @@ class FarmWorker {
       try {
         return DateTime.parse(value);
       } catch (e) {
-        print('Error parsing date: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -523,7 +517,6 @@ class Supply {
       try {
         return DateTime.parse(value);
       } catch (e) {
-        print('Error parsing date: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -562,3 +555,4 @@ class Supply {
     };
   }
 }
+

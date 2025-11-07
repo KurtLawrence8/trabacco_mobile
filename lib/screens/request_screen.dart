@@ -138,7 +138,6 @@ class _RequestScreenState extends State<RequestScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error loading coordinators: $e');
       if (mounted) {
         setState(() {
           _loadingCoordinators = false;
@@ -151,13 +150,11 @@ class _RequestScreenState extends State<RequestScreen> {
     setState(() => _loadingSupplies = true);
     try {
       final supplies = await InventoryService().getInventory(widget.token);
-      print('Fetched supplies: $supplies');
       setState(() {
         _supplies = supplies;
         _filteredSupplies = List.from(supplies);
       });
     } catch (e) {
-      print('Error fetching supplies: $e');
       if (mounted) {
         if (e.toString().contains('AUTHENTICATION_EXPIRED')) {
           // Redirect to login screen when authentication expires
@@ -186,17 +183,14 @@ class _RequestScreenState extends State<RequestScreen> {
   void _fetchEquipment() async {
     setState(() => _loadingEquipment = true);
     try {
-      print('[RequestScreen] Fetching available equipment...');
       final equipment =
           await EquipmentService().getAvailableEquipment(widget.token);
-      print('[RequestScreen] Fetched ${equipment.length} equipment items');
       setState(() {
         _equipment = equipment;
         _filteredEquipment = List.from(equipment);
       });
 
       if (equipment.isEmpty) {
-        print('[RequestScreen] No available equipment found');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -208,7 +202,6 @@ class _RequestScreenState extends State<RequestScreen> {
         }
       }
     } catch (e) {
-      print('[RequestScreen] Error fetching equipment: $e');
       if (mounted) {
         if (e.toString().contains('AUTHENTICATION_EXPIRED')) {
           // Redirect to login screen when authentication expires
@@ -294,7 +287,6 @@ class _RequestScreenState extends State<RequestScreen> {
         'expected_return_date': _formatDateForApi(_returnDateController.text),
     };
 
-    print('Request data being sent: $requestData');
     try {
       await RequestService().createRequest(widget.token, requestData);
       if (!mounted) return;
@@ -1710,7 +1702,6 @@ class _RequestScreenState extends State<RequestScreen> {
         return '$year-$month-$day';
       }
     } catch (e) {
-      print('Error parsing date: $dateString');
     }
     return dateString; // Return original if parsing fails
   }
@@ -1739,7 +1730,6 @@ class _RequestScreenState extends State<RequestScreen> {
         }
       } catch (e) {
         // Supply not found, let it pass for now
-        print('Selected supply not found: $e');
       }
     }
 
@@ -1759,7 +1749,6 @@ class _RequestScreenState extends State<RequestScreen> {
               'Only ${selectedSupply.quantity} available. Maximum: ${selectedSupply.quantity}');
         }
       } catch (e) {
-        print('Error validating quantity: $e');
       }
     }
   }
@@ -1783,7 +1772,6 @@ class _RequestScreenState extends State<RequestScreen> {
                         selectedSupply.quantity.toString();
                     setState(() {});
                   } catch (e) {
-                    print('Error setting max quantity: $e');
                   }
                 }
               },
@@ -1948,7 +1936,6 @@ class _RequestScreenState extends State<RequestScreen> {
           }
         }
       } catch (e) {
-        print('Error validating equipment context: $e');
       }
     }
   }
@@ -1963,7 +1950,6 @@ class _RequestScreenState extends State<RequestScreen> {
         return DateTime(year, month, day);
       }
     } catch (e) {
-      print('Error parsing date for validation: $dateString');
     }
     return null;
   }
@@ -2047,7 +2033,6 @@ class _RequestScreenState extends State<RequestScreen> {
             prefs.remove('request_draft_${widget.farmWorker.id}');
           }
         } catch (e) {
-          print('Error loading form draft: $e');
         }
       }
     });
@@ -2133,3 +2118,4 @@ class _RequestScreenState extends State<RequestScreen> {
     _clearFormDraft();
   }
 }
+
