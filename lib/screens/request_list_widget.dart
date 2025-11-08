@@ -20,7 +20,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
   @override
   void initState() {
     super.initState();
-        _requestsFuture = RequestService()
+    _requestsFuture = RequestService()
         .getRequestsForFarmWorker(widget.token, widget.farmWorkerId);
   }
 
@@ -44,7 +44,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
     return FutureBuilder<List<RequestModel>>(
       future: _requestsFuture,
       builder: (context, snapshot) {
-                if (snapshot.hasError) {
+        if (snapshot.hasError) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -216,7 +216,7 @@ class _RequestListWidgetState extends State<RequestListWidget> {
     final isPending = status == 'pending' || status == '' || status.isEmpty;
 
     // Debug logging to see actual status values
-    
+
     // Get request type icon and color (matching technician landing screen)
     IconData typeIcon;
     Color typeColor;
@@ -404,16 +404,6 @@ class _RequestListWidgetState extends State<RequestListWidget> {
               if (req.type?.toLowerCase() == 'supply' && req.supplyName != null)
                 Text(
                   req.supplyName!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              if (req.type?.toLowerCase() == 'cash_advance' &&
-                  req.amount != null)
-                Text(
-                  '₱${req.amount!.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -678,7 +668,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         if (duration != null && duration > 0) {
           durationToSend = duration;
         } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please enter a valid duration')),
           );
           return;
@@ -701,7 +691,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
 
       // Handle expected return date - always send current value for equipment requests
       final returnDateText = _returnDateController.text.trim();
-      
+
       String? dateToSend;
 
       if (returnDateText.isNotEmpty) {
@@ -724,14 +714,14 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
             // If it's already in YYYY-MM-DD format, use it directly
             DateTime.parse(widget.request.expectedReturnDate!);
             dateToSend = widget.request.expectedReturnDate;
-                      } catch (e) {
+          } catch (e) {
             // If it's in a different format, try to parse and format it
-                        // For now, just use it as-is since we can't be sure of the original format
+            // For now, just use it as-is since we can't be sure of the original format
             dateToSend = widget.request.expectedReturnDate;
           }
         } else {
           // For equipment requests, return date can be optional if we have original
-                  }
+        }
       }
 
       // Always send return date for equipment requests
@@ -773,8 +763,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     }
 
     // Debug logging
-    if (widget.request.type == 'equipment') {
-                            }
+    if (widget.request.type == 'equipment') {}
 
     try {
       await RequestService()
@@ -793,7 +782,6 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
       // Note: This is a Flutter app, so we can't directly dispatch web events
       // The web app will detect changes through its own refresh mechanisms
     } catch (e) {
-
       String errorMessage = 'Failed to update request';
       if (e.toString().contains('Failed to update request')) {
         errorMessage = e.toString();
@@ -834,7 +822,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
         final result = '$year-$month-$day';
         return result;
       } else {
-                throw Exception('Invalid date format - expected MM-DD-YYYY');
+        throw Exception('Invalid date format - expected MM-DD-YYYY');
       }
     } catch (e) {
       throw e; // Re-throw to handle in calling code
@@ -1031,7 +1019,7 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
                                   try {
                                     return _buildCustomEquipmentDropdown();
                                   } catch (e) {
-                                                                        return Container(
+                                    return Container(
                                       height: 56,
                                       decoration: BoxDecoration(
                                         color: Colors.red[50],
@@ -1705,4 +1693,3 @@ class _EditRequestDialogState extends State<EditRequestDialog> {
     );
   }
 }
-

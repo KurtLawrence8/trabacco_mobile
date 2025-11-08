@@ -227,7 +227,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authService.resendVerificationEmail(_loginController.text.trim());
+      await _authService.resendVerificationEmail(
+        _loginController.text.trim(),
+        _roleType,
+      );
 
       if (mounted) {
         setState(() {

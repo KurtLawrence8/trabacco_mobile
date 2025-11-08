@@ -150,13 +150,14 @@ class AuthService {
   }
 
   // NEW ETO RESEND VERIFICATION EMAIL FOR TECHNICIAN
-  Future<void> resendVerificationEmail(String email) async {
+  Future<void> resendVerificationEmail(String email, String roleType) async {
     try {
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}/email/resend'),
         headers: ApiConfig.getHeaders(),
         body: json.encode({
           'email': email,
+          'role_type': roleType,
         }),
       );
 

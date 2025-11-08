@@ -143,7 +143,7 @@ class ApiConfig {
 
   // Google Maps API Key (for Directions API and other Google Maps services)
   static const String googleMapsApiKey =
-      'AIzaSyBqeh2FJ10ybg0JGxTG5PF4YyvKTSvJmIg';
+      'AIzaSyCxiAXxMEdsMORraACr8DDFJg_uZUqI4-w';
 
   // Helper method to replace path parameters
   static String replacePathParams(
