@@ -185,6 +185,25 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     }
   }
 
+  Future<int?> _resolveTechnicianId() async {
+    if (widget.technicianId != null) {
+      return widget.technicianId;
+    }
+
+    try {
+      final userInfo = await _authService.getCurrentUserInfo();
+      if (userInfo == null) return null;
+
+      final idValue = userInfo['id'];
+      if (idValue is int) return idValue;
+      if (idValue is String) return int.tryParse(idValue);
+    } catch (_) {
+      return null;
+    }
+
+    return null;
+  }
+
   void _filterItems<T>({
     required TextEditingController searchController,
     required List<T> sourceList,
@@ -662,11 +681,22 @@ class _PlantingFormScreenState extends State<PlantingFormScreen> {
     }
 
     try {
+      final technicianId = await _resolveTechnicianId();
+      if (technicianId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unable to determine technician account. Please log in again.')),
+          );
+        }
+        return;
+      }
+
       final plantingData = {
         'farm_id': _selectedFarm!.id,
         'coordinator_id': _selectedCoordinatorId, // Added coordinator selection
         'plants_planted': int.parse(_plantsPlantedController.text),
         'laborer_ids': _selectedLaborers.map((l) => l.id).toList(),
+        'technician_id': technicianId,
       };
 
       final response = await _plantingService.submitPlantingReport(

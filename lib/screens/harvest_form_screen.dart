@@ -189,6 +189,27 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     }
   }
 
+  Future<int?> _resolveTechnicianId() async {
+    if (widget.technicianId != null) {
+      return widget.technicianId;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = prefs.getString('user_data');
+      if (userData != null) {
+        final decoded = json.decode(userData);
+        final idValue = decoded['id'];
+        if (idValue is int) return idValue;
+        if (idValue is String) return int.tryParse(idValue);
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
+  }
+
   void _filterItems<T>({
     required TextEditingController searchController,
     required List<T> sourceList,
@@ -504,12 +525,23 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
     });
 
     try {
+      final technicianId = await _resolveTechnicianId();
+      if (technicianId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unable to determine technician account. Please log in again.')),
+          );
+        }
+        return;
+      }
+
       final harvestData = {
         'farm_id': _selectedFarm!.id,
         'coordinator_id': _selectedCoordinatorId, // Added coordinator selection
         'mortality': int.parse(_mortalityController.text),
         'initial_kg': double.parse(_initialKgController.text),
         'laborer_ids': _selectedLaborers.map((l) => l.id).toList(),
+        'technician_id': technicianId,
       };
 
       final response =
